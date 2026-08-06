@@ -10,7 +10,7 @@ const SITE_CONFIG = {
   // ---- Your info ----
   businessName: "Florida Nature Prints",
   tagline: "Calm moments from the Sunshine State",
-  yourName: "Marina Royzen",
+  yourName: "Florida Nature Prints", // public name on About/Contact (not a personal name)
   yourEmail: "hello@floridanatureprints.com",
 
   // ---- Contact & order forms ----
