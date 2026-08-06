@@ -10,15 +10,15 @@ const SITE_CONFIG = {
   // ---- Your info ----
   businessName: "Florida Nature Prints",
   tagline: "Calm moments from the Sunshine State",
-  yourName: "Your Name", // change to your real name
-  yourEmail: "you@example.com", // shown on Contact page
+  yourName: "Marina Royzen",
+  yourEmail: "hello@floridanatureprints.com",
 
-  // ---- Email forms (Formspree — free & simple) ----
-  // 1. Go to https://formspree.io and create a free account
-  // 2. Create a new form and copy the form ID (looks like: xyzabcde)
-  // 3. Paste it below in place of YOUR_FORM_ID
-  // Orders and contact messages will be emailed to the address you set in Formspree.
-  formspreeFormId: "YOUR_FORM_ID",
+  // ---- Contact & order forms ----
+  // Forms email this address using FormSubmit (no extra account needed).
+  // The FIRST time someone submits a form, check hello@… and click FormSubmit’s
+  // confirmation link. After that, messages arrive automatically.
+  // (Optional) You can still use Formspree instead by putting a form ID below.
+  formspreeFormId: "",
 
   // ---- Payment (Stripe Payment Link) ----
   // 1. In Stripe, create a Payment Link for your prints

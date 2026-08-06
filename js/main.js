@@ -37,15 +37,27 @@
     return "images/prints/" + encodeURIComponent(file);
   }
 
-  function formspreeUrl() {
-    return "https://formspree.io/f/" + SITE_CONFIG.formspreeFormId;
-  }
-
   function formspreeReady() {
     return (
       SITE_CONFIG.formspreeFormId &&
-      SITE_CONFIG.formspreeFormId !== "YOUR_FORM_ID"
+      SITE_CONFIG.formspreeFormId !== "YOUR_FORM_ID" &&
+      SITE_CONFIG.formspreeFormId.trim() !== ""
     );
+  }
+
+  function formEndpoint() {
+    if (formspreeReady()) {
+      return "https://formspree.io/f/" + SITE_CONFIG.formspreeFormId;
+    }
+    // Default: FormSubmit → emails SITE_CONFIG.yourEmail (no account required)
+    return (
+      "https://formsubmit.co/ajax/" +
+      encodeURIComponent(SITE_CONFIG.yourEmail)
+    );
+  }
+
+  function formsReady() {
+    return !!(SITE_CONFIG.yourEmail && SITE_CONFIG.yourEmail.indexOf("@") > 0);
   }
 
   // ---- Fill business name in logo / footer ----
@@ -203,11 +215,14 @@
   setupForm("order-form", "order-message", function (form) {
     return {
       _subject: "New print order — " + SITE_CONFIG.businessName,
+      _template: "table",
+      _captcha: "false",
       form_type: "Order",
       print: form.print.value,
       size: form.size.value,
       name: form.name.value,
       email: form.email.value,
+      _replyto: form.email.value,
       phone: form.phone.value || "(not provided)",
       address: form.address.value,
       city: form.city.value,
@@ -221,9 +236,12 @@
   setupForm("contact-form", "contact-message", function (form) {
     return {
       _subject: "Website contact — " + SITE_CONFIG.businessName,
+      _template: "table",
+      _captcha: "false",
       form_type: "Contact",
       name: form.name.value,
       email: form.email.value,
+      _replyto: form.email.value,
       message: form.message.value,
     };
   });
@@ -235,7 +253,8 @@
 
     const notice = form.querySelector(".setup-notice");
     if (notice) {
-      notice.style.display = formspreeReady() ? "none" : "block";
+      // Only show technical notice if email is missing
+      notice.style.display = formsReady() ? "none" : "block";
     }
 
     form.addEventListener("submit", async function (e) {
@@ -245,11 +264,13 @@
         msg.textContent = "";
       }
 
-      if (!formspreeReady()) {
+      if (!formsReady()) {
         if (msg) {
           msg.className = "form-message error";
           msg.textContent =
-            "Email is not set up yet. Open js/config.js and add your Formspree form ID. See README for steps.";
+            "Email is not set up yet. Please write to " +
+            (SITE_CONFIG.yourEmail || "us") +
+            " directly.";
         }
         return;
       }
@@ -263,7 +284,7 @@
 
       try {
         const payload = buildPayload(form);
-        const res = await fetch(formspreeUrl(), {
+        const res = await fetch(formEndpoint(), {
           method: "POST",
           headers: {
             Accept: "application/json",
@@ -272,7 +293,11 @@
           body: JSON.stringify(payload),
         });
 
-        if (res.ok) {
+        const data = await res.json().catch(function () {
+          return {};
+        });
+
+        if (res.ok && data.success !== "false" && !data.error) {
           form.reset();
           if (msg) {
             msg.className = "form-message success";
@@ -280,12 +305,12 @@
               "Thank you! Your message was sent. I'll get back to you soon.";
           }
         } else {
-          const data = await res.json().catch(function () {
-            return {};
-          });
           throw new Error(
-            (data.errors && data.errors[0] && data.errors[0].message) ||
-              "Something went wrong. Please try again or email me directly."
+            data.message ||
+              (data.errors && data.errors[0] && data.errors[0].message) ||
+              "Something went wrong. Please try again or email me directly at " +
+                SITE_CONFIG.yourEmail +
+                "."
           );
         }
       } catch (err) {
@@ -293,7 +318,9 @@
           msg.className = "form-message error";
           msg.textContent =
             err.message ||
-            "Could not send. Please check your connection or email me directly.";
+            "Could not send. Please email me directly at " +
+              SITE_CONFIG.yourEmail +
+              ".";
         }
       } finally {
         if (btn) {
