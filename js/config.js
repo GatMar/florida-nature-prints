@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  EASY SETTINGS — edit this file to customize your website
+ *  EASY SETTINGS  - edit this file to customize your website
  * ============================================================
  *  You only need to change the values below (keep the quotes).
  *  After saving, refresh your browser to see the changes.

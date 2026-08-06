@@ -170,11 +170,11 @@
           return (
             '<option value="' +
             escapeHtml(s.label) +
-            ' — $' +
+            '  - $' +
             s.price +
             '">' +
             escapeHtml(s.label) +
-            " — $" +
+            "  - $" +
             s.price +
             "</option>"
           );
@@ -214,7 +214,7 @@
   // ---- Order form ----
   setupForm("order-form", "order-message", function (form) {
     return {
-      _subject: "New print order — " + SITE_CONFIG.businessName,
+      _subject: "New print order  - " + SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
       form_type: "Order",
@@ -235,7 +235,7 @@
   // ---- Contact form ----
   setupForm("contact-form", "contact-message", function (form) {
     return {
-      _subject: "Website contact — " + SITE_CONFIG.businessName,
+      _subject: "Website contact  - " + SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
       form_type: "Contact",
