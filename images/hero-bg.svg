@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7eb8d4"/>
+      <stop offset="45%" stop-color="#b8d4c8"/>
+      <stop offset="100%" stop-color="#d4e8dc"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a9fc4"/>
+      <stop offset="100%" stop-color="#3d7a56"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <ellipse cx="1200" cy="220" rx="90" ry="90" fill="#f5e6c8" opacity="0.55"/>
+  <path d="M0 520 Q400 460 800 520 T1600 500 L1600 900 L0 900 Z" fill="url(#water)" opacity="0.85"/>
+  <path d="M0 580 Q350 540 700 590 T1600 570 L1600 900 L0 900 Z" fill="#2d6f95" opacity="0.35"/>
+  <path d="M80 620 L95 480 L110 620 Z" fill="#2f5f43" opacity="0.7"/>
+  <path d="M200 640 L220 500 L240 640 Z" fill="#3d7a56" opacity="0.65"/>
+  <path d="M1320 610 L1340 470 L1360 610 Z" fill="#2f5f43" opacity="0.7"/>
+  <path d="M1450 630 L1475 510 L1500 630 Z" fill="#3d7a56" opacity="0.6"/>
+  <ellipse cx="400" cy="700" rx="180" ry="28" fill="#1a435c" opacity="0.12"/>
+</svg>

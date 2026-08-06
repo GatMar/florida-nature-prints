@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gallery — Florida Nature Prints</title>
+    <meta
+      name="description"
+      content="Browse Florida nature photography — ready to order as fine art prints."
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-inner">
+        <a href="index.html" class="logo" data-business-name
+          >Florida <span>Nature</span> Prints</a
+        >
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="shop.html">Shop</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-hero">
+        <div class="container">
+          <h1>Gallery</h1>
+          <p>
+            Explore the collection. Tap “Buy print” on any image to order it in
+            your preferred size.
+          </p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="container">
+          <div class="photo-grid" id="gallery-grid">
+            <!-- Filled by main.js from config.js -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-brand" data-business-name>
+              Florida <span>Nature</span> Prints
+            </div>
+            <p data-tagline>Calm moments from the Sunshine State</p>
+          </div>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-bottom">
+          &copy; <span id="year"></span>
+          <span data-business-name>Florida Nature Prints</span>. All rights
+          reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

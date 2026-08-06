@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shop / Buy Prints — Florida Nature Prints</title>
+    <meta
+      name="description"
+      content="Order Florida nature photography prints in multiple sizes. Simple form and secure payment."
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-inner">
+        <a href="index.html" class="logo" data-business-name
+          >Florida <span>Nature</span> Prints</a
+        >
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="shop.html">Shop</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-hero">
+        <div class="container">
+          <h1>Shop / Buy prints</h1>
+          <p>
+            Choose a print and size, fill in your shipping details, then pay with
+            the secure button below.
+          </p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="container shop-layout">
+          <div class="shop-info">
+            <h2>How ordering works</h2>
+            <p>
+              1) Pick your print and size in the form.<br />
+              2) Enter your name, email, and shipping address.<br />
+              3) Submit the form so I receive your order details by email.<br />
+              4) Click the payment button to pay securely.
+            </p>
+
+            <h2 style="font-size: 1.25rem; margin-top: 1.5rem">Print sizes</h2>
+            <ul class="size-list" id="size-list">
+              <!-- Filled by main.js -->
+            </ul>
+            <p style="font-size: 0.9rem; color: var(--text-soft)">
+              Prices are for unframed fine art prints. Shipping is calculated
+              after your order (or included — update this text in
+              <code>shop.html</code> if you prefer).
+            </p>
+
+            <div class="payment-box">
+              <h3>Pay with Stripe</h3>
+              <p>
+                After you submit the order form, use this secure payment link.
+                (You can replace the link anytime in <code>js/config.js</code>.)
+              </p>
+              <a
+                id="stripe-payment-btn"
+                class="btn btn-payment"
+                href="https://buy.stripe.com/test_REPLACE_WITH_YOUR_LINK"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Pay securely with Stripe
+              </a>
+              <p class="payment-note">
+                Tip: later you can swap this for PayPal, Venmo, or another link —
+                just change <code>stripePaymentLink</code> in
+                <code>js/config.js</code>.
+              </p>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <h2>Order form</h2>
+            <p class="form-intro">
+              I’ll receive an email with everything below so I can prepare and
+              ship your print.
+            </p>
+
+            <div id="order-message" class="form-message" role="status"></div>
+
+            <form id="order-form" novalidate>
+              <div class="setup-notice" style="display: none">
+                Email not connected yet. Add your free Formspree form ID in
+                <code>js/config.js</code> (see the README). Orders won’t email
+                until that’s done.
+              </div>
+
+              <div class="form-group">
+                <label for="order-print">Which print?</label>
+                <select id="order-print" name="print" required>
+                  <option value="">Choose a print…</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="order-size">Print size</label>
+                <select id="order-size" name="size" required>
+                  <option value="">Choose a size…</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="order-name">Full name</label>
+                <input
+                  id="order-name"
+                  name="name"
+                  type="text"
+                  autocomplete="name"
+                  required
+                  placeholder="Jane Smith"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="order-email">Email</label>
+                <input
+                  id="order-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                  placeholder="you@email.com"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="order-phone"
+                  >Phone <span class="hint">(optional)</span></label
+                >
+                <input
+                  id="order-phone"
+                  name="phone"
+                  type="tel"
+                  autocomplete="tel"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="order-address">Shipping street address</label>
+                <input
+                  id="order-address"
+                  name="address"
+                  type="text"
+                  autocomplete="street-address"
+                  required
+                  placeholder="123 Palm Ave"
+                />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="order-city">City</label>
+                  <input
+                    id="order-city"
+                    name="city"
+                    type="text"
+                    autocomplete="address-level2"
+                    required
+                    placeholder="Tampa"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="order-state">State</label>
+                  <input
+                    id="order-state"
+                    name="state"
+                    type="text"
+                    autocomplete="address-level1"
+                    required
+                    placeholder="FL"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="order-zip">ZIP code</label>
+                <input
+                  id="order-zip"
+                  name="zip"
+                  type="text"
+                  autocomplete="postal-code"
+                  required
+                  placeholder="33601"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="order-notes"
+                  >Notes <span class="hint">(optional)</span></label
+                >
+                <textarea
+                  id="order-notes"
+                  name="notes"
+                  placeholder="Gift message, framing questions, etc."
+                ></textarea>
+              </div>
+
+              <button class="btn btn-primary btn-block" type="submit">
+                Submit order details
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-brand" data-business-name>
+              Florida <span>Nature</span> Prints
+            </div>
+            <p data-tagline>Calm moments from the Sunshine State</p>
+          </div>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-bottom">
+          &copy; <span id="year"></span>
+          <span data-business-name>Florida Nature Prints</span>. All rights
+          reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
