@@ -1,17 +1,21 @@
 /**
- * Gator Life — Pac-Man style Florida swamp maze
- * Original educational game (not affiliated with any trademarked game).
+ * Gator Life — original Florida swamp river adventure
+ * Swim the waterways, climb hills & roads, eat fish, dodge big gators.
+ * (Original design — not affiliated with any trademarked game.)
  */
 (function () {
   "use strict";
 
-  const STORAGE = "gatorLifeProgress_v5_pac";
+  const STORAGE = "gatorLifeProgress_v6_swamp";
   const COLS = 15;
   const ROWS = 19;
   const TILE = 24;
-  const W = COLS * TILE; // 360
-  const H = ROWS * TILE; // 456
+  const W = COLS * TILE;
+  const H = ROWS * TILE;
   const TOTAL_LEVELS = 50;
+  // tile kinds
+  const T = { BLOCK: 1, RIVER: 2, FISH: 3, BIGFISH: 4, ROAD: 5, HILL: 6 };
+
   const DIRS = {
     left: { x: -1, y: 0 },
     right: { x: 1, y: 0 },
@@ -39,11 +43,8 @@
   let pausedForQuiz = false;
   let gatorImg = null;
   let gatorImgReady = false;
-  let touchStart = null;
   const bgImages = [];
-  let bgReady = false;
 
-  // Same gallery photos used on the site (maze plays over these)
   const BG_FILES = [
     "golden-gulf.jpeg",
     "crimson-marsh.jpeg",
@@ -57,50 +58,22 @@
     "storm-lit-sunset.jpeg",
     "evening-shore.jpeg",
     "beach-horizon-glow.jpeg",
-    "footprints-at-sunset.jpeg",
-    "orange-afterglow.jpeg",
-    "pink-bay-clouds.jpg",
-    "sky-on-fire.jpeg",
-    "sun-over-the-gulf.jpeg",
-    "heron-silhouette.jpeg",
     "gator-in-the-green.jpeg",
     "great-blue-heron.jpeg",
+    "orange-afterglow.jpeg",
+    "sky-on-fire.jpeg",
   ];
 
   const $ = function (s) {
     return document.querySelector(s);
   };
 
-  function loadBackgrounds() {
-    let left = BG_FILES.length;
-    if (!left) {
-      bgReady = true;
-      return;
-    }
-    BG_FILES.forEach(function (file) {
-      const img = new Image();
-      img.onload = img.onerror = function () {
-        if (img.naturalWidth) bgImages.push(img);
-        left -= 1;
-        if (left <= 0) bgReady = true;
-      };
-      img.src = "images/prints/" + file;
-    });
-  }
-
-  function bgForLevel(idx) {
-    if (!bgImages.length) return null;
-    return bgImages[idx % bgImages.length];
-  }
-
-  /* ---------- Haptics ---------- */
   function haptic(pattern) {
     try {
       if (navigator.vibrate) navigator.vibrate(pattern);
     } catch (e) {}
   }
 
-  /* ---------- Save / load ---------- */
   function load() {
     try {
       const d = JSON.parse(localStorage.getItem(STORAGE) || "{}");
@@ -131,7 +104,6 @@
       const el = $("#screen-" + k);
       if (el) el.classList.toggle("active", k === name);
     });
-    // Mobile: lock page chrome / bounce while playing
     if (document.body) {
       document.body.classList.toggle("is-playing", name === "play");
     }
@@ -156,287 +128,279 @@
 
   function stageName(i) {
     if (i < 10) return "Hatchling";
-    if (i < 20) return "Juvenile";
-    if (i < 35) return "Sub-adult";
-    return "Adult";
+    if (i < 20) return "River Pup";
+    if (i < 35) return "Swamp Scout";
+    return "Marsh Ace";
   }
-
-  /* ---------- Classic Pac-Man style maze templates ---------- */
-  // # wall  . path  (pellets filled later)  15 wide × 19 tall
-  // Designed as TOP-DOWN corridors (not platform terraces)
-  const MAZE_TEMPLATES = [
-    [
-      "###############",
-      "#.............#",
-      "#.###.#.###.#.#",
-      "#o#...#...#...#",
-      "#.#.#####.#.###",
-      "#.#.......#...#",
-      "#.#####.#.###.#",
-      "#.....#.#.....#",
-      "###.#.#.#.#####",
-      "....#.#.#.....#",
-      "###.#.###.#####",
-      "#.....#.......#",
-      "#.###.#.#####.#",
-      "#o#...#.....#.#",
-      "#.#.#######.#.#",
-      "#.#.........#.#",
-      "#.#####.###.#.#",
-      "#............o#",
-      "###############",
-    ],
-    [
-      "###############",
-      "#......#......#",
-      "#.####.#.####.#",
-      "#o...........o#",
-      "###.#.#####.###",
-      "#...#...#.....#",
-      "#.#####.#.###.#",
-      "#.#.....#...#.#",
-      "#.#.###.###.#.#",
-      "....#.....#....",
-      "#.#.###.###.#.#",
-      "#.#...#.....#.#",
-      "#.###.#.#####.#",
-      "#.....#...#...#",
-      "###.#####.#.###",
-      "#o...........o#",
-      "#.####.#.####.#",
-      "#......#......#",
-      "###############",
-    ],
-    [
-      "###############",
-      "#.............#",
-      "#.##.#####.##.#",
-      "#o#.........#o#",
-      "#.#.##.#.##.#.#",
-      "#...#..#..#...#",
-      "###.#.###.#.###",
-      "#...#.....#...#",
-      "#.#.#######.#.#",
-      "....#.....#....",
-      "#.#.#######.#.#",
-      "#...#.....#...#",
-      "###.#.###.#.###",
-      "#...#..#..#...#",
-      "#.#.##.#.##.#.#",
-      "#o#.........#o#",
-      "#.##.#####.##.#",
-      "#.............#",
-      "###############",
-    ],
-  ];
 
   function seeded(idx, n) {
     const x = Math.sin(idx * 12.9898 + n * 78.233) * 43758.5453;
     return x - Math.floor(x);
   }
 
-  function templateToGrid(rows) {
-    const g = [];
-    for (let y = 0; y < ROWS; y++) {
-      g[y] = [];
-      const line = rows[y] || "###############";
-      for (let x = 0; x < COLS; x++) {
-        const ch = line[x] || "#";
-        if (ch === "#") g[y][x] = 1;
-        else if (ch === "o") g[y][x] = 3;
-        else g[y][x] = 0; // path, pellets added next
-      }
-    }
-    return g;
-  }
-
-  function mirrorH(rows) {
-    return rows.map(function (line) {
-      return line.split("").reverse().join("");
+  function loadBackgrounds() {
+    BG_FILES.forEach(function (file) {
+      const img = new Image();
+      img.onload = function () {
+        if (img.naturalWidth) bgImages.push(img);
+      };
+      img.src = "images/prints/" + file;
     });
   }
 
-  function buildMaze(idx) {
-    const base = MAZE_TEMPLATES[idx % MAZE_TEMPLATES.length];
-    let rows = base.slice();
-    if (Math.floor(idx / MAZE_TEMPLATES.length) % 2 === 1) {
-      rows = mirrorH(rows);
+  function bgForLevel(idx) {
+    if (!bgImages.length) return null;
+    return bgImages[idx % bgImages.length];
+  }
+
+  function loadGator() {
+    gatorImg = new Image();
+    gatorImg.onload = function () {
+      gatorImgReady = true;
+    };
+    gatorImg.src = "images/game/gator-sprite.png?v=6";
+  }
+
+  function isWalkable(cell) {
+    return (
+      cell === T.RIVER ||
+      cell === T.FISH ||
+      cell === T.BIGFISH ||
+      cell === T.ROAD ||
+      cell === T.HILL
+    );
+  }
+
+  function isBlocked(g, x, y) {
+    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
+    return g[y][x] === T.BLOCK;
+  }
+
+  /* ---------- Swirly river labyrinth generation ---------- */
+  function buildLevel(idx) {
+    // Start solid land
+    const g = [];
+    for (let y = 0; y < ROWS; y++) {
+      g[y] = [];
+      for (let x = 0; x < COLS; x++) g[y][x] = T.BLOCK;
     }
-    // Light per-level tweak: flip a few interior wall/path cells (keep border)
-    const g = templateToGrid(rows);
-    for (let i = 0; i < 6 + (idx % 5); i++) {
-      const x = 2 + Math.floor(seeded(idx, i) * (COLS - 4));
-      const y = 2 + Math.floor(seeded(idx, i + 40) * (ROWS - 4));
-      // Don't touch center house band or tunnels
-      if (y === Math.floor(ROWS / 2)) continue;
-      if (y >= 8 && y <= 10 && x >= 5 && x <= 9) continue;
-      if (g[y][x] === 1 && seeded(idx, i + 70) > 0.55) g[y][x] = 0;
-      else if (g[y][x] === 0 && seeded(idx, i + 90) > 0.72) {
-        // only place wall if neighbors keep connectivity-ish
-        let openN = 0;
-        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
-          const nx = x + d[0];
-          const ny = y + d[1];
-          if (nx > 0 && ny > 0 && nx < COLS - 1 && ny < ROWS - 1 && g[ny][nx] !== 1)
-            openN++;
-        });
-        if (openN >= 3) g[y][x] = 1;
+
+    // Carve several winding river channels (meandering paths)
+    const channels = 3 + (idx % 3);
+    for (let c = 0; c < channels; c++) {
+      let x = 1 + Math.floor(seeded(idx, c * 3) * (COLS - 2));
+      let y = c === 0 ? ROWS - 2 : 1 + Math.floor(seeded(idx, c * 7) * (ROWS - 2));
+      let dir = c % 2 === 0 ? 0 : 1; // 0 rightish, 1 downish
+      const steps = 40 + Math.floor(seeded(idx, c + 20) * 50);
+      for (let s = 0; s < steps; s++) {
+        g[y][x] = T.RIVER;
+        // widen river slightly
+        if (x + 1 < COLS - 1 && seeded(idx, s + c * 11) > 0.45) g[y][x + 1] = T.RIVER;
+        if (y + 1 < ROWS - 1 && seeded(idx, s + c * 13) > 0.55) g[y + 1][x] = T.RIVER;
+
+        // meander
+        const r = seeded(idx, s * 3 + c * 17);
+        if (r < 0.28) dir = (dir + 1) % 4;
+        else if (r < 0.4) dir = (dir + 3) % 4;
+        const d = [
+          [1, 0],
+          [0, 1],
+          [-1, 0],
+          [0, -1],
+        ][dir];
+        let nx = x + d[0];
+        let ny = y + d[1];
+        if (nx < 1 || nx >= COLS - 1 || ny < 1 || ny >= ROWS - 1) {
+          dir = (dir + 1) % 4;
+          continue;
+        }
+        x = nx;
+        y = ny;
       }
     }
 
-    // Ghost house (open center box) — classic Pac layout
-    for (let y = 8; y <= 10; y++) {
-      for (let x = 5; x <= 9; x++) g[y][x] = 0;
-    }
-    // House walls ring
-    for (let x = 5; x <= 9; x++) {
-      if (x !== 7) g[7][x] = 1;
-      g[11][x] = 1;
-    }
-    g[8][5] = 1;
-    g[9][5] = 1;
-    g[10][5] = 1;
-    g[8][9] = 1;
-    g[9][9] = 1;
-    g[10][9] = 1;
-    g[7][7] = 0; // door
-
-    // Side tunnels always open
-    const midY = Math.floor(ROWS / 2);
-    g[midY][0] = 0;
-    g[midY][COLS - 1] = 0;
-    g[midY][1] = 0;
-    g[midY][COLS - 2] = 0;
-
-    // Player start bottom center-ish
-    const start = { x: 7, y: ROWS - 2 };
-    // Ensure path at start
-    g[start.y][start.x] = 0;
-    g[start.y][start.x - 1] = 0;
-    g[start.y][start.x + 1] = 0;
-    g[start.y - 1][start.x] = 0;
-
-    // Connectivity fix
-    const reach = flood(g, start.x, start.y);
+    // Connect channels: carve a few arcs between random river cells
+    const riverCells = [];
     for (let y = 1; y < ROWS - 1; y++) {
       for (let x = 1; x < COLS - 1; x++) {
-        if (g[y][x] === 1) continue;
+        if (g[y][x] === T.RIVER) riverCells.push({ x: x, y: y });
+      }
+    }
+    for (let i = 0; i < 8; i++) {
+      if (riverCells.length < 2) break;
+      const a = riverCells[Math.floor(seeded(idx, 100 + i) * riverCells.length)];
+      const b = riverCells[Math.floor(seeded(idx, 200 + i) * riverCells.length)];
+      let cx = a.x;
+      let cy = a.y;
+      let guard = 0;
+      while ((cx !== b.x || cy !== b.y) && guard++ < 30) {
+        g[cy][cx] = T.RIVER;
+        if (cx !== b.x && (guard % 2 === 0 || cy === b.y)) cx += cx < b.x ? 1 : -1;
+        else if (cy !== b.y) cy += cy < b.y ? 1 : -1;
+      }
+    }
+
+    // Roads crossing scenery (horizontal strips of walkable path)
+    const roadRows = [4, 10, 15].filter(function (_, i) {
+      return seeded(idx, 300 + i) > 0.25 || i === 1;
+    });
+    roadRows.forEach(function (ry, i) {
+      if (ry >= ROWS - 1) return;
+      for (let x = 1; x < COLS - 1; x++) {
+        // Road only where it bridges land or continues river network
+        if (g[ry][x] === T.BLOCK || g[ry][x] === T.RIVER) {
+          // leave occasional gaps for swirl look
+          if (seeded(idx, 400 + i * 20 + x) > 0.12) g[ry][x] = T.ROAD;
+        }
+      }
+    });
+
+    // Hills — raised mounds you can climb onto
+    const hillCount = 4 + (idx % 4);
+    for (let i = 0; i < hillCount; i++) {
+      const hx = 2 + Math.floor(seeded(idx, 500 + i) * (COLS - 4));
+      const hy = 2 + Math.floor(seeded(idx, 600 + i) * (ROWS - 4));
+      for (let dy = 0; dy < 2; dy++) {
+        for (let dx = 0; dx < 2; dx++) {
+          const x = hx + dx;
+          const y = hy + dy;
+          if (x > 0 && y > 0 && x < COLS - 1 && y < ROWS - 1) {
+            g[y][x] = T.HILL;
+          }
+        }
+      }
+      // ensure access from a river neighbor
+      if (hx > 1) g[hy][hx - 1] = g[hy][hx - 1] === T.BLOCK ? T.RIVER : g[hy][hx - 1];
+    }
+
+    // Ensure border remains blocked (swamp edge)
+    for (let x = 0; x < COLS; x++) {
+      g[0][x] = T.BLOCK;
+      g[ROWS - 1][x] = T.BLOCK;
+    }
+    for (let y = 0; y < ROWS; y++) {
+      g[y][0] = T.BLOCK;
+      g[y][COLS - 1] = T.BLOCK;
+    }
+
+    // Start position: bottom river
+    let start = { x: 2, y: ROWS - 3 };
+    for (let y = ROWS - 2; y >= 1; y--) {
+      for (let x = 1; x < COLS - 1; x++) {
+        if (isWalkable(g[y][x])) {
+          start = { x: x, y: y };
+          y = 0;
+          break;
+        }
+      }
+    }
+    // Force open start pocket
+    g[start.y][start.x] = T.RIVER;
+    if (start.x + 1 < COLS - 1) g[start.y][start.x + 1] = T.RIVER;
+
+    // Connectivity flood from start — open blocked pockets
+    const reach = floodWalk(g, start.x, start.y);
+    for (let y = 1; y < ROWS - 1; y++) {
+      for (let x = 1; x < COLS - 1; x++) {
+        if (!isWalkable(g[y][x])) continue;
         if (reach[y][x]) continue;
         let cx = x;
         let cy = y;
         let guard = 0;
-        while (!reach[cy][cx] && guard++ < 40) {
+        while (!reach[cy][cx] && guard++ < 50) {
           if (cx > start.x) cx--;
           else if (cx < start.x) cx++;
           else if (cy > start.y) cy--;
           else if (cy < start.y) cy++;
-          g[cy][cx] = 0;
+          if (g[cy][cx] === T.BLOCK) g[cy][cx] = T.RIVER;
           reach[cy][cx] = true;
         }
       }
     }
 
-    // Pellets on paths (not in ghost house)
-    let pellets = 0;
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        if (g[y][x] === 1) continue;
-        if (y >= 8 && y <= 10 && x >= 5 && x <= 9) {
-          g[y][x] = 0;
-          continue;
+    // Scatter fish on river tiles
+    let fishLeft = 0;
+    for (let y = 1; y < ROWS - 1; y++) {
+      for (let x = 1; x < COLS - 1; x++) {
+        if (g[y][x] !== T.RIVER) continue;
+        if (x === start.x && y === start.y) continue;
+        const r = seeded(idx, x * 31 + y * 17);
+        if (r > 0.38) {
+          g[y][x] = T.FISH;
+          fishLeft++;
+        } else if (r > 0.33) {
+          g[y][x] = T.BIGFISH;
+          fishLeft++;
         }
-        if (g[y][x] === 3) {
-          pellets++;
-          continue;
-        }
-        // skip pure tunnel portals
-        if (y === midY && (x === 0 || x === COLS - 1)) {
-          g[y][x] = 0;
-          continue;
-        }
-        g[y][x] = 2;
-        pellets++;
       }
     }
-    // Guarantee 4 power pellets if missing
-    const powerSpots = [
-      [1, 1],
-      [COLS - 2, 1],
-      [1, ROWS - 2],
-      [COLS - 2, ROWS - 2],
-    ];
-    powerSpots.forEach(function (s) {
-      let x = s[0];
-      let y = s[1];
-      if (g[y][x] === 1) {
-        // nudge inward
-        x = x < COLS / 2 ? x + 1 : x - 1;
-        y = y < ROWS / 2 ? y + 1 : y - 1;
-      }
-      if (g[y][x] !== 1) {
-        if (g[y][x] !== 3) {
-          g[y][x] = 3;
-          pellets++;
+    // Guarantee some fish
+    if (fishLeft < 12) {
+      for (let y = 1; y < ROWS - 1 && fishLeft < 16; y++) {
+        for (let x = 1; x < COLS - 1 && fishLeft < 16; x++) {
+          if (g[y][x] === T.RIVER && !(x === start.x && y === start.y)) {
+            g[y][x] = T.FISH;
+            fishLeft++;
+          }
         }
-      }
-    });
-
-    // recount
-    pellets = 0;
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        if (g[y][x] === 2 || g[y][x] === 3) pellets++;
       }
     }
 
-    const enemyCount = Math.min(6, 2 + Math.floor(idx / 5));
-    const enemies = [];
-    const kinds = ["🐦", "🐍", "🦝", "🚤", "🦅", "🐗"];
-    const colors = ["#ff6b8a", "#7dcea0", "#f0c040", "#6eb5ff", "#c77dff", "#ff9f43"];
-    for (let i = 0; i < enemyCount; i++) {
-      const hx = 6 + (i % 3);
-      const hy = 9;
-      enemies.push({
-        x: hx,
-        y: hy,
-        px: (hx + 0.5) * TILE,
-        py: (hy + 0.5) * TILE,
+    // Big gator obstacles
+    const bigCount = Math.min(5, 1 + Math.floor(idx / 6));
+    const bigs = [];
+    const spots = [];
+    for (let y = 1; y < ROWS - 1; y++) {
+      for (let x = 1; x < COLS - 1; x++) {
+        if (isWalkable(g[y][x]) && Math.abs(x - start.x) + Math.abs(y - start.y) > 5) {
+          spots.push({ x: x, y: y });
+        }
+      }
+    }
+    for (let i = 0; i < bigCount; i++) {
+      if (!spots.length) break;
+      const si = Math.floor(seeded(idx, 900 + i) * spots.length);
+      const sp = spots.splice(si, 1)[0];
+      bigs.push({
+        x: sp.x,
+        y: sp.y,
+        px: (sp.x + 0.5) * TILE,
+        py: (sp.y + 0.5) * TILE,
         dir: DIR_KEYS[i % 4],
-        kind: kinds[i % kinds.length],
-        color: colors[i % colors.length],
-        speed: 1.35 + Math.min(1.1, idx * 0.03) + i * 0.05,
-        scatter: i % 2 === 0,
-        homeX: hx,
-        homeY: hy,
-        eaten: false,
-        release: 1.0 + i * 1.0,
+        speed: 1.05 + Math.min(0.9, idx * 0.025) + i * 0.08,
+        phase: i * 1.7,
+        wiggle: 0,
       });
     }
 
     return {
       grid: g,
-      pelletsLeft: pellets,
+      fishLeft: fishLeft,
       player: {
         x: start.x,
         y: start.y,
         px: (start.x + 0.5) * TILE,
         py: (start.y + 0.5) * TILE,
-        dir: "left",
-        nextDir: "left",
-        speed: 2.2,
-        mouth: 0,
+        dir: "right",
+        nextDir: "right",
+        speed: 2.05,
+        bob: 0,
+        onLand: false,
       },
-      enemies: enemies,
-      power: 0,
+      bigs: bigs,
       inv: 0,
       time: 0,
       won: false,
       flash: 0,
+      splat: 0,
+      splatX: 0,
+      splatY: 0,
+      ouch: 0,
       idx: idx,
     };
   }
 
-  function flood(g, sx, sy) {
+  function floodWalk(g, sx, sy) {
     const seen = [];
     for (let y = 0; y < ROWS; y++) {
       seen[y] = [];
@@ -446,359 +410,63 @@
     seen[sy][sx] = true;
     while (q.length) {
       const c = q.shift();
-      for (let i = 0; i < DIR_KEYS.length; i++) {
-        const d = DIRS[DIR_KEYS[i]];
-        let nx = c.x + d.x;
-        let ny = c.y + d.y;
-        // wrap tunnels
-        if (ny === Math.floor(ROWS / 2)) {
-          if (nx < 0) nx = COLS - 1;
-          if (nx >= COLS) nx = 0;
-        }
-        if (ny < 0 || ny >= ROWS || nx < 0 || nx >= COLS) continue;
-        if (g[ny][nx] === 1) continue;
-        if (seen[ny][nx]) continue;
+      DIR_KEYS.forEach(function (k) {
+        const d = DIRS[k];
+        const nx = c.x + d.x;
+        const ny = c.y + d.y;
+        if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return;
+        if (!isWalkable(g[ny][nx])) return;
+        if (seen[ny][nx]) return;
         seen[ny][nx] = true;
         q.push({ x: nx, y: ny });
-      }
+      });
     }
     return seen;
-  }
-
-  function isWall(g, x, y) {
-    // tunnel wrap on middle row
-    if (y === Math.floor(ROWS / 2)) {
-      if (x < 0 || x >= COLS) return false;
-    }
-    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
-    return g[y][x] === 1;
   }
 
   function tileCenter(tx, ty) {
     return { x: (tx + 0.5) * TILE, y: (ty + 0.5) * TILE };
   }
 
-  /* ---------- Drawing (Pac-Man look over gallery photo) ---------- */
-  function wallAt(g, x, y) {
-    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
-    return g[y][x] === 1;
-  }
-
-  function drawPhotoBackground() {
-    const img = bgForLevel(world.idx);
-    if (img) {
-      const iw = img.naturalWidth || img.width;
-      const ih = img.naturalHeight || img.height;
-      const scale = Math.max(W / iw, H / ih);
-      const dw = iw * scale;
-      const dh = ih * scale;
-      const dx = (W - dw) / 2;
-      const dy = (H - dh) / 2;
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(img, dx, dy, dw, dh);
-    } else {
-      ctx.fillStyle = "#0a1a12";
-      ctx.fillRect(0, 0, W, H);
-    }
-    // Darken so neon maze + dots read clearly
-    ctx.fillStyle = "rgba(4, 12, 18, 0.52)";
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  function drawMaze() {
-    const g = world.grid;
-    const t = world.time;
-
-    drawPhotoBackground();
-
-    // Soft path tint only (not solid platforms)
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        if (g[y][x] === 1) continue;
-        ctx.fillStyle = "rgba(0, 20, 40, 0.22)";
-        ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-      }
-    }
-
-    // Classic Pac-Man style wall outlines (rounded corridors)
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    const wallColor = world.power > 0 ? "#9ec9ff" : "#3ec6ff";
-    const wallOuter = world.power > 0 ? "#cfe6ff" : "#7de0ff";
-
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        if (g[y][x] !== 1) continue;
-        const px = x * TILE;
-        const py = y * TILE;
-        const m = 3.5;
-        // Fill very subtle so photo still shows through walls
-        ctx.fillStyle = "rgba(10, 40, 70, 0.35)";
-        ctx.beginPath();
-        ctx.roundRect
-          ? ctx.roundRect(px + m, py + m, TILE - m * 2, TILE - m * 2, 5)
-          : ctx.rect(px + m, py + m, TILE - m * 2, TILE - m * 2);
-        ctx.fill();
-
-        // Draw edges only where wall meets path (classic maze lines)
-        ctx.strokeStyle = wallOuter;
-        ctx.lineWidth = 2.4;
-        ctx.beginPath();
-        // top
-        if (!wallAt(g, x, y - 1)) {
-          ctx.moveTo(px + m, py + m);
-          ctx.lineTo(px + TILE - m, py + m);
-        }
-        // bottom
-        if (!wallAt(g, x, y + 1)) {
-          ctx.moveTo(px + m, py + TILE - m);
-          ctx.lineTo(px + TILE - m, py + TILE - m);
-        }
-        // left
-        if (!wallAt(g, x - 1, y)) {
-          ctx.moveTo(px + m, py + m);
-          ctx.lineTo(px + m, py + TILE - m);
-        }
-        // right
-        if (!wallAt(g, x + 1, y)) {
-          ctx.moveTo(px + TILE - m, py + m);
-          ctx.lineTo(px + TILE - m, py + TILE - m);
-        }
-        ctx.stroke();
-
-        // Inner neon edge
-        ctx.strokeStyle = wallColor;
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-      }
-    }
-
-    // Pellets + power dots
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        const cell = g[y][x];
-        const cx = x * TILE + TILE / 2;
-        const cy = y * TILE + TILE / 2;
-        if (cell === 2) {
-          ctx.fillStyle = "#ffe566";
-          ctx.shadowColor = "rgba(255, 230, 100, 0.7)";
-          ctx.shadowBlur = 4;
-          ctx.beginPath();
-          ctx.arc(cx, cy, 2.4, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        } else if (cell === 3) {
-          const pulse = 5.5 + Math.sin(t * 7 + x + y) * 1.4;
-          ctx.fillStyle = "#fff8dc";
-          ctx.shadowColor = "rgba(255, 255, 180, 0.9)";
-          ctx.shadowBlur = 10;
-          ctx.beginPath();
-          ctx.arc(cx, cy, pulse, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-      }
-    }
-
-    // Ghost house — pink door like classic Pac-Man
-    ctx.strokeStyle = "rgba(255, 160, 200, 0.85)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(5 * TILE + 4, 7 * TILE + 4, 5 * TILE - 8, 4 * TILE - 8);
-    ctx.fillStyle = "rgba(255, 120, 180, 0.9)";
-    ctx.fillRect(7 * TILE + 2, 7 * TILE + 2, TILE - 4, 4);
-  }
-
-  function drawPlayer() {
-    const p = world.player;
-    const powered = world.power > 0;
-    ctx.save();
-    ctx.translate(p.px, p.py);
-    const ang =
-      p.dir === "right"
-        ? 0
-        : p.dir === "down"
-          ? Math.PI / 2
-          : p.dir === "left"
-            ? Math.PI
-            : -Math.PI / 2;
-    ctx.rotate(ang);
-
-    if (world.inv > 0 && Math.floor(world.time * 12) % 2 === 0) {
-      ctx.globalAlpha = 0.35;
-    }
-
-    // Pac-Man style chomp body (reads top-down, not climbing)
-    const mouth = 0.28 + Math.abs(Math.sin(p.mouth)) * 0.32;
-    ctx.fillStyle = powered ? "#b8ff6a" : "#3ddc84";
-    ctx.beginPath();
-    ctx.arc(0, 0, TILE * 0.4, mouth, Math.PI * 2 - mouth, false);
-    ctx.lineTo(0, 0);
-    ctx.closePath();
-    ctx.fill();
-    // Eye
-    ctx.fillStyle = "#0a2010";
-    ctx.beginPath();
-    ctx.arc(TILE * 0.06, -TILE * 0.16, 2.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Tiny gator face cue inside the chomp circle
-    if (gatorImgReady && gatorImg) {
-      ctx.save();
-      ctx.globalAlpha = 0.55;
-      const s = TILE * 0.55;
-      ctx.drawImage(gatorImg, -s * 0.35, -s * 0.45, s * 0.7, s * 0.7);
-      ctx.restore();
-    }
-
-    if (powered) {
-      ctx.strokeStyle = "rgba(255, 255, 120, 0.85)";
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.arc(0, 0, TILE * 0.52 + Math.sin(world.time * 12) * 2, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    ctx.restore();
-  }
-
-  function drawEnemies() {
-    world.enemies.forEach(function (e) {
-      if (e.eaten && world.power <= 0) {
-        // eyes only returning home
-        ctx.fillStyle = "#fff";
-        ctx.beginPath();
-        ctx.arc(e.px - 4, e.py - 2, 3, 0, Math.PI * 2);
-        ctx.arc(e.px + 4, e.py - 2, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#223";
-        ctx.beginPath();
-        ctx.arc(e.px - 3, e.py - 2, 1.2, 0, Math.PI * 2);
-        ctx.arc(e.px + 5, e.py - 2, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-        return;
-      }
-      const scared = world.power > 0 && !e.eaten;
-      const r = TILE * 0.4;
-      ctx.fillStyle = scared
-        ? world.power < 2 && Math.floor(world.time * 8) % 2
-          ? "#fff"
-          : "#4a6cff"
-        : e.color;
-      // Ghost body
-      ctx.beginPath();
-      ctx.arc(e.px, e.py - 2, r, Math.PI, 0);
-      ctx.lineTo(e.px + r, e.py + r * 0.7);
-      for (let i = 0; i < 3; i++) {
-        const fx = e.px + r - (i + 0.5) * ((2 * r) / 3);
-        ctx.quadraticCurveTo(
-          fx + r / 6,
-          e.py + r * 0.2,
-          fx,
-          e.py + r * 0.7
-        );
-      }
-      ctx.closePath();
-      ctx.fill();
-      // Face / emoji
-      ctx.font = scared ? "10px serif" : "13px serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(scared ? "😰" : e.kind, e.px, e.py - 1);
-    });
-  }
-
-  function drawHudStrip() {
-    ctx.fillStyle = "rgba(5, 20, 12, 0.75)";
-    ctx.fillRect(0, 0, W, 18);
-    ctx.fillStyle = "#e8f5ec";
-    ctx.font = "bold 11px system-ui,sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText(
-      "Lv " +
-        (world.idx + 1) +
-        "  ·  " +
-        stageName(world.idx) +
-        "  ·  Snacks " +
-        world.pelletsLeft,
-      8,
-      12
-    );
-    if (world.power > 0) {
-      ctx.fillStyle = "#ffe566";
-      ctx.fillText("POWER " + world.power.toFixed(1) + "s", W - 100, 12);
-    }
-  }
-
-  function drawWorld() {
-    drawMaze();
-    drawEnemies();
-    drawPlayer();
-    drawHudStrip();
-    if (world.flash > 0) {
-      ctx.fillStyle = "rgba(255,255,200," + Math.min(0.45, world.flash) + ")";
-      ctx.fillRect(0, 0, W, H);
-    }
-  }
-
-  /* ---------- Movement helpers ---------- */
   function nearCenter(px, py, tx, ty) {
     const c = tileCenter(tx, ty);
-    return Math.abs(px - c.x) < 2.2 && Math.abs(py - c.y) < 2.2;
+    return Math.abs(px - c.x) < 2.4 && Math.abs(py - c.y) < 2.4;
   }
 
-  function trySetDir(entity, dir, isPlayer) {
+  function trySetDir(entity, dir) {
     const d = DIRS[dir];
     if (!d) return false;
-    // Can turn if next tile is free (from current tile)
-    const tx = entity.x;
-    const ty = entity.y;
-    let nx = tx + d.x;
-    let ny = ty + d.y;
-    if (ty === Math.floor(ROWS / 2)) {
-      if (nx < 0) nx = COLS - 1;
-      if (nx >= COLS) nx = 0;
-    }
-    if (isWall(world.grid, nx, ny)) return false;
+    const nx = entity.x + d.x;
+    const ny = entity.y + d.y;
+    if (isBlocked(world.grid, nx, ny)) return false;
     entity.dir = dir;
     return true;
   }
 
-  function moveEntity(entity, speed, isPlayer) {
-    // Snap toward grid center on axis not moving
-    const d = DIRS[entity.dir] || DIRS.left;
+  function moveEntity(entity, speed) {
+    const d = DIRS[entity.dir] || DIRS.right;
     const c = tileCenter(entity.x, entity.y);
 
-    // Queued turn for player at centers
-    if (isPlayer && entity.nextDir && entity.nextDir !== entity.dir) {
+    if (entity.nextDir && entity.nextDir !== entity.dir) {
       if (nearCenter(entity.px, entity.py, entity.x, entity.y)) {
-        if (trySetDir(entity, entity.nextDir, true)) {
+        if (trySetDir(entity, entity.nextDir)) {
           entity.px = c.x;
           entity.py = c.y;
         }
       }
     }
 
-    // If about to hit wall, stop at center (player) or pick new dir (enemy)
-    let nx = entity.x + d.x;
-    let ny = entity.y + d.y;
-    if (entity.y === Math.floor(ROWS / 2)) {
-      if (nx < -1) nx = COLS;
-      if (nx > COLS) nx = -1;
-    }
-    const blocked = isWall(world.grid, nx, ny);
-    if (blocked) {
-      // approach center then stop / turn
-      const ax = d.x !== 0;
-      if (ax) {
+    const nx = entity.x + d.x;
+    const ny = entity.y + d.y;
+    if (isBlocked(world.grid, nx, ny)) {
+      if (d.x !== 0) {
         if ((d.x > 0 && entity.px >= c.x) || (d.x < 0 && entity.px <= c.x)) {
           entity.px = c.x;
-          if (!isPlayer) pickEnemyDir(entity);
           return;
         }
       } else {
         if ((d.y > 0 && entity.py >= c.y) || (d.y < 0 && entity.py <= c.y)) {
           entity.py = c.y;
-          if (!isPlayer) pickEnemyDir(entity);
           return;
         }
       }
@@ -807,164 +475,445 @@
     entity.px += d.x * speed;
     entity.py += d.y * speed;
 
-    // Update tile when crossing midlines
-    const newTx = Math.floor(entity.px / TILE);
-    const newTy = Math.floor(entity.py / TILE);
-    // Tunnel wrap
-    if (entity.py >= Math.floor(ROWS / 2) * TILE && entity.py < (Math.floor(ROWS / 2) + 1) * TILE) {
-      if (entity.px < 0) entity.px += W;
-      if (entity.px >= W) entity.px -= W;
+    const tx = Math.floor(entity.px / TILE);
+    const ty = Math.floor(entity.py / TILE);
+    if (tx >= 0 && ty >= 0 && tx < COLS && ty < ROWS && !isBlocked(world.grid, tx, ty)) {
+      entity.x = tx;
+      entity.y = ty;
     }
-    const tx2 = ((Math.floor(entity.px / TILE) % COLS) + COLS) % COLS;
-    const ty2 = Math.floor(entity.py / TILE);
-    if (ty2 >= 0 && ty2 < ROWS && !isWall(world.grid, tx2, ty2)) {
-      entity.x = tx2;
-      entity.y = ty2;
-    }
-
-    // Keep on path centers for opposite axis
-    if (d.x !== 0) entity.py += (c.y - entity.py) * 0.35;
-    if (d.y !== 0) entity.px += (c.x - entity.px) * 0.35;
+    if (d.x !== 0) entity.py += (c.y - entity.py) * 0.32;
+    if (d.y !== 0) entity.px += (c.x - entity.px) * 0.32;
   }
 
-  function pickEnemyDir(e) {
-    const options = [];
-    const reverse = {
-      left: "right",
-      right: "left",
-      up: "down",
-      down: "up",
-    };
-    DIR_KEYS.forEach(function (dir) {
-      if (dir === reverse[e.dir] && options.length) return; // prefer not reverse
-      const d = DIRS[dir];
-      const nx = e.x + d.x;
-      const ny = e.y + d.y;
-      if (!isWall(world.grid, nx, ny)) options.push(dir);
+  /* ---------- Drawing: river swamp (not arcade maze) ---------- */
+  function drawPhotoBg() {
+    const img = bgForLevel(world.idx);
+    if (img) {
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      const scale = Math.max(W / iw, H / ih) * 1.05;
+      const dw = iw * scale;
+      const dh = ih * scale;
+      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    } else {
+      ctx.fillStyle = "#0c281c";
+      ctx.fillRect(0, 0, W, H);
+    }
+    ctx.fillStyle = "rgba(6, 18, 14, 0.38)";
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawWorld() {
+    const g = world.grid;
+    const t = world.time;
+    drawPhotoBg();
+
+    // Soft land wash on blocked cells
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const cell = g[y][x];
+        const px = x * TILE;
+        const py = y * TILE;
+        if (cell === T.BLOCK) {
+          ctx.fillStyle = "rgba(28, 48, 28, 0.28)";
+          ctx.fillRect(px, py, TILE, TILE);
+          // reeds
+          if ((x + y) % 3 === 0) {
+            ctx.strokeStyle = "rgba(50, 100, 55, 0.45)";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(px + 8, py + TILE);
+            ctx.quadraticCurveTo(
+              px + 10 + Math.sin(t + x) * 2,
+              py + 8,
+              px + 6,
+              py + 2
+            );
+            ctx.stroke();
+          }
+        } else if (cell === T.RIVER || cell === T.FISH || cell === T.BIGFISH) {
+          // Swirly river water
+          const wave = Math.sin(t * 2 + x * 0.7 + y * 0.5) * 2;
+          const grd = ctx.createLinearGradient(px, py, px + TILE, py + TILE);
+          grd.addColorStop(0, "rgba(30, 110, 130, 0.72)");
+          grd.addColorStop(0.5, "rgba(40, 140, 120, 0.65)");
+          grd.addColorStop(1, "rgba(25, 90, 110, 0.7)");
+          ctx.fillStyle = grd;
+          ctx.beginPath();
+          ctx.moveTo(px, py + 4 + wave);
+          ctx.quadraticCurveTo(px + TILE / 2, py - 2 + wave, px + TILE, py + 4 - wave);
+          ctx.lineTo(px + TILE, py + TILE - 2);
+          ctx.quadraticCurveTo(px + TILE / 2, py + TILE + 2, px, py + TILE - 2);
+          ctx.closePath();
+          ctx.fill();
+          // bank edge
+          ctx.strokeStyle = "rgba(90, 140, 70, 0.55)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        } else if (cell === T.ROAD) {
+          ctx.fillStyle = "rgba(70, 65, 55, 0.78)";
+          ctx.fillRect(px + 1, py + 6, TILE - 2, TILE - 12);
+          ctx.strokeStyle = "rgba(230, 210, 80, 0.7)";
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(px + 2, py + TILE / 2);
+          ctx.lineTo(px + TILE - 2, py + TILE / 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        } else if (cell === T.HILL) {
+          // Grassy hill mound
+          ctx.fillStyle = "rgba(55, 110, 50, 0.82)";
+          ctx.beginPath();
+          ctx.ellipse(
+            px + TILE / 2,
+            py + TILE * 0.65,
+            TILE * 0.48,
+            TILE * 0.38,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.fillStyle = "rgba(100, 160, 70, 0.7)";
+          ctx.beginPath();
+          ctx.ellipse(
+            px + TILE / 2,
+            py + TILE * 0.5,
+            TILE * 0.32,
+            TILE * 0.22,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+      }
+    }
+
+    // Fish
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const cell = g[y][x];
+        if (cell !== T.FISH && cell !== T.BIGFISH) continue;
+        const cx = x * TILE + TILE / 2;
+        const cy = y * TILE + TILE / 2 + Math.sin(t * 4 + x) * 1.5;
+        drawFish(cx, cy, cell === T.BIGFISH, t + x);
+      }
+    }
+
+    // Big gators
+    world.bigs.forEach(function (b) {
+      drawBigGator(b);
     });
-    if (!options.length) {
-      DIR_KEYS.forEach(function (dir) {
-        const d = DIRS[dir];
-        if (!isWall(world.grid, e.x + d.x, e.y + d.y)) options.push(dir);
-      });
-    }
-    if (!options.length) return;
 
+    // Little player gator
+    drawLittleGator();
+
+    // HUD strip
+    ctx.fillStyle = "rgba(5, 18, 12, 0.72)";
+    ctx.fillRect(0, 0, W, 18);
+    ctx.fillStyle = "#e8f5ec";
+    ctx.font = "bold 11px system-ui,sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(
+      "Lv " +
+        (world.idx + 1) +
+        " · " +
+        stageName(world.idx) +
+        " · Fish " +
+        world.fishLeft,
+      8,
+      12
+    );
+
+    // Splat + OUCH overlay
+    if (world.splat > 0) {
+      const a = Math.min(1, world.splat);
+      // red splash blobs
+      for (let i = 0; i < 14; i++) {
+        const ang = (i / 14) * Math.PI * 2;
+        const dist = (1 - a) * 40 + 10 + (i % 3) * 8;
+        const sx = world.splatX + Math.cos(ang) * dist;
+        const sy = world.splatY + Math.sin(ang) * dist * 0.7;
+        ctx.fillStyle = "rgba(180, 30, 40," + a * 0.85 + ")";
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, 10 + (i % 4) * 3, 7 + (i % 3) * 2, ang, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "rgba(120, 20, 30," + a * 0.35 + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
+    if (world.ouch > 0) {
+      const p = Math.min(1, world.ouch);
+      const scale = 0.7 + (1 - p) * 0.6;
+      ctx.save();
+      ctx.translate(W / 2, H / 2);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = Math.min(1, p * 1.4);
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#8b0000";
+      ctx.lineWidth = 6;
+      ctx.font = "bold 64px system-ui,Impact,sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.strokeText("OUCH!", 0, 0);
+      ctx.fillStyle = "#ff3b3b";
+      ctx.fillText("OUCH!", 0, 0);
+      ctx.restore();
+    }
+
+    if (world.flash > 0) {
+      ctx.fillStyle = "rgba(255,220,180," + Math.min(0.4, world.flash) + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  function drawFish(cx, cy, big, phase) {
+    const s = big ? 1.35 : 1;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(Math.sin(phase * 2) * 0.25);
+    ctx.fillStyle = big ? "#ffb347" : "#7ec8e3";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 6 * s, 3.5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-6 * s, 0);
+    ctx.lineTo(-10 * s, -4 * s);
+    ctx.lineTo(-10 * s, 4 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(3 * s, -0.5 * s, 1 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBigGator(b) {
+    const ang =
+      b.dir === "right"
+        ? 0
+        : b.dir === "left"
+          ? Math.PI
+          : b.dir === "down"
+            ? Math.PI / 2
+            : -Math.PI / 2;
+    ctx.save();
+    ctx.translate(b.px, b.py);
+    ctx.rotate(ang + Math.sin(b.wiggle) * 0.08);
+    // Large menacing body
+    const len = TILE * 1.55;
+    const thick = TILE * 0.55;
+    ctx.fillStyle = "#1f5c32";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, len * 0.45, thick * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // snout
+    ctx.fillStyle = "#2a7a42";
+    ctx.beginPath();
+    ctx.ellipse(len * 0.28, 0, len * 0.22, thick * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // eye
+    ctx.fillStyle = "#f0e060";
+    ctx.beginPath();
+    ctx.arc(len * 0.2, -thick * 0.2, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(len * 0.22, -thick * 0.2, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    // teeth hint
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(len * 0.35, 2, 3, 2);
+    ctx.fillRect(len * 0.42, 2, 3, 2);
+    // label
+    ctx.rotate(-ang);
+    ctx.fillStyle = "rgba(255,80,80,0.9)";
+    ctx.font = "bold 9px system-ui,sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("BIG", 0, -TILE * 0.55);
+    ctx.restore();
+  }
+
+  function drawLittleGator() {
     const p = world.player;
-    // Target: chase player, or run away when powered, or go home if eaten
-    let tx = p.x;
-    let ty = p.y;
-    if (e.eaten) {
-      tx = e.homeX;
-      ty = e.homeY;
-    } else if (world.power > 0) {
-      tx = e.homeX;
-      ty = e.homeY;
-    } else if (e.scatter) {
-      tx = e.homeX + (e.kind.length % 3);
-      ty = 1;
+    const cell = world.grid[p.y][p.x];
+    const onLand = cell === T.ROAD || cell === T.HILL;
+    const ang =
+      p.dir === "right"
+        ? 0
+        : p.dir === "left"
+          ? Math.PI
+          : p.dir === "down"
+            ? Math.PI / 2
+            : -Math.PI / 2;
+
+    ctx.save();
+    ctx.translate(p.px, p.py + (onLand ? 0 : Math.sin(p.bob) * 2));
+    ctx.rotate(ang);
+
+    if (world.inv > 0 && Math.floor(world.time * 14) % 2 === 0) {
+      ctx.globalAlpha = 0.35;
     }
 
+    // Swim wake in water
+    if (!onLand) {
+      ctx.fillStyle = "rgba(200, 240, 255, 0.35)";
+      ctx.beginPath();
+      ctx.ellipse(-TILE * 0.35, 0, 8, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (gatorImgReady && gatorImg) {
+      const s = TILE * 1.25;
+      ctx.imageSmoothingEnabled = true;
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(0, s * 0.28, s * 0.28, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.drawImage(gatorImg, -s / 2, -s / 2, s, s);
+    } else {
+      // fallback baby gator
+      ctx.fillStyle = "#3cb371";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 11, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(5, -2, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Climb marker on hills/roads
+    if (onLand) {
+      ctx.rotate(-ang);
+      ctx.fillStyle = "rgba(255, 230, 120, 0.9)";
+      ctx.font = "bold 9px system-ui,sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(cell === T.HILL ? "⬆ hill" : "road", 0, -TILE * 0.55);
+    }
+
+    ctx.restore();
+  }
+
+  /* ---------- Logic ---------- */
+  function pickBigDir(b) {
+    const options = [];
+    DIR_KEYS.forEach(function (dir) {
+      const d = DIRS[dir];
+      if (!isBlocked(world.grid, b.x + d.x, b.y + d.y)) options.push(dir);
+    });
+    if (!options.length) return;
+    const p = world.player;
     let best = options[0];
-    let bestScore = 1e9;
+    let bestD = 1e9;
     options.forEach(function (dir) {
       const d = DIRS[dir];
-      const nx = e.x + d.x;
-      const ny = e.y + d.y;
-      const dist = Math.abs(nx - tx) + Math.abs(ny - ty);
-      // slight randomness
-      const score = dist + seeded(world.idx, e.x * 3 + e.y + world.time) * 0.4;
-      if (score < bestScore) {
-        bestScore = score;
+      const nx = b.x + d.x;
+      const ny = b.y + d.y;
+      const dist = Math.abs(nx - p.x) + Math.abs(ny - p.y);
+      // slight wander so not perfect chase
+      const score = dist + seeded(world.idx, b.x + b.y + world.time) * 1.2;
+      if (score < bestD) {
+        bestD = score;
         best = dir;
       }
     });
-    e.dir = best;
+    b.dir = best;
   }
 
-  /* ---------- Game logic ---------- */
-  function collectAtPlayer() {
+  function collectFish() {
     const p = world.player;
     const cell = world.grid[p.y][p.x];
-    if (cell === 2) {
-      world.grid[p.y][p.x] = 0;
-      world.pelletsLeft--;
-      state.score += 10;
+    if (cell === T.FISH) {
+      world.grid[p.y][p.x] = T.RIVER;
+      world.fishLeft--;
+      state.score += 15;
       haptic(8);
       updateHud();
-      if (world.pelletsLeft <= 0) winLevel();
-    } else if (cell === 3) {
-      world.grid[p.y][p.x] = 0;
-      world.pelletsLeft--;
-      state.score += 50;
-      world.power = 6.5;
-      world.flash = 0.35;
-      haptic([12, 30, 12]);
+      if (world.fishLeft <= 0) winLevel();
+    } else if (cell === T.BIGFISH) {
+      world.grid[p.y][p.x] = T.RIVER;
+      world.fishLeft--;
+      state.score += 40;
+      world.flash = 0.25;
+      haptic([10, 20, 10]);
       updateHud();
-      // Revive eaten enemies flags
-      world.enemies.forEach(function (e) {
-        if (e.eaten && e.x === e.homeX) e.eaten = false;
-      });
-      if (world.pelletsLeft <= 0) winLevel();
-      // Occasional quiz on power pellet (every other level)
-      if (world.idx % 2 === 1 && Math.random() < 0.35) {
-        openComicQuiz();
-      }
+      if (world.fishLeft <= 0) winLevel();
     }
   }
 
-  function collideEnemies() {
+  function collideBigs() {
+    if (world.inv > 0 || world.splat > 0) return;
     const p = world.player;
-    world.enemies.forEach(function (e) {
-      if (e.release > 0) return;
-      const dx = p.px - e.px;
-      const dy = p.py - e.py;
-      if (dx * dx + dy * dy > (TILE * 0.55) * (TILE * 0.55)) return;
-      if (world.power > 0 && !e.eaten) {
-        e.eaten = true;
-        state.score += 100;
-        haptic([10, 20, 30]);
-        updateHud();
-      } else if (!e.eaten && world.inv <= 0) {
-        hurt();
+    for (let i = 0; i < world.bigs.length; i++) {
+      const b = world.bigs[i];
+      const dx = p.px - b.px;
+      const dy = p.py - b.py;
+      if (dx * dx + dy * dy < (TILE * 0.7) * (TILE * 0.7)) {
+        getEaten(b);
+        return;
       }
-    });
+    }
   }
 
-  function hurt() {
+  function getEaten(byBig) {
+    world.splat = 1.15;
+    world.ouch = 1.25;
+    world.splatX = world.player.px;
+    world.splatY = world.player.py;
+    world.inv = 2.5;
+    world.flash = 0.5;
     state.lives -= 1;
-    world.inv = 2.2;
-    world.flash = 0.4;
-    haptic([40, 40, 60]);
+    haptic([50, 40, 80, 40, 100]);
     updateHud();
-    // Reset positions
-    const start = { x: 2, y: ROWS - 3 };
-    world.player.x = start.x;
-    world.player.y = start.y;
-    world.player.px = (start.x + 0.5) * TILE;
-    world.player.py = (start.y + 0.5) * TILE;
-    world.player.dir = "right";
-    world.player.nextDir = "right";
-    world.enemies.forEach(function (e, i) {
-      e.x = e.homeX;
-      e.y = e.homeY;
-      e.px = (e.homeX + 0.5) * TILE;
-      e.py = (e.homeY + 0.5) * TILE;
-      e.eaten = false;
-      e.release = 0.8 + i * 0.6;
-    });
-    if (state.lives <= 0) {
-      state.lives = 3;
-      state.score = Math.max(0, state.score - 30);
-      startLevel(state.level, true);
-    }
+
+    // Respawn after brief splat
+    const sx = world.player.x;
+    const sy = world.player.y;
+    // find safe tile near start-ish
+    setTimeout(function () {
+      if (!world) return;
+      // reset player toward bottom open tile
+      let rx = 2;
+      let ry = ROWS - 3;
+      for (let y = ROWS - 2; y >= 1; y--) {
+        for (let x = 1; x < COLS - 1; x++) {
+          if (isWalkable(world.grid[y][x])) {
+            rx = x;
+            ry = y;
+            y = 0;
+            break;
+          }
+        }
+      }
+      world.player.x = rx;
+      world.player.y = ry;
+      world.player.px = (rx + 0.5) * TILE;
+      world.player.py = (ry + 0.5) * TILE;
+      world.player.dir = "right";
+      world.player.nextDir = "right";
+      // shove big gator away a bit
+      if (byBig) {
+        byBig.x = Math.min(COLS - 2, byBig.x + 2);
+        byBig.px = (byBig.x + 0.5) * TILE;
+      }
+      if (state.lives <= 0) {
+        state.lives = 3;
+        state.score = Math.max(0, state.score - 25);
+        startLevel(state.level, true);
+      }
+    }, 650);
   }
 
   function winLevel() {
     if (world.won) return;
     world.won = true;
     stopLoop();
-    haptic([20, 40, 20, 40, 60]);
+    haptic([20, 40, 20, 40, 50]);
     state.totalScore += state.score;
     state.completed[state.level] = true;
     if (state.unlocked < state.level + 2) {
@@ -976,12 +925,12 @@
     $("#fact-score").textContent =
       "Level score: " + state.score + " · Total: " + state.totalScore;
     const facts = [
-      "American alligators live in Florida wetlands, lakes, and swamps.",
-      "Gators are ambush hunters — patience is a superpower.",
-      "Baby alligators have bright yellow stripes for camouflage.",
-      "Never feed wild alligators — it teaches them to approach people.",
-      "Gator holes hold water in dry season and help other wildlife too.",
-      "A full-grown American alligator can be over 10 feet long.",
+      "Baby alligators stay near water and eat insects, small fish, and frogs.",
+      "Florida’s wetlands are a maze of rivers, sloughs, and cypress strands.",
+      "Adult alligators can be dangerous — keep a safe distance in the wild.",
+      "Roads near wetlands are real gator crossing spots — drive carefully.",
+      "Hills and banks give gators sunny basking spots after a swim.",
+      "Never feed wild alligators — it makes them bold around people.",
     ];
     $("#fact-text").textContent = facts[state.level % facts.length];
     const g = $("#global-score");
@@ -992,49 +941,51 @@
   function update(dt) {
     if (!world || world.won || pausedForQuiz) return;
     world.time += dt;
-    if (world.power > 0) world.power -= dt;
     if (world.inv > 0) world.inv -= dt;
     if (world.flash > 0) world.flash -= dt;
+    if (world.splat > 0) world.splat -= dt;
+    if (world.ouch > 0) world.ouch -= dt;
 
     const p = world.player;
-    // Input → nextDir
     if (keys["arrowleft"] || keys["a"]) p.nextDir = "left";
     if (keys["arrowright"] || keys["d"]) p.nextDir = "right";
     if (keys["arrowup"] || keys["w"]) p.nextDir = "up";
     if (keys["arrowdown"] || keys["s"]) p.nextDir = "down";
 
-    // reverse immediately if free
     if (p.nextDir) {
       const rev = { left: "right", right: "left", up: "down", down: "up" };
       if (p.nextDir === rev[p.dir] || nearCenter(p.px, p.py, p.x, p.y)) {
-        trySetDir(p, p.nextDir, true);
+        trySetDir(p, p.nextDir);
       }
     }
 
-    moveEntity(p, p.speed, true);
-    p.mouth += dt * 14;
-    collectAtPlayer();
+    // Slightly slower on hills, faster on river
+    const cell = world.grid[p.y][p.x];
+    let spd = p.speed;
+    if (cell === T.HILL) spd *= 0.82;
+    if (cell === T.ROAD) spd *= 1.08;
+    if (cell === T.RIVER || cell === T.FISH || cell === T.BIGFISH) spd *= 1.05;
 
-    world.enemies.forEach(function (e) {
-      if (e.release > 0) {
-        e.release -= dt;
-        return;
+    // Freeze brief moment during splat
+    if (world.splat <= 0.55) {
+      moveEntity(p, spd);
+      p.bob += dt * 8;
+      collectFish();
+    }
+
+    world.bigs.forEach(function (b) {
+      b.wiggle += dt * 6;
+      b.phase += dt;
+      if (nearCenter(b.px, b.py, b.x, b.y)) {
+        b.px = (b.x + 0.5) * TILE;
+        b.py = (b.y + 0.5) * TILE;
+        pickBigDir(b);
       }
-      // Decision at tile centers
-      if (nearCenter(e.px, e.py, e.x, e.y)) {
-        e.px = (e.x + 0.5) * TILE;
-        e.py = (e.y + 0.5) * TILE;
-        pickEnemyDir(e);
-        if (e.eaten && e.x === e.homeX && e.y === e.homeY) {
-          e.eaten = false;
-        }
-      }
-      const spd =
-        e.eaten ? 3.2 : world.power > 0 ? e.speed * 0.65 : e.speed;
-      moveEntity(e, spd, false);
+      // Big gators prefer river/road but can use any walkable
+      moveEntity(b, b.speed);
     });
 
-    collideEnemies();
+    if (world.splat <= 0.4) collideBigs();
   }
 
   function tick(ts) {
@@ -1061,18 +1012,21 @@
       state.score = 0;
       state.lives = 3;
     }
-    world = buildMaze(idx);
+    world = buildLevel(idx);
     updateHud();
-    $("#level-title").textContent =
-      "Level " + (idx + 1) + " · " + stageName(idx);
-    const blurb = $("#level-blurb");
-    if (blurb) blurb.style.display = "none";
-    $("#play-hint").textContent =
-      "Top-down maze · Eat all dots · Big dots = power · Swipe or D-pad";
+    const title = $("#level-title");
+    if (title) {
+      title.textContent = "Level " + (idx + 1) + " · " + stageName(idx);
+    }
+    const hint = $("#play-hint");
+    if (hint) {
+      hint.textContent =
+        "Swim rivers · Climb hills & roads · Eat fish · Avoid BIG gators!";
+    }
     show("play");
     world._last = 0;
     loopId = requestAnimationFrame(tick);
-    haptic(15);
+    haptic(12);
   }
 
   function renderLevels() {
@@ -1101,22 +1055,7 @@
     updateHud();
   }
 
-  /* ---------- Quiz (kept light) ---------- */
-  const NPCS = [
-    {
-      name: "Rita the Rattler",
-      emoji: "🐍",
-      tag: "SNAKE SAYS",
-      openers: ["Ssssnack break quiz!", "Quick swamp question:"],
-    },
-    {
-      name: "Rascal Raccoon",
-      emoji: "🦝",
-      tag: "RASCAL ASKS",
-      openers: ["Hold up — quiz time!", "Bandit brain teaser:"],
-    },
-  ];
-
+  /* ---------- Light quiz (optional flavor) ---------- */
   function openComicQuiz() {
     if (pausedForQuiz || !window.GATOR_QUESTIONS) return;
     pausedForQuiz = true;
@@ -1135,8 +1074,6 @@
     state.playSeed += 1;
     save();
 
-    const npc = NPCS[state.playSeed % NPCS.length];
-    const opener = npc.openers[state.playSeed % npc.openers.length];
     const overlay = $("#comic-overlay");
     const title = $("#comic-question");
     const opts = $("#comic-options");
@@ -1147,21 +1084,22 @@
     const npcFace = $("#comic-npc-face");
     const npcLine = $("#comic-npc-line");
 
-    overlay.classList.add("show");
-    if (tag) tag.textContent = npc.tag;
-    if (npcName) npcName.textContent = npc.name;
+    if (overlay) overlay.classList.add("show");
+    if (tag) tag.textContent = "SWAMP QUIZ";
+    if (npcName) npcName.textContent = "River Friend";
     if (npcFace) {
       npcFace.classList.remove("has-photo");
-      npcFace.textContent = npc.emoji;
-      npcFace.style.backgroundImage = "";
+      npcFace.textContent = "🐟";
     }
-    if (npcLine) npcLine.textContent = opener;
-    title.textContent = q.q;
-    fb.className = "comic-feedback";
-    fb.textContent = "";
-    cont.style.display = "none";
+    if (npcLine) npcLine.textContent = "Quick question while you swim!";
+    if (title) title.textContent = q.q;
+    if (fb) {
+      fb.className = "comic-feedback";
+      fb.textContent = "";
+    }
+    if (cont) cont.style.display = "none";
+    if (!opts) return;
     opts.innerHTML = "";
-    haptic(10);
 
     q.choices.forEach(function (c, idx) {
       const b = document.createElement("button");
@@ -1174,21 +1112,22 @@
         });
         if (idx === q.correct) {
           b.classList.add("correct");
-          state.score += 40;
-          fb.className = "comic-feedback show";
-          fb.textContent = npc.emoji + " Yes! " + q.explain;
-          haptic([10, 20, 10]);
+          state.score += 35;
+          if (fb) {
+            fb.className = "comic-feedback show";
+            fb.textContent = "Nice! " + q.explain;
+          }
         } else {
           b.classList.add("wrong");
-          const right = opts.children[q.correct];
-          if (right) right.classList.add("correct");
+          if (opts.children[q.correct]) opts.children[q.correct].classList.add("correct");
           state.score += 5;
-          fb.className = "comic-feedback show";
-          fb.textContent = npc.emoji + " Close! " + q.explain;
-          haptic(25);
+          if (fb) {
+            fb.className = "comic-feedback show";
+            fb.textContent = "Close! " + q.explain;
+          }
         }
         updateHud();
-        cont.style.display = "block";
+        if (cont) cont.style.display = "block";
       });
       opts.appendChild(b);
     });
@@ -1200,21 +1139,16 @@
     pausedForQuiz = false;
   }
 
-  /* ---------- Input (mobile-first) ---------- */
+  /* ---------- Mobile input ---------- */
   function setDir(dir) {
     if (!dir) return;
-    keys["arrow" + dir] = true;
-    // clear other arrow keys so only one direction is held
     DIR_KEYS.forEach(function (d) {
-      if (d !== dir) keys["arrow" + d] = false;
+      keys["arrow" + d] = d === dir;
     });
     if (world && world.player) {
       world.player.nextDir = dir;
-      // reverse immediately feels snappy on phone
       const rev = { left: "right", right: "left", up: "down", down: "up" };
-      if (world.player.dir === rev[dir]) {
-        trySetDir(world.player, dir, true);
-      }
+      if (world.player.dir === rev[dir]) trySetDir(world.player, dir);
     }
   }
 
@@ -1223,15 +1157,12 @@
   }
 
   function bindPads() {
-    const dpad = $("#dpad");
-    const buttons = ["pad-left", "pad-right", "pad-up", "pad-down"];
-    buttons.forEach(function (id) {
+    ["pad-left", "pad-right", "pad-up", "pad-down"].forEach(function (id) {
       const el = $("#" + id);
       if (!el) return;
       const dir = el.getAttribute("data-dir");
       const on = function (e) {
         e.preventDefault();
-        e.stopPropagation();
         try {
           el.setPointerCapture(e.pointerId);
         } catch (err) {}
@@ -1247,22 +1178,17 @@
       el.addEventListener("pointerdown", on);
       el.addEventListener("pointerup", off);
       el.addEventListener("pointercancel", off);
-      // Don't clear on leave if capture holds — only when pointer ends
       el.addEventListener("lostpointercapture", off);
     });
-
-    // Sliding finger across the D-pad switches direction
+    const dpad = $("#dpad");
     if (dpad) {
       dpad.addEventListener(
         "pointermove",
         function (e) {
           if (e.buttons === 0 && e.pressure === 0) return;
-          const target = document.elementFromPoint(e.clientX, e.clientY);
-          if (!target) return;
-          const btn = target.closest("[data-dir]");
-          if (!btn) return;
-          const dir = btn.getAttribute("data-dir");
-          if (dir) setDir(dir);
+          const t = document.elementFromPoint(e.clientX, e.clientY);
+          const btn = t && t.closest && t.closest("[data-dir]");
+          if (btn) setDir(btn.getAttribute("data-dir"));
         },
         { passive: true }
       );
@@ -1272,91 +1198,50 @@
   function bindSwipe() {
     const stage = $("#stage-wrap") || canvas;
     if (!stage) return;
-
     let start = null;
     let lastDir = null;
-
-    const point = function (e) {
-      if (e.touches && e.touches[0]) {
+    const pt = function (e) {
+      if (e.touches && e.touches[0])
         return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      }
       return { x: e.clientX, y: e.clientY };
     };
-
     const onStart = function (e) {
-      // Don't steal quiz taps
       if (pausedForQuiz) return;
-      if (e.target && e.target.closest && e.target.closest(".comic-overlay.show"))
-        return;
-      const p = point(e);
-      start = { x: p.x, y: p.y };
+      start = pt(e);
       lastDir = null;
-      // prevent page scroll while swiping on maze
       if (e.cancelable) e.preventDefault();
     };
-
     const onMove = function (e) {
-      if (!start || !world || !world.player) return;
+      if (!start || !world) return;
       if (e.cancelable) e.preventDefault();
-      const p = point(e);
+      const p = pt(e);
       const dx = p.x - start.x;
       const dy = p.y - start.y;
-      const absX = Math.abs(dx);
-      const absY = Math.abs(dy);
-      // Continuous swipe steering (feels like a virtual stick)
-      if (absX < 16 && absY < 16) return;
-      let dir;
-      if (absX > absY) dir = dx > 0 ? "right" : "left";
-      else dir = dy > 0 ? "down" : "up";
+      if (Math.abs(dx) < 16 && Math.abs(dy) < 16) return;
+      const dir =
+        Math.abs(dx) > Math.abs(dy)
+          ? dx > 0
+            ? "right"
+            : "left"
+          : dy > 0
+            ? "down"
+            : "up";
       if (dir !== lastDir) {
         lastDir = dir;
         setDir(dir);
         haptic(4);
-        // reset origin so small course-corrections work
-        start = { x: p.x, y: p.y };
+        start = p;
       }
     };
-
-    const onEnd = function (e) {
-      if (!start || !world || !world.player) {
-        start = null;
-        return;
-      }
-      const p =
-        e.changedTouches && e.changedTouches[0]
-          ? { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY }
-          : point(e);
-      const dx = p.x - start.x;
-      const dy = p.y - start.y;
+    const onEnd = function () {
       start = null;
-      if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
-      if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? "right" : "left");
-      else setDir(dy > 0 ? "down" : "up");
     };
-
-    // Pointer events (works for mouse + touch)
     stage.addEventListener("pointerdown", onStart, { passive: false });
     stage.addEventListener("pointermove", onMove, { passive: false });
     stage.addEventListener("pointerup", onEnd, { passive: true });
-    stage.addEventListener("pointercancel", function () {
-      start = null;
-    });
-
-    // Extra touch listeners for older iOS
     stage.addEventListener("touchstart", onStart, { passive: false });
     stage.addEventListener("touchmove", onMove, { passive: false });
     stage.addEventListener("touchend", onEnd, { passive: true });
-  }
-
-  function loadGator() {
-    gatorImg = new Image();
-    gatorImg.onload = function () {
-      gatorImgReady = true;
-    };
-    gatorImg.onerror = function () {
-      gatorImgReady = false;
-    };
-    gatorImg.src = "images/game/gator-sprite.png?v=5";
   }
 
   function init() {
@@ -1367,18 +1252,6 @@
     canvas.width = W;
     canvas.height = H;
     ctx.imageSmoothingEnabled = true;
-    // Polyfill roundRect if missing
-    if (!ctx.roundRect) {
-      ctx.roundRect = function (x, y, w, h, r) {
-        r = Math.min(r, w / 2, h / 2);
-        this.moveTo(x + r, y);
-        this.arcTo(x + w, y, x + w, y + h, r);
-        this.arcTo(x + w, y + h, x, y + h, r);
-        this.arcTo(x, y + h, x, y, r);
-        this.arcTo(x, y, x + w, y, r);
-        this.closePath();
-      };
-    }
 
     loadBackgrounds();
     loadGator();
@@ -1387,9 +1260,7 @@
       const k = e.key.toLowerCase();
       keys[k] = true;
       if (
-        ["arrowup", "arrowdown", "arrowleft", "arrowright", " "].indexOf(k) >=
-          0 ||
-        e.code === "Space"
+        ["arrowup", "arrowdown", "arrowleft", "arrowright", " "].indexOf(k) >= 0
       ) {
         e.preventDefault();
       }
@@ -1441,7 +1312,8 @@
         updateHud();
       }
     });
-    $("#comic-continue").addEventListener("click", closeComicQuiz);
+    const cont = $("#comic-continue");
+    if (cont) cont.addEventListener("click", closeComicQuiz);
     const quitPlay = $("#btn-quit-play");
     if (quitPlay) {
       quitPlay.addEventListener("click", function () {
@@ -1450,22 +1322,6 @@
         show("start");
       });
     }
-
-    // Stop iOS rubber-band scroll while on play screen
-    document.addEventListener(
-      "touchmove",
-      function (e) {
-        if (!document.body.classList.contains("is-playing")) return;
-        // allow scrolling inside quiz popup
-        if (e.target && e.target.closest && e.target.closest(".comic-overlay.show"))
-          return;
-        if (e.target && e.target.closest && e.target.closest(".comic-options"))
-          return;
-        // block background scroll
-        if (e.cancelable) e.preventDefault();
-      },
-      { passive: false }
-    );
     $("#btn-fact-levels").addEventListener("click", function () {
       renderLevels();
       show("levels");
@@ -1478,6 +1334,17 @@
         show("levels");
       }
     });
+
+    document.addEventListener(
+      "touchmove",
+      function (e) {
+        if (!document.body.classList.contains("is-playing")) return;
+        if (e.target && e.target.closest && e.target.closest(".comic-overlay.show"))
+          return;
+        if (e.cancelable) e.preventDefault();
+      },
+      { passive: false }
+    );
 
     bindPads();
     bindSwipe();
