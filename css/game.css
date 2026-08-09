@@ -251,14 +251,15 @@
   display: flex;
 }
 
+/* Cartoon speech pop-ups (match cute 3D baby gator style) */
 .meme-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  max-width: 440px;
+  gap: 0.25rem;
+  max-width: 460px;
   width: 100%;
-  animation: comic-pop 0.28s cubic-bezier(0.2, 1.4, 0.4, 1);
+  animation: comic-pop 0.32s cubic-bezier(0.2, 1.35, 0.4, 1);
 }
 
 .meme-npc {
@@ -269,124 +270,146 @@
 }
 
 .meme-npc-face {
-  font-size: 3.2rem;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, #7dcea0, #2f6b43 70%);
+  border: 4px solid #fff;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25), 0 0 0 3px #2f6b43;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 2.6rem;
   line-height: 1;
-  filter: drop-shadow(3px 3px 0 #000);
-  animation: npc-bob 0.6s ease-in-out infinite alternate;
+  animation: npc-bob 0.7s ease-in-out infinite alternate;
+}
+
+.meme-npc-face.has-photo {
+  background: #1a3324 url("../images/game/gator-sprite.png") center 20% / cover
+    no-repeat;
+  font-size: 0;
 }
 
 @keyframes npc-bob {
   from {
-    transform: translateY(0) rotate(-4deg);
+    transform: translateY(0) scale(1);
   }
   to {
-    transform: translateY(-4px) rotate(4deg);
+    transform: translateY(-5px) scale(1.04);
   }
 }
 
 .meme-npc-name {
-  margin-top: 0.15rem;
-  background: #111;
-  color: #ffe566;
+  margin-top: 0.35rem;
+  background: linear-gradient(180deg, #3cb371, #2a8f55);
+  color: #fff;
   font-weight: 900;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  padding: 0.2rem 0.55rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
   border: 3px solid #fff;
-  box-shadow: 3px 3px 0 #000;
+  box-shadow: 0 4px 0 #1a4a30;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 .comic-bubble,
 .meme-bubble {
   position: relative;
   width: 100%;
-  background: #fffef8;
-  color: #111;
-  border: 5px solid #111;
-  border-radius: 22px 26px 8px 22px;
-  padding: 0.9rem 0.95rem 0.85rem;
-  box-shadow: 8px 8px 0 #000, 0 0 0 4px #ffe566;
-  font-family: Impact, Haettenschweiler, "Arial Black", "Courier New", sans-serif;
-  letter-spacing: 0.01em;
+  background: linear-gradient(180deg, #fffefb 0%, #f3fff6 100%);
+  color: #143 rel 22;
+  color: #143d22;
+  border: 4px solid #2f6b43;
+  border-radius: 28px;
+  padding: 1rem 1rem 0.95rem;
+  box-shadow:
+    0 10px 0 rgba(20, 60, 35, 0.25),
+    0 0 0 4px rgba(255, 255, 255, 0.35);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0;
 }
 
 @keyframes comic-pop {
   0% {
-    transform: scale(0.4) rotate(-8deg);
+    transform: scale(0.55) translateY(12px);
     opacity: 0;
   }
   70% {
-    transform: scale(1.06) rotate(2deg);
+    transform: scale(1.04) translateY(-2px);
     opacity: 1;
   }
   100% {
-    transform: scale(1) rotate(0);
+    transform: scale(1) translateY(0);
     opacity: 1;
   }
 }
 
-/* Speech pointer up toward NPC face */
+/* Soft cartoon pointer toward character */
 .meme-bubble::after {
   content: "";
   position: absolute;
-  top: -16px;
+  top: -14px;
   left: 50%;
   margin-left: -12px;
   width: 0;
   height: 0;
   border-left: 12px solid transparent;
   border-right: 12px solid transparent;
-  border-bottom: 16px solid #111;
+  border-bottom: 16px solid #2f6b43;
 }
 
 .meme-bubble::before {
   content: "";
   position: absolute;
-  top: -9px;
+  top: -8px;
   left: 50%;
-  margin-left: -8px;
+  margin-left: -9px;
   width: 0;
   height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 12px solid #fffef8;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 12px solid #fffefb;
   z-index: 1;
 }
 
 .comic-tag {
   display: inline-block;
-  background: #ff2d55;
-  color: #fff;
-  border: 3px solid #111;
-  border-radius: 6px;
-  padding: 0.12rem 0.5rem;
-  font-size: 0.68rem;
+  background: linear-gradient(180deg, #ffe566, #f0c040);
+  color: #1a3d22;
+  border: 2px solid #2f6b43;
+  border-radius: 999px;
+  padding: 0.15rem 0.65rem;
+  font-size: 0.7rem;
   font-weight: 900;
   text-transform: uppercase;
-  margin-bottom: 0.4rem;
-  box-shadow: 3px 3px 0 #111;
-  transform: rotate(-2deg);
+  margin-bottom: 0.45rem;
+  box-shadow: 0 2px 0 #1a4a30;
+  font-family: system-ui, sans-serif;
 }
 
 .meme-npc-line {
-  font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 1.05rem;
-  line-height: 1.2;
+  line-height: 1.25;
   margin: 0 0 0.55rem;
-  color: #111;
-  text-transform: uppercase;
-  text-shadow: 2px 2px 0 #ffe566;
+  color: #1a4a30;
+  font-weight: 800;
+  text-transform: none;
+  text-shadow: none;
 }
 
 .comic-bubble h3,
 .meme-bubble h3 {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.92rem;
-  line-height: 1.35;
-  margin-bottom: 0.7rem;
-  color: #111;
-  font-weight: 800;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+  color: #143d22;
+  font-weight: 700;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -398,31 +421,34 @@
 
 .comic-opt {
   text-align: left;
-  padding: 0.7rem 0.75rem;
-  border: 3px solid #111;
-  border-radius: 10px;
-  background: #f3fff6;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.88rem;
-  font-weight: 700;
+  padding: 0.75rem 0.85rem;
+  border: 3px solid #2f6b43;
+  border-radius: 16px;
+  background: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 650;
   cursor: pointer;
   min-height: 48px;
-  box-shadow: 3px 3px 0 #111;
-  color: #111;
+  box-shadow: 0 4px 0 rgba(20, 60, 35, 0.2);
+  color: #143d22;
   text-transform: none;
   letter-spacing: 0;
 }
 
 .comic-opt:hover:not(:disabled) {
-  background: #d8f5e0;
+  background: #e8faf0;
+  transform: translateY(-1px);
 }
 
 .comic-opt.correct {
-  background: #8fd9a8;
+  background: #b8f0c8;
+  border-color: #1f8a4a;
 }
 
 .comic-opt.wrong {
-  background: #f5b8a8;
+  background: #ffe0d6;
+  border-color: #c45c40;
 }
 
 .comic-opt:disabled {

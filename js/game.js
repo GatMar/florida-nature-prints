@@ -258,6 +258,8 @@
 
   const bgImages = [];
   let bgReady = false;
+  let gatorImg = null;
+  let gatorImgReady = false;
 
   const $ = function (s) {
     return document.querySelector(s);
@@ -284,9 +286,43 @@
     });
   }
 
+  function loadGatorSprite(done) {
+    gatorImg = new Image();
+    gatorImg.onload = function () {
+      gatorImgReady = true;
+      if (done) done();
+    };
+    gatorImg.onerror = function () {
+      gatorImgReady = false;
+      if (done) done();
+    };
+    // Your custom baby gator art (grows in-game with age)
+    gatorImg.src = "images/game/gator-sprite.png";
+  }
+
   function bgForLevel(idx) {
     if (!bgImages.length) return null;
     return bgImages[idx % bgImages.length];
+  }
+
+  /** Display size for gator by stage - baby smaller, adult much bigger */
+  function gatorDrawSize(idx) {
+    // Base height in canvas pixels (portrait sprite)
+    if (idx < 5) return { w: 52, h: 78 }; // egg/newborn
+    if (idx < 10) return { w: 64, h: 96 }; // baby
+    if (idx < 20) return { w: 80, h: 120 }; // hatchling
+    if (idx < 30) return { w: 100, h: 150 }; // juvenile
+    if (idx < 40) return { w: 120, h: 180 }; // sub-adult
+    return { w: 140, h: 210 }; // adult
+  }
+
+  /** Older gators: darker, less "baby yellow" via canvas filters */
+  function gatorAgeFilter(idx) {
+    if (idx < 10) return "none";
+    if (idx < 20) return "saturate(0.95) brightness(0.98)";
+    if (idx < 30) return "saturate(0.85) brightness(0.92) contrast(1.05)";
+    if (idx < 40) return "saturate(0.7) brightness(0.88) contrast(1.08) hue-rotate(-6deg)";
+    return "saturate(0.55) brightness(0.82) contrast(1.12) hue-rotate(-12deg)";
   }
 
   function stageName(i) {
@@ -298,12 +334,12 @@
   }
 
   function gatorScale(i) {
-    // Double previous size - large upright gator
-    if (i < 10) return 4.4;
-    if (i < 20) return 4.8;
-    if (i < 30) return 5.2;
-    if (i < 40) return 5.6;
-    return 6.0;
+    // Kept for rival sizing; main player uses gatorDrawSize()
+    if (i < 10) return 3.2;
+    if (i < 20) return 3.6;
+    if (i < 30) return 4.0;
+    if (i < 40) return 4.4;
+    return 4.8;
   }
 
   function load() {
@@ -532,9 +568,9 @@
 
     // Flag on top floor near the end
     const goalFloor = floors[floors.length - 1];
-    const sc = gatorScale(idx);
-    const pw = 14 * sc;
-    const ph = 22 * sc;
+    const sz = gatorDrawSize(idx);
+    const pw = sz.w;
+    const ph = sz.h;
     return {
       idx: idx,
       len: len,
@@ -681,120 +717,46 @@
     return null;
   }
 
-  // UPRIGHT miniature gator (taller than wide) with light/dark “3D” shading.
-  // Facing right. Columns ~14, rows ~22.
-  // . empty  D dark  M mid  L light  B belly  Y stripe/eye  K black  N snout tip
-  const GATOR_SPRITE = [
-    "....LLLMML....",
-    "...LMMMMMML...",
-    "..LMMYYYYMML..",
-    "..LMMYKKYMML..",
-    ".LMMMYYYYMMML.",
-    ".LMMMMMMMMMML.",
-    "LMMMBBBBMMMNL.",
-    "LMMBBBBBBMMNL.",
-    "LMMBBBBBBMMDD.",
-    ".LMMBBBBMMMDD.",
-    ".LMMMMMMMMMDD.",
-    "..LMMMMMMMDD..",
-    "..LMMDDMMMDD..",
-    "...LMDD.MDD...",
-    "...LMDD.MDD...",
-    "...DM.D.D.D...",
-    "...DM.D.D.D...",
-    "....D...D.....",
-    "....D...D.....",
-    "...DD...DD....",
-    "...DD...DD....",
-    "..............",
-  ];
-  const GATOR_EGG = [
-    "...LLLLL...",
-    "..LMMMMML..",
-    ".LMMYYY MML.",
-    ".LMMYKKYMML.",
-    "LMMMYYYYMMML",
-    "LMMBBBBBMMML",
-    "LMMBBBBBMMML",
-    ".LMMBBBMMML.",
-    "..LMMMMMML..",
-    "...LDDDDL...",
-    "....LDDL....",
-  ].map(function (r) {
-    return r.replace(" ", "M");
-  });
-  const PAL = {
-    D: "#163820",
-    M: "#2a6b36",
-    L: "#55b060",
-    B: "#7ec86a",
-    Y: "#f0d24a",
-    K: "#0c100c",
-    N: "#1a3a22",
-  };
-
-  function drawSprite(rows, ox, oy, facing, pivotW) {
-    const h = rows.length;
-    const w = rows[0].length;
-    ctx.save();
-    if (facing < 0) {
-      ctx.translate(ox + pivotW / 2, 0);
-      ctx.scale(-1, 1);
-      ctx.translate(-(ox + pivotW / 2), 0);
-    }
-    for (let r = 0; r < h; r++) {
-      for (let c = 0; c < w; c++) {
-        const ch = rows[r][c];
-        if (!ch || ch === ".") continue;
-        const col = PAL[ch];
-        if (!col) continue;
-        ctx.fillStyle = col;
-        ctx.fillRect(ox + c, oy + r, 1, 1);
-      }
-    }
-    ctx.restore();
-  }
-
+  /**
+   * Draw your custom gator art (images/game/gator-sprite.png).
+   * Baby years: bright striped look as in the photo.
+   * Older years: larger draw size + age filter (darker adult look).
+   */
   function drawPixelGator(p, scale, facing) {
-    const rows = world && world.idx < 5 ? GATOR_EGG : GATOR_SPRITE;
-    const sw = rows[0].length;
-    const sh = rows.length;
-    const s = Math.max(2, Math.round(scale));
     const x = Math.floor(p.x - world.camera);
-    const y = Math.floor(p.y + Math.max(0, p.h - sh * s));
-    // Soft outline so gator pops on bright photos
+    const y = Math.floor(p.y);
+    const w = Math.max(8, Math.floor(p.w));
+    const h = Math.max(8, Math.floor(p.h));
+    const idx = world ? world.idx : 0;
+
     ctx.save();
     if (facing < 0) {
-      ctx.translate(x + (sw * s) / 2, y);
-      ctx.scale(-s, s);
-      ctx.translate(-sw / 2, 0);
+      ctx.translate(x + w / 2, y + h / 2);
+      ctx.scale(-1, 1);
+      ctx.translate(-(x + w / 2), -(y + h / 2));
+    }
+
+    if (gatorImgReady && gatorImg) {
+      ctx.imageSmoothingEnabled = true;
+      // Soft shadow under feet
+      ctx.fillStyle = "rgba(0,0,0,0.28)";
+      ctx.beginPath();
+      ctx.ellipse(x + w / 2, y + h - 2, w * 0.35, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.filter = gatorAgeFilter(idx);
+      // Slight bob when moving
+      const bob =
+        world && Math.abs(world.player.vx) > 0.2
+          ? Math.sin((world.time || 0) * 12) * 2
+          : 0;
+      ctx.drawImage(gatorImg, x, y + bob, w, h);
+      ctx.filter = "none";
+      ctx.imageSmoothingEnabled = false;
     } else {
-      ctx.translate(x, y);
-      ctx.scale(s, s);
-    }
-    for (let r = 0; r < sh; r++) {
-      for (let c = 0; c < sw; c++) {
-        const ch = rows[r][c];
-        if (!ch || ch === ".") continue;
-        // 1px dark outline neighbors
-        ctx.fillStyle = "rgba(0,0,0,0.55)";
-        ctx.fillRect(c - 0.15, r - 0.15, 1.3, 1.3);
-      }
-    }
-    for (let r = 0; r < sh; r++) {
-      for (let c = 0; c < sw; c++) {
-        const ch = rows[r][c];
-        if (!ch || ch === ".") continue;
-        ctx.fillStyle = PAL[ch] || "#2f6b38";
-        ctx.fillRect(c, r, 1, 1);
-      }
-    }
-    // young stripes overlay
-    if (world && world.idx >= 5 && world.idx < 20) {
-      ctx.fillStyle = "#f0d24a";
-      ctx.fillRect(4, 8, 1, 6);
-      ctx.fillRect(7, 9, 1, 5);
-      ctx.fillRect(10, 8, 1, 6);
+      // Fallback blob if image missing
+      ctx.fillStyle = "#3d8a4a";
+      ctx.fillRect(x, y, w, h);
     }
     ctx.restore();
   }
@@ -1073,9 +1035,10 @@
     }
 
     if (h.kind === "rival") {
+      const sz = gatorDrawSize(Math.min(49, (world ? world.idx : 0) + 10));
       drawPixelGator(
-        { x: h.x, y: h.y, w: 14 * 4.8, h: 22 * 4.8 },
-        4.8,
+        { x: h.x, y: h.y, w: sz.w * 0.85, h: sz.h * 0.85 },
+        1,
         -1
       );
       return;
@@ -1478,7 +1441,18 @@
     overlay.classList.add("show");
     if (tag) tag.textContent = npc.tag;
     if (npcName) npcName.textContent = npc.name;
-    if (npcFace) npcFace.textContent = npc.emoji;
+    if (npcFace) {
+      // Use your gator art in the speech pop-up face circle when available
+      if (gatorImgReady) {
+        npcFace.textContent = "";
+        npcFace.classList.add("has-photo");
+        npcFace.style.backgroundImage = "url('images/game/gator-sprite.png')";
+      } else {
+        npcFace.classList.remove("has-photo");
+        npcFace.textContent = npc.emoji;
+        npcFace.style.backgroundImage = "";
+      }
+    }
     if (npcLine) npcLine.textContent = opener;
     title.textContent = q.q;
     fb.className = "comic-feedback";
@@ -1700,6 +1674,9 @@
 
     loadBackgrounds(function () {
       // Photos ready - nothing else required; next draw uses them
+    });
+    loadGatorSprite(function () {
+      // Custom baby gator art ready
     });
 
     window.addEventListener("keydown", function (e) {
