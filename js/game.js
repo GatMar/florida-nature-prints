@@ -68,7 +68,8 @@
   let audioCtx = null;
   let audioReady = false;
 
-  const BG_FILES = [
+  // Prefer every print from the website gallery when config is loaded
+  const BG_FILES_FALLBACK = [
     "golden-gulf.jpeg",
     "crimson-marsh.jpeg",
     "marsh-at-dusk.jpeg",
@@ -85,6 +86,13 @@
     "great-blue-heron.jpeg",
     "orange-afterglow.jpeg",
     "sky-on-fire.jpeg",
+    "footprints-at-sunset.jpeg",
+    "last-light-on-the-beach.jpeg",
+    "pink-bay-clouds.jpg",
+    "sun-over-the-gulf.jpeg",
+    "heron-silhouette.jpeg",
+    "floating-gator.jpeg",
+    "young-gator.jpeg",
   ];
 
   const $ = function (s) {
@@ -292,12 +300,28 @@
     return x - Math.floor(x);
   }
 
+  function galleryPhotoFiles() {
+    // All website print photos as living backgrounds
+    if (
+      typeof SITE_CONFIG !== "undefined" &&
+      SITE_CONFIG.photos &&
+      SITE_CONFIG.photos.length
+    ) {
+      return SITE_CONFIG.photos.map(function (p) {
+        return p.file;
+      });
+    }
+    return BG_FILES_FALLBACK;
+  }
+
   function loadBackgrounds() {
-    BG_FILES.forEach(function (file) {
+    const files = galleryPhotoFiles();
+    files.forEach(function (file) {
       const img = new Image();
       img.onload = function () {
         if (img.naturalWidth) bgImages.push(img);
       };
+      img.onerror = function () {};
       img.src = "images/prints/" + file;
     });
   }
@@ -312,7 +336,12 @@
     gatorImg.onload = function () {
       gatorImgReady = true;
     };
-    gatorImg.src = "images/game/gator-sprite.png?v=6";
+    gatorImg.onerror = function () {
+      // fallback
+      gatorImg.src = "images/game/gator-hatchling.png?v=7";
+    };
+    // Clear hatchling figurine (no speech bubble)
+    gatorImg.src = "images/game/gator-hatchling.png?v=7";
   }
 
   function isWalkable(cell) {
@@ -724,12 +753,15 @@
     if (img) {
       const iw = img.naturalWidth || img.width;
       const ih = img.naturalHeight || img.height;
-      const scale = Math.max(W / iw, H / ih) * 1.08;
+      // Cover full playfield with website photo
+      const scale = Math.max(W / iw, H / ih) * 1.12;
       const dw = iw * scale;
       const dh = ih * scale;
+      // Slow parallax with camera-less drift from time
+      const drift = ((world.time || 0) * 3) % 20;
       ctx.imageSmoothingEnabled = true;
       if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      ctx.drawImage(img, (W - dw) / 2 - drift * 0.3, (H - dh) / 2, dw, dh);
     } else {
       const g = ctx.createLinearGradient(0, 0, 0, H);
       g.addColorStop(0, "#1a3d2e");
@@ -737,8 +769,8 @@
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
     }
-    // Gentle darken so game pieces read on bright photos
-    ctx.fillStyle = "rgba(4, 14, 12, 0.32)";
+    // Lighter veil so Florida photos stay vivid
+    ctx.fillStyle = "rgba(4, 14, 12, 0.22)";
     ctx.fillRect(0, 0, W, H);
   }
 
@@ -2173,7 +2205,11 @@
       state.unlocked = Math.min(TOTAL_LEVELS, state.level + 2);
     }
     save();
-    $("#fact-emoji").textContent = "🐊";
+    const factEmoji = $("#fact-emoji");
+    // Keep hatchling image on clear screen (don't replace with emoji text)
+    if (factEmoji && !factEmoji.querySelector("img")) {
+      factEmoji.textContent = "🐊";
+    }
     $("#fact-title").textContent = "Level " + (state.level + 1) + " clear!";
     $("#fact-score").textContent =
       "Level score: " + state.score + " · Total: " + state.totalScore;

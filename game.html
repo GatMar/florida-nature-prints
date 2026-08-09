@@ -49,12 +49,14 @@
       <div class="game-wrap">
         <div class="game-card game-card-arcade">
           <!-- START -->
-          <section id="screen-start" class="game-screen active">
+          <section id="screen-start" class="game-screen active game-screen-photo">
             <div class="start-hero" aria-hidden="true">
               <img
-                src="images/game/gator-sprite.png"
-                alt=""
+                src="images/game/gator-hatchling.png?v=7"
+                alt="Baby hatchling alligator"
                 class="start-gator-fig"
+                width="280"
+                height="380"
               />
             </div>
             <h1>Gator Life</h1>
@@ -99,7 +101,7 @@
           </section>
 
           <!-- LEVELS -->
-          <section id="screen-levels" class="game-screen">
+          <section id="screen-levels" class="game-screen game-screen-photo">
             <h1>Pick a level</h1>
             <p class="subtitle">Clear one to unlock the next. Replay anytime.</p>
             <div class="level-grid" id="level-grid"></div>
@@ -178,8 +180,14 @@
           </section>
 
           <!-- FACT -->
-          <section id="screen-fact" class="game-screen">
-            <div class="complete-emoji" id="fact-emoji">🐊</div>
+          <section id="screen-fact" class="game-screen game-screen-photo">
+            <div class="complete-emoji fact-gator-wrap" id="fact-emoji">
+              <img
+                src="images/game/gator-hatchling.png?v=7"
+                alt=""
+                class="fact-gator-img"
+              />
+            </div>
             <h1 id="fact-title">Level clear!</h1>
             <p class="score-pop" id="fact-score">Score</p>
             <div class="fact-card">
