@@ -84,37 +84,111 @@
     }
   });
 
-  // ---- Gallery / home featured photos ----
-  const galleryGrid = document.getElementById("gallery-grid");
-  if (galleryGrid && SITE_CONFIG.photos) {
-    galleryGrid.innerHTML = SITE_CONFIG.photos
-      .map(function (photo) {
-        return (
-          '<article class="photo-card">' +
-          '<div class="photo-img-wrap">' +
-          '<img class="photo-img" src="' +
-          photoUrl(photo.file) +
-          '" alt="' +
-          escapeHtml(photo.title) +
-          '" loading="lazy" />' +
-          "</div>" +
-          '<div class="photo-body">' +
-          "<h3>" +
-          escapeHtml(photo.title) +
-          "</h3>" +
-          "<p>" +
-          escapeHtml(photo.desc) +
-          "</p>" +
-          '<div class="photo-actions">' +
+  // ---- Gallery cards (shared markup) ----
+  function photoCardHtml(photo, withBuy) {
+    return (
+      '<article class="photo-card" data-category="' +
+      escapeHtml(photo.category || "all") +
+      '">' +
+      '<div class="photo-img-wrap">' +
+      '<img class="photo-img" src="' +
+      photoUrl(photo.file) +
+      '" alt="' +
+      escapeHtml(photo.title) +
+      '" loading="lazy" />' +
+      "</div>" +
+      '<div class="photo-body">' +
+      "<h3>" +
+      escapeHtml(photo.title) +
+      "</h3>" +
+      "<p>" +
+      escapeHtml(photo.desc) +
+      "</p>" +
+      (withBuy
+        ? '<div class="photo-actions">' +
           '<a class="btn btn-primary" href="shop.html?print=' +
           encodeURIComponent(photo.title) +
           '">Buy print</a>' +
-          "</div>" +
-          "</div>" +
-          "</article>"
-        );
-      })
-      .join("");
+          "</div>"
+        : "") +
+      "</div>" +
+      "</article>"
+    );
+  }
+
+  // ---- Gallery with category tabs ----
+  const galleryGrid = document.getElementById("gallery-grid");
+  const galleryTabs = document.getElementById("gallery-tabs");
+  if (galleryGrid && SITE_CONFIG.photos) {
+    function renderGallery(category) {
+      const cat = category || "all";
+      const list = SITE_CONFIG.photos.filter(function (photo) {
+        if (cat === "all") return true;
+        return (photo.category || "") === cat;
+      });
+      if (!list.length) {
+        galleryGrid.innerHTML =
+          '<p class="gallery-empty">No photos in this category yet.</p>';
+        return;
+      }
+      galleryGrid.innerHTML = list
+        .map(function (photo) {
+          return photoCardHtml(photo, true);
+        })
+        .join("");
+      const countEl = document.getElementById("gallery-count");
+      if (countEl) {
+        countEl.textContent =
+          list.length + (list.length === 1 ? " photo" : " photos");
+      }
+    }
+
+    if (galleryTabs && SITE_CONFIG.categories) {
+      galleryTabs.innerHTML = SITE_CONFIG.categories
+        .map(function (c, i) {
+          return (
+            '<button type="button" class="gallery-tab' +
+            (i === 0 ? " is-active" : "") +
+            '" data-category="' +
+            escapeHtml(c.id) +
+            '" role="tab" aria-selected="' +
+            (i === 0 ? "true" : "false") +
+            '">' +
+            escapeHtml(c.label) +
+            "</button>"
+          );
+        })
+        .join("");
+
+      galleryTabs.addEventListener("click", function (e) {
+        const btn = e.target.closest(".gallery-tab");
+        if (!btn) return;
+        const cat = btn.getAttribute("data-category") || "all";
+        galleryTabs.querySelectorAll(".gallery-tab").forEach(function (tab) {
+          const on = tab === btn;
+          tab.classList.toggle("is-active", on);
+          tab.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        renderGallery(cat);
+      });
+    }
+
+    // Deep link: gallery.html?cat=gators
+    const params = new URLSearchParams(window.location.search);
+    const startCat = params.get("cat") || "all";
+    if (galleryTabs && startCat !== "all") {
+      const match = galleryTabs.querySelector(
+        '.gallery-tab[data-category="' + startCat + '"]'
+      );
+      if (match) {
+        galleryTabs.querySelectorAll(".gallery-tab").forEach(function (tab) {
+          const on = tab === match;
+          tab.classList.toggle("is-active", on);
+          tab.setAttribute("aria-selected", on ? "true" : "false");
+        });
+      }
+    }
+    renderGallery(startCat);
   }
 
   const featuredGrid = document.getElementById("featured-grid");
@@ -122,25 +196,7 @@
     const featured = SITE_CONFIG.photos.slice(0, 3);
     featuredGrid.innerHTML = featured
       .map(function (photo) {
-        return (
-          '<article class="photo-card">' +
-          '<div class="photo-img-wrap">' +
-          '<img class="photo-img" src="' +
-          photoUrl(photo.file) +
-          '" alt="' +
-          escapeHtml(photo.title) +
-          '" loading="lazy" />' +
-          "</div>" +
-          '<div class="photo-body">' +
-          "<h3>" +
-          escapeHtml(photo.title) +
-          "</h3>" +
-          "<p>" +
-          escapeHtml(photo.desc) +
-          "</p>" +
-          "</div>" +
-          "</article>"
-        );
+        return photoCardHtml(photo, false);
       })
       .join("");
   }
