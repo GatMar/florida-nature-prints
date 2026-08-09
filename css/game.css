@@ -78,7 +78,7 @@
 }
 
 .stage-wrap-arcade {
-  max-width: min(100%, 420px);
+  max-width: min(100%, 640px);
   width: 100%;
   margin: 0 auto;
   background: #06140e;
@@ -94,9 +94,9 @@
   display: block;
   width: 100%;
   height: auto;
-  /* Leave room for HUD + D-pad on phones */
-  max-height: min(52dvh, 480px);
-  aspect-ratio: 360 / 456;
+  /* Larger playfield; leave room for HUD + D-pad on phones */
+  max-height: min(62dvh, 620px);
+  aspect-ratio: 570 / 510;
   image-rendering: auto;
   background: #0a1f16;
   touch-action: none;
@@ -182,7 +182,7 @@
 }
 
 .game-wrap {
-  width: min(100% - 1rem, 960px);
+  width: min(100% - 0.75rem, 720px);
   margin: 0 auto;
   padding: 0.75rem 0 2.5rem;
 }
@@ -803,19 +803,23 @@
     font-size: 0.85rem;
   }
 
+  .stage-wrap-arcade {
+    max-width: 100%;
+  }
+
   .stage-wrap-arcade #game-canvas {
-    max-height: min(48dvh, 420px);
+    max-height: min(56dvh, 520px);
   }
 
   .dpad {
-    width: min(100%, 300px);
+    width: min(100%, 320px);
     gap: 0.4rem;
   }
 
   .dpad-btn {
-    min-height: 72px;
-    min-width: 72px;
-    font-size: 1.6rem;
+    min-height: 76px;
+    min-width: 76px;
+    font-size: 1.65rem;
     border-radius: 18px;
   }
 
@@ -839,7 +843,7 @@
 /* Short phones: prioritize maze + pad */
 @media (max-width: 520px) and (max-height: 720px) {
   .stage-wrap-arcade #game-canvas {
-    max-height: min(42dvh, 360px);
+    max-height: min(48dvh, 420px);
   }
 
   .start-list {
@@ -847,7 +851,7 @@
   }
 
   .dpad-btn {
-    min-height: 62px;
+    min-height: 64px;
   }
 }
 
@@ -884,7 +888,7 @@
   }
 
   .stage-wrap-arcade #game-canvas {
-    max-height: min(78dvh, 420px);
+    max-height: min(82dvh, 480px);
   }
 
   .play-hint {
@@ -893,13 +897,13 @@
 
   .dpad {
     grid-area: dpad;
-    width: 160px;
+    width: 180px;
     margin: 0 auto;
   }
 
   .dpad-btn {
-    min-height: 48px;
-    min-width: 48px;
-    font-size: 1.2rem;
+    min-height: 52px;
+    min-width: 52px;
+    font-size: 1.25rem;
   }
 }

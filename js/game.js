@@ -7,11 +7,12 @@
   "use strict";
 
   const STORAGE = "gatorLifeProgress_v6_swamp";
-  const COLS = 15;
-  const ROWS = 19;
-  const TILE = 24;
-  const W = COLS * TILE;
-  const H = ROWS * TILE;
+  // Wider + larger playfield (everything scales with TILE)
+  const COLS = 19;
+  const ROWS = 17;
+  const TILE = 30;
+  const W = COLS * TILE; // 570
+  const H = ROWS * TILE; // 510
   const TOTAL_LEVELS = 50;
   // tile kinds
   const T = {
@@ -216,11 +217,11 @@
   }
 
   function growthScale() {
-    // Grows with fish eaten this level (and a bit with score)
+    // Grows with fish eaten this level (starts a bit larger on big board)
     const eaten = (world && world.fishEaten) || 0;
-    const base = 0.72;
-    const perFish = 0.045;
-    const cap = 1.85;
+    const base = 0.82;
+    const perFish = 0.05;
+    const cap = 1.95;
     return Math.min(cap, base + eaten * perFish);
   }
 
