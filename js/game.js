@@ -7,9 +7,10 @@
   "use strict";
 
   const STORAGE = "gatorLifeProgress_v2";
-  const W = 320;
-  const H = 180;
-  const GRAV = 0.28;
+  // Higher internal resolution = smaller, clearer pixel art when scaled up
+  const W = 480;
+  const H = 270;
+  const GRAV = 0.42;
   const TOTAL_LEVELS = 50;
 
   const state = {
@@ -42,28 +43,49 @@
     } catch (e) {}
   }
 
+  function scoreVoice(v, prefer) {
+    const n = (v.name || "") + " " + (v.lang || "");
+    let s = 0;
+    if (/en[-_]?(us|gb|au|ie)/i.test(v.lang || "")) s += 3;
+    if (/en/i.test(v.lang || "")) s += 1;
+    // Prefer softer, more natural / youthful voices when available
+    if (/samantha|karen|moira|fiona|victoria|zira|susan|allison|ava|nicky|siri|soft|natural|premium|enhanced|neural/i.test(n))
+      s += 6;
+    if (/google|microsoft|apple/i.test(n)) s += 2;
+    if (prefer === "gator") {
+      // Kid-like: avoid deep male robotic defaults when possible
+      if (/female|woman|girl|child|kids|samantha|karen|moira|fiona|ava/i.test(n)) s += 5;
+      if (/male|david|mark|daniel|fred|alex|bruce|tom/i.test(n) && !/female/i.test(n)) s -= 2;
+    }
+    if (prefer === "npc") {
+      if (/female|samantha|karen|zira|moira/i.test(n)) s += 3;
+    }
+    // Penalize clearly robotic labels when alternatives exist
+    if (/robot|compact|eloquence/i.test(n)) s -= 1;
+    return s;
+  }
+
   function pickVoice(prefer) {
     if (!voiceSupported) return null;
     const list = window.speechSynthesis.getVoices() || [];
     if (!list.length) return null;
-    const en = list.filter(function (v) {
-      return (v.lang || "").toLowerCase().indexOf("en") === 0;
-    });
-    const pool = en.length ? en : list;
-    if (prefer === "npc") {
-      // Slightly higher / different voice when possible
-      return (
-        pool.find(function (v) {
-          return /female|samantha|victoria|karen|moira|zira/i.test(v.name);
-        }) || pool[pool.length - 1]
-      );
+    let best = list[0];
+    let bestScore = -999;
+    for (let i = 0; i < list.length; i++) {
+      const sc = scoreVoice(list[i], prefer);
+      if (sc > bestScore) {
+        bestScore = sc;
+        best = list[i];
+      }
     }
-    // Gator: prefer a steadier default English voice
-    return (
-      pool.find(function (v) {
-        return /male|daniel|alex|fred|david|mark/i.test(v.name);
-      }) || pool[0]
-    );
+    return best;
+  }
+
+  /** Kid-gator style: brighter pitch, quicker, playful wording */
+  function kidify(text) {
+    return String(text)
+      .replace(/!+/g, "!")
+      .replace(/\.$/, "!");
   }
 
   function speak(text, kind, opts) {
@@ -71,21 +93,26 @@
     opts = opts || {};
     try {
       if (!opts.queue) stopVoice();
-      const u = new SpeechSynthesisUtterance(String(text));
+      let said = String(text);
+      if (kind === "gator") said = kidify(said);
+      const u = new SpeechSynthesisUtterance(said);
       u.lang = "en-US";
       const v = pickVoice(kind === "npc" ? "npc" : "gator");
       if (v) u.voice = v;
-      if (kind === "npc") {
-        u.rate = 1.02;
-        u.pitch = 1.25;
-      } else if (kind === "gator") {
-        u.rate = 1.08;
-        u.pitch = 0.85;
+      if (kind === "gator") {
+        // Brighter, more playful "kid gator" within Web Speech limits
+        u.rate = 1.14;
+        u.pitch = 1.55;
+        u.volume = 1;
+      } else if (kind === "npc") {
+        u.rate = 1.05;
+        u.pitch = 1.2;
+        u.volume = 1;
       } else {
-        u.rate = 1;
-        u.pitch = 1;
+        u.rate = 1.05;
+        u.pitch = 1.1;
+        u.volume = 1;
       }
-      u.volume = 1;
       window.speechSynthesis.speak(u);
     } catch (e) {}
   }
@@ -99,25 +126,25 @@
 
   const GATOR_LINES = {
     start: [
-      "Let's go!",
-      "Marsh time!",
+      "Let's gooo!",
+      "Whee, marsh time!",
       "I got this!",
-      "Swim strong!",
-      "Florida run!",
+      "Tiny gator power!",
+      "Ready set splash!",
     ],
-    jump: ["Up we go!", "Boing!", "Higher!"],
+    jump: ["Boing!", "Up up!", "Weee!"],
     fire: [
       "Hot hot hot!",
-      "Jump the fire!",
-      "Must climb faster!",
+      "Jump jump!",
+      "Gotta go faster!",
       "Too toasty!",
     ],
-    cave: ["Dash the cave!", "Now! Through!", "Watch the rocks!"],
-    hurt: ["Oof!", "Not cool!", "I'm okay!", "Yow!"],
-    snack: ["Yum!", "Snack secured!", "Tasty!"],
-    quiz: ["Okay, think!", "I know this!", "Brain mode!"],
-    win: ["Yes! Level clear!", "Nailed it!", "Flag time!"],
-    nearFlag: ["Almost there!", "Go go go!", "Must climb faster!"],
+    cave: ["Now now now!", "Through the cave!", "Zip zip!"],
+    hurt: ["Owie!", "Hey!", "I'm okay!", "Yow!"],
+    snack: ["Yum yum!", "Snack!", "Tasty!"],
+    quiz: ["Hmm, think!", "I can do it!", "Quiz time!"],
+    win: ["Yay! We did it!", "Flag flag flag!", "Best gator!"],
+    nearFlag: ["Almost!", "Go go go!", "Gotta go faster!"],
   };
 
   function gatorLine(kind, force) {
@@ -195,11 +222,12 @@
   }
 
   function gatorScale(i) {
-    if (i < 10) return 0.7;
-    if (i < 20) return 0.85;
+    // Small miniature gator; grows only slightly with stage
+    if (i < 10) return 0.85;
+    if (i < 20) return 0.95;
     if (i < 30) return 1;
-    if (i < 40) return 1.15;
-    return 1.35;
+    if (i < 40) return 1.08;
+    return 1.15;
   }
 
   function load() {
@@ -275,23 +303,23 @@
     const hazards = [];
     const quizzes = [];
     const items = [];
-    const len = 900 + idx * 28;
-    const groundY = 150;
+    const len = 1400 + idx * 40;
+    const groundY = 228;
 
     // ground segments with gaps
     let x = 0;
     while (x < len) {
-      const w = 80 + Math.floor(Math.random() * 60) + (idx < 5 ? 40 : 0);
-      platforms.push({ x: x, y: groundY, w: w, h: 30 });
-      const gap = 20 + Math.min(50, 10 + idx);
-      x += w + (idx > 3 && Math.random() < 0.35 ? gap : 8);
+      const w = 110 + Math.floor(Math.random() * 80) + (idx < 5 ? 50 : 0);
+      platforms.push({ x: x, y: groundY, w: w, h: 44 });
+      const gap = 28 + Math.min(55, 12 + idx);
+      x += w + (idx > 3 && Math.random() < 0.35 ? gap : 10);
     }
     // floating pads
-    for (let i = 0; i < 4 + Math.floor(idx / 5); i++) {
+    for (let i = 0; i < 5 + Math.floor(idx / 5); i++) {
       platforms.push({
-        x: 120 + i * 140 + (idx % 7) * 9,
-        y: 100 - (i % 3) * 18,
-        w: 48 + (idx % 5) * 4,
+        x: 160 + i * 180 + (idx % 7) * 11,
+        y: 150 - (i % 3) * 24,
+        w: 56 + (idx % 5) * 4,
         h: 10,
       });
     }
@@ -314,48 +342,49 @@
     for (let i = 0; i < count; i++) {
       const unlock = Math.min(roster.length - 1, 2 + Math.floor(idx / 4) + (i % 3));
       const k = roster[Math.floor(Math.random() * (unlock + 1))];
-      const baseX = 140 + i * (75 - Math.min(35, idx * 0.4)) + Math.random() * 40;
+      const baseX = 200 + i * (100 - Math.min(40, idx * 0.45)) + Math.random() * 50;
       if (k === "fire") {
         hazards.push({
           kind: "fire",
           x: baseX,
           y: groundY - 2,
-          w: 22 + (idx % 4) * 2,
-          h: 18,
+          w: 18,
+          h: 16,
           vx: 0,
           baseY: groundY - 2,
           phase: Math.random() * 10,
-          tall: 14 + Math.random() * 10,
+          tall: 12 + Math.random() * 6,
         });
       } else if (k === "cave") {
         hazards.push({
           kind: "cave",
           x: baseX,
-          y: groundY - 36,
-          w: 28,
-          h: 40,
+          y: groundY - 42,
+          w: 26,
+          h: 44,
           open: true,
           phase: Math.random() * 6,
           period: 2.2 + Math.random() * 1.4,
           vx: 0,
-          baseY: groundY - 36,
+          baseY: groundY - 42,
         });
       } else {
+        const fly = k === "hawk" || k === "bird";
         hazards.push({
           kind: k,
           x: baseX,
-          y: k === "hawk" || k === "bird" ? groundY - 50 : groundY - 14,
-          w: k === "panther" || k === "boar" || k === "rival" ? 20 : 14,
-          h: k === "panther" || k === "boar" ? 14 : 12,
+          y: fly ? groundY - 70 : groundY - 16,
+          w: k === "panther" || k === "boar" || k === "rival" ? 18 : 14,
+          h: k === "panther" || k === "boar" ? 12 : 10,
           vx:
-            k === "hawk" || k === "bird"
-              ? 0.75 + idx * 0.02
+            fly
+              ? 1.05 + idx * 0.02
               : k === "boat"
-                ? 0.95
+                ? 1.2
                 : k === "panther"
-                  ? 0.55
-                  : 0.4,
-          baseY: k === "hawk" || k === "bird" ? groundY - 50 : groundY - 14,
+                  ? 0.75
+                  : 0.55,
+          baseY: fly ? groundY - 70 : groundY - 16,
           phase: Math.random() * 10,
         });
       }
@@ -365,8 +394,8 @@
     const qn = 2 + (idx % 3);
     for (let i = 0; i < qn; i++) {
       quizzes.push({
-        x: 180 + ((i + 1) * len) / (qn + 2),
-        y: groundY - 40,
+        x: 220 + ((i + 1) * len) / (qn + 2),
+        y: groundY - 48,
         hit: false,
       });
     }
@@ -374,12 +403,13 @@
     // snacks
     for (let i = 0; i < 8 + (idx % 5); i++) {
       items.push({
-        x: 100 + i * 70,
-        y: groundY - 28 - (i % 3) * 20,
+        x: 140 + i * 90,
+        y: groundY - 36 - (i % 3) * 22,
         taken: false,
       });
     }
 
+    const sc = gatorScale(idx);
     return {
       idx: idx,
       len: len,
@@ -387,18 +417,19 @@
       hazards: hazards,
       quizzes: quizzes,
       items: items,
-      goalX: len - 40,
+      goalX: len - 50,
       camera: 0,
       time: 0,
       inv: 0,
       won: false,
       player: {
-        x: 40,
-        y: 100,
+        x: 48,
+        y: 160,
         vx: 0,
         vy: 0,
-        w: 16 * gatorScale(idx),
-        h: 10 * gatorScale(idx),
+        // Compact hitbox matching tiny gator sprite (~20x12)
+        w: 20 * sc,
+        h: 12 * sc,
         onGround: false,
         facing: 1,
       },
@@ -450,49 +481,95 @@
     });
   }
 
+  // Tiny pseudo-3D alligator sprite (rows of 1px colors). Facing right.
+  // . empty  D dark  M mid  L light  B belly  Y stripe/eye  K black  N nostril
+  const GATOR_SPRITE = [
+    "......LLL.........",
+    "....LLMMMML.......",
+    "...LMMYYYYMML.....",
+    "..LMMMDDDMYMLL....",
+    ".LMMMMDDDDMYYLK...",
+    "LMMBBBMMMDDMMNLK..",
+    "LMBBBBBMMMDMMMLK..",
+    ".DMBBBBMMMDMMDD...",
+    "..DMM.MM..MM.DD...",
+    "...DD.DD..DD.D....",
+  ];
+  const GATOR_EGG = [
+    "..LLLL..",
+    ".LMMMML.",
+    "LMMYYMML",
+    "LMDDDMML",
+    "LMDDDMML",
+    ".LMMMML.",
+    "..LDDL..",
+  ];
+  const PAL = {
+    D: "#1e4a28",
+    M: "#2f6b38",
+    L: "#4a9a55",
+    B: "#6aaa58",
+    Y: "#e8d060",
+    K: "#101810",
+    N: "#0a0a0a",
+  };
+
+  function drawSprite(rows, ox, oy, facing, pivotW) {
+    const h = rows.length;
+    const w = rows[0].length;
+    ctx.save();
+    if (facing < 0) {
+      ctx.translate(ox + pivotW / 2, 0);
+      ctx.scale(-1, 1);
+      ctx.translate(-(ox + pivotW / 2), 0);
+    }
+    for (let r = 0; r < h; r++) {
+      for (let c = 0; c < w; c++) {
+        const ch = rows[r][c];
+        if (!ch || ch === ".") continue;
+        const col = PAL[ch];
+        if (!col) continue;
+        ctx.fillStyle = col;
+        ctx.fillRect(ox + c, oy + r, 1, 1);
+      }
+    }
+    ctx.restore();
+  }
+
   function drawPixelGator(p, scale, facing) {
     const x = Math.floor(p.x - world.camera);
     const y = Math.floor(p.y);
-    const s = scale;
+    // scale ~1 draws native 1px art (small + readable)
+    const s = Math.max(1, Math.round(scale));
     ctx.save();
+    if (s !== 1) {
+      // draw at 1x into temp path by scaling context carefully
+    }
     if (facing < 0) {
-      ctx.translate(x + p.w / 2, 0);
-      ctx.scale(-1, 1);
-      ctx.translate(-(x + p.w / 2), 0);
-    }
-    // body blocks - original design
-    ctx.fillStyle = "#2f6b3a";
-    ctx.fillRect(x, y + 2 * s, 12 * s, 6 * s);
-    ctx.fillStyle = "#3d8a4a";
-    ctx.fillRect(x + 2 * s, y + 1 * s, 8 * s, 3 * s);
-    // head
-    ctx.fillStyle = "#357a42";
-    ctx.fillRect(x + 10 * s, y + 2 * s, 7 * s, 5 * s);
-    // snout
-    ctx.fillStyle = "#2a6035";
-    ctx.fillRect(x + 15 * s, y + 4 * s, 5 * s, 2 * s);
-    // eye
-    ctx.fillStyle = "#f0e060";
-    ctx.fillRect(x + 13 * s, y + 2 * s, 2 * s, 2 * s);
-    ctx.fillStyle = "#111";
-    ctx.fillRect(x + 14 * s, y + 2 * s, 1 * s, 1 * s);
-    // legs
-    ctx.fillStyle = "#245530";
-    ctx.fillRect(x + 2 * s, y + 7 * s, 3 * s, 3 * s);
-    ctx.fillRect(x + 8 * s, y + 7 * s, 3 * s, 3 * s);
-    // hatchling stripes
-    if (world.idx < 20) {
-      ctx.fillStyle = "#e8d060";
-      ctx.fillRect(x + 3 * s, y + 2 * s, 1 * s, 5 * s);
-      ctx.fillRect(x + 6 * s, y + 2 * s, 1 * s, 5 * s);
-      ctx.fillRect(x + 9 * s, y + 2 * s, 1 * s, 5 * s);
-    }
-    // egg form early
-    if (world.idx < 5) {
-      ctx.fillStyle = "#f0e8c8";
-      ctx.fillRect(x + 2 * s, y, 10 * s, 12 * s);
-      ctx.fillStyle = "#e0d0a0";
-      ctx.fillRect(x + 4 * s, y + 2 * s, 2 * s, 2 * s);
+      ctx.translate(x + p.w / 2, y + p.h / 2);
+      ctx.scale(-s, s);
+      ctx.translate(-(p.w / (2 * s)), -(p.h / (2 * s)));
+      const rows = world.idx < 5 ? GATOR_EGG : GATOR_SPRITE;
+      for (let r = 0; r < rows.length; r++) {
+        for (let c = 0; c < rows[r].length; c++) {
+          const ch = rows[r][c];
+          if (!ch || ch === ".") continue;
+          ctx.fillStyle = PAL[ch] || "#2f6b38";
+          ctx.fillRect(c, r, 1, 1);
+        }
+      }
+    } else {
+      ctx.translate(x, y);
+      ctx.scale(s, s);
+      const rows = world.idx < 5 ? GATOR_EGG : GATOR_SPRITE;
+      for (let r = 0; r < rows.length; r++) {
+        for (let c = 0; c < rows[r].length; c++) {
+          const ch = rows[r][c];
+          if (!ch || ch === ".") continue;
+          ctx.fillStyle = PAL[ch] || "#2f6b38";
+          ctx.fillRect(c, r, 1, 1);
+        }
+      }
     }
     ctx.restore();
   }
@@ -500,126 +577,124 @@
   function drawHazard(h, cam) {
     const x = Math.floor(h.x - cam);
     const y = Math.floor(h.y);
-    if (x < -30 || x > W + 30) return;
-    const flick = Math.sin((world ? world.time : 0) * 12 + h.phase) * 0.5 + 0.5;
+    if (x < -40 || x > W + 40) return;
+    const flick = Math.sin((world ? world.time : 0) * 14 + h.phase) * 0.5 + 0.5;
 
     if (h.kind === "fire") {
-      const tall = (h.tall || 16) + flick * 6;
-      ctx.fillStyle = "#3a2010";
-      ctx.fillRect(x, y + 10, h.w, 6);
-      ctx.fillStyle = "#ff4400";
-      ctx.fillRect(x + 2, y + 10 - tall, h.w - 4, tall);
-      ctx.fillStyle = "#ffcc00";
-      ctx.fillRect(x + 5, y + 12 - tall * 0.7, h.w - 10, tall * 0.55);
-      ctx.fillStyle = "#fff8c0";
-      ctx.fillRect(x + h.w / 2 - 1, y + 8 - tall, 3, 5);
+      const tall = (h.tall || 12) + flick * 4;
+      ctx.fillStyle = "#2a1810";
+      ctx.fillRect(x + 1, y + 8, h.w - 2, 4);
+      ctx.fillStyle = "#ff5500";
+      ctx.fillRect(x + 3, y + 8 - tall, h.w - 6, tall);
+      ctx.fillStyle = "#ffcc33";
+      ctx.fillRect(x + 5, y + 10 - tall * 0.65, Math.max(2, h.w - 10), tall * 0.45);
+      ctx.fillStyle = "#fff6a0";
+      ctx.fillRect(x + Math.floor(h.w / 2), y + 6 - tall, 2, 4);
       return;
     }
 
     if (h.kind === "cave") {
-      // Rock mouth that opens and closes
-      ctx.fillStyle = "#2a2a2a";
-      ctx.fillRect(x, y, h.w, h.h);
-      ctx.fillStyle = "#1a1a1a";
-      const openAmt = h.open ? 0.85 : 0.15;
+      const openAmt = h.open ? 0.8 : 0.18;
       const gap = Math.floor(h.h * openAmt);
       const topH = Math.floor((h.h - gap) / 2);
-      ctx.fillStyle = "#4a4038";
-      ctx.fillRect(x - 2, y, h.w + 4, topH);
-      ctx.fillRect(x - 2, y + h.h - topH, h.w + 4, topH);
-      ctx.fillStyle = "#0a0a0a";
-      ctx.fillRect(x + 4, y + topH, h.w - 8, gap);
+      ctx.fillStyle = "#3a342e";
+      ctx.fillRect(x, y, h.w, topH);
+      ctx.fillRect(x, y + h.h - topH, h.w, topH);
+      ctx.fillStyle = "#1a1612";
+      ctx.fillRect(x + 3, y + topH, h.w - 6, gap);
+      ctx.fillStyle = "#5a5048";
+      ctx.fillRect(x - 1, y, 2, h.h);
+      ctx.fillRect(x + h.w - 1, y, 2, h.h);
       if (!h.open) {
-        ctx.fillStyle = "rgba(180,40,40,0.35)";
+        ctx.fillStyle = "rgba(160,50,40,0.3)";
         ctx.fillRect(x, y, h.w, h.h);
       }
       return;
     }
 
     if (h.kind === "rattler") {
-      ctx.fillStyle = "#c4a35a";
-      ctx.fillRect(x, y + 6, 18, 4);
-      ctx.fillStyle = "#8b6914";
-      for (let i = 0; i < 5; i++) ctx.fillRect(x + i * 3, y + 5 + (i % 2), 3, 3);
+      ctx.fillStyle = "#b89540";
+      ctx.fillRect(x, y + 5, 14, 3);
+      ctx.fillStyle = "#8a6a20";
+      ctx.fillRect(x + 2, y + 4, 2, 2);
+      ctx.fillRect(x + 6, y + 4, 2, 2);
+      ctx.fillRect(x + 10, y + 4, 2, 2);
       ctx.fillStyle = "#d4b060";
-      ctx.fillRect(x + 14, y + 2, 6, 6);
+      ctx.fillRect(x + 12, y + 2, 5, 5);
       ctx.fillStyle = "#111";
-      ctx.fillRect(x + 17, y + 3, 2, 2);
-      // rattle
+      ctx.fillRect(x + 14, y + 3, 1, 1);
       ctx.fillStyle = "#e8d080";
-      ctx.fillRect(x - 3, y + 6, 4, 3);
+      ctx.fillRect(x - 2, y + 5, 3, 2);
       return;
     }
 
     if (h.kind === "hawk" || h.kind === "bird") {
-      ctx.fillStyle = h.kind === "hawk" ? "#5a4030" : "#3a3a3a";
-      ctx.fillRect(x, y, 14, 6);
-      ctx.fillRect(x + 12, y - 2, 8, 4);
+      ctx.fillStyle = h.kind === "hawk" ? "#5a4030" : "#333";
+      ctx.fillRect(x, y + 2, 10, 4);
+      ctx.fillRect(x + 8, y, 5, 3);
       ctx.fillStyle = "#222";
-      ctx.fillRect(x + 2, y + 2, 4, 2);
-      if (h.kind === "hawk") {
-        ctx.fillStyle = "#8b4513";
-        ctx.fillRect(x - 4, y + 1, 6, 3);
-        ctx.fillRect(x + 10, y + 1, 6, 3);
-      }
+      ctx.fillRect(x + 1, y + 3, 2, 1);
+      ctx.fillStyle = "#6a5030";
+      ctx.fillRect(x - 3, y + 2, 4, 2);
+      ctx.fillRect(x + 7, y + 2, 4, 2);
       return;
     }
 
     if (h.kind === "panther") {
-      ctx.fillStyle = "#2a2a2a";
-      ctx.fillRect(x, y, 22, 10);
-      ctx.fillRect(x + 18, y - 2, 8, 8);
-      ctx.fillStyle = "#f0c040";
-      ctx.fillRect(x + 22, y, 2, 2);
-      ctx.fillStyle = "#111";
-      ctx.fillRect(x + 4, y + 9, 3, 4);
-      ctx.fillRect(x + 14, y + 9, 3, 4);
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(x, y + 2, 16, 7);
+      ctx.fillRect(x + 13, y, 6, 6);
+      ctx.fillStyle = "#e0b040";
+      ctx.fillRect(x + 16, y + 2, 1, 1);
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(x + 3, y + 8, 2, 3);
+      ctx.fillRect(x + 10, y + 8, 2, 3);
       return;
     }
 
     if (h.kind === "boar") {
-      ctx.fillStyle = "#5c4030";
-      ctx.fillRect(x, y, 18, 11);
-      ctx.fillStyle = "#f5f0e0";
-      ctx.fillRect(x + 16, y + 4, 5, 2);
-      ctx.fillStyle = "#111";
-      ctx.fillRect(x + 3, y + 10, 3, 3);
-      ctx.fillRect(x + 11, y + 10, 3, 3);
+      ctx.fillStyle = "#5a4030";
+      ctx.fillRect(x, y + 2, 14, 8);
+      ctx.fillStyle = "#f0e8d8";
+      ctx.fillRect(x + 12, y + 5, 4, 2);
+      ctx.fillStyle = "#2a2010";
+      ctx.fillRect(x + 2, y + 9, 2, 2);
+      ctx.fillRect(x + 8, y + 9, 2, 2);
       return;
     }
 
     if (h.kind === "boat") {
-      ctx.fillStyle = "#8b4513";
-      ctx.fillRect(x, y, 22, 8);
-      ctx.fillStyle = "#c0c0c0";
-      ctx.fillRect(x + 8, y - 8, 3, 8);
+      ctx.fillStyle = "#7a4518";
+      ctx.fillRect(x, y + 4, 16, 6);
+      ctx.fillStyle = "#c8c8c8";
+      ctx.fillRect(x + 6, y - 2, 2, 6);
       ctx.fillStyle = "#fff";
-      ctx.fillRect(x + 11, y - 7, 8, 5);
+      ctx.fillRect(x + 8, y - 1, 5, 3);
       return;
     }
 
     if (h.kind === "raccoon") {
       ctx.fillStyle = "#6b5b4b";
-      ctx.fillRect(x, y, 12, 8);
+      ctx.fillRect(x, y + 2, 10, 6);
       ctx.fillStyle = "#111";
-      ctx.fillRect(x + 2, y + 2, 8, 2);
+      ctx.fillRect(x + 2, y + 3, 6, 2);
       return;
     }
 
     if (h.kind === "snake") {
-      ctx.fillStyle = "#4a7a3a";
-      ctx.fillRect(x, y + 4, 16, 3);
-      ctx.fillRect(x + 12, y, 4, 5);
+      ctx.fillStyle = "#3d6a32";
+      ctx.fillRect(x, y + 5, 12, 2);
+      ctx.fillRect(x + 10, y + 2, 3, 4);
       return;
     }
 
     if (h.kind === "rival") {
-      drawPixelGator({ x: h.x, y: h.y - 4, w: 18, h: 12 }, 1.1, -1);
+      drawPixelGator({ x: h.x, y: h.y, w: 18, h: 12 }, 1, -1);
       return;
     }
 
     ctx.fillStyle = "#5c4030";
-    ctx.fillRect(x, y + 2, 16, 6);
+    ctx.fillRect(x, y + 2, 10, 5);
   }
 
   function drawWorld() {
@@ -633,28 +708,28 @@
       if (it.taken) return;
       const x = Math.floor(it.x - cam);
       ctx.fillStyle = "#e8c040";
-      ctx.fillRect(x, it.y, 6, 6);
+      ctx.fillRect(x, it.y, 5, 5);
       ctx.fillStyle = "#fff8c0";
       ctx.fillRect(x + 1, it.y + 1, 2, 2);
     });
 
-    // quiz markers (comic stars)
+    // quiz markers
     world.quizzes.forEach(function (q) {
       if (q.hit) return;
       const x = Math.floor(q.x - cam);
       ctx.fillStyle = "#ffe566";
-      ctx.fillRect(x, q.y, 12, 12);
+      ctx.fillRect(x, q.y, 10, 10);
       ctx.fillStyle = "#111";
-      ctx.font = "bold 10px monospace";
-      ctx.fillText("?", x + 3, q.y + 10);
+      ctx.font = "bold 9px monospace";
+      ctx.fillText("?", x + 2, q.y + 8);
     });
 
     // goal flag
     const gx = Math.floor(world.goalX - cam);
     ctx.fillStyle = "#f5f5f5";
-    ctx.fillRect(gx, 100, 3, 50);
+    ctx.fillRect(gx, 160, 3, 68);
     ctx.fillStyle = "#3cb371";
-    ctx.fillRect(gx + 3, 100, 14, 10);
+    ctx.fillRect(gx + 3, 160, 12, 9);
 
     world.hazards.forEach(function (h) {
       drawHazard(h, cam);
@@ -664,13 +739,13 @@
 
     // HUD strip on canvas
     ctx.fillStyle = "rgba(10,30,18,0.55)";
-    ctx.fillRect(0, 0, W, 14);
+    ctx.fillRect(0, 0, W, 16);
     ctx.fillStyle = "#e8f5ec";
-    ctx.font = "10px monospace";
+    ctx.font = "11px monospace";
     ctx.fillText(
       "LV " + (world.idx + 1) + "  " + stageName(world.idx) + "  SCORE " + state.score,
-      4,
-      10
+      6,
+      12
     );
   }
 
@@ -685,18 +760,18 @@
 
   function updatePlayer(dt) {
     const p = world.player;
-    const sp = 1.35 + Math.min(0.8, world.idx * 0.015);
+    const sp = 2.1 + Math.min(1.1, world.idx * 0.02);
     let move = 0;
     if (keys["arrowleft"] || keys["a"]) move -= 1;
     if (keys["arrowright"] || keys["d"]) move += 1;
     p.vx = move * sp;
     if (move) p.facing = move > 0 ? 1 : -1;
     if ((keys["arrowup"] || keys["w"] || keys[" "] || keys["z"]) && p.onGround) {
-      p.vy = -4.6 - Math.min(0.8, world.idx * 0.02);
+      p.vy = -6.8 - Math.min(1.0, world.idx * 0.025);
       p.onGround = false;
     }
     p.vy += GRAV;
-    if (p.vy > 6) p.vy = 6;
+    if (p.vy > 9) p.vy = 9;
 
     // Jump callout (edge-trigger-ish)
     if (
@@ -737,7 +812,7 @@
       world.camera = 0;
     }
 
-    world.camera = Math.max(0, Math.min(world.len - W, p.x - 80));
+    world.camera = Math.max(0, Math.min(world.len - W, p.x - 120));
   }
 
   function hurt() {

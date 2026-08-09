@@ -217,10 +217,12 @@
   display: block;
   width: 100%;
   height: auto;
+  max-height: min(62vh, 520px);
+  object-fit: contain;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   touch-action: none;
-  background: #6aa8bc;
+  background: #1a3020;
 }
 
 .play-hint {
