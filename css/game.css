@@ -1,8 +1,71 @@
-/* Gator Life - pixel adventure, Florida wetlands */
+/* Gator Life - Pac-style swamp arcade */
 
 .game-page {
-  background: #0d2818;
+  background: radial-gradient(ellipse at top, #143d28 0%, #0a1a12 55%, #050f0a 100%);
   min-height: 100vh;
+}
+
+.game-card-arcade {
+  border-color: #4fd68a !important;
+  box-shadow:
+    0 0 0 4px #0a1a10,
+    0 0 24px rgba(60, 179, 113, 0.25),
+    0 16px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+.stage-wrap-arcade {
+  max-width: 400px;
+  margin: 0 auto;
+  background: #06140e;
+  border-color: #3cb371 !important;
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(60, 179, 113, 0.2);
+}
+
+.stage-wrap-arcade #game-canvas {
+  max-height: min(70vh, 520px);
+  aspect-ratio: 360 / 456;
+  image-rendering: auto;
+  background: #0a1f16;
+}
+
+/* D-pad controls */
+.dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem auto 0;
+  max-width: 280px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.dpad-mid {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.dpad-btn {
+  min-width: 72px;
+  min-height: 58px;
+  font-size: 1.35rem;
+  border-radius: 12px !important;
+  padding: 0.4rem 0.75rem !important;
+}
+
+.dpad-center {
+  min-width: 58px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.dpad-up,
+.dpad-down {
+  min-width: 88px;
 }
 
 .game-page .site-header {

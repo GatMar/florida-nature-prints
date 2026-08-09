@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <title>Gator Life - Florida Nature Prints</title>
     <meta
       name="description"
-      content="Gator Life: a free Florida swamp labyrinth game — walk, jump, and explore with wildlife quizzes."
+      content="Gator Life: a free Pac-Man style Florida swamp maze game with snacks, critters, levels, and quizzes."
     />
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/game.css" />
@@ -40,7 +40,7 @@
 
     <main>
       <div class="game-wrap">
-        <div class="game-card">
+        <div class="game-card game-card-arcade">
           <!-- START -->
           <section id="screen-start" class="game-screen active">
             <div class="start-hero" aria-hidden="true">
@@ -52,13 +52,13 @@
             </div>
             <h1>Gator Life</h1>
             <p class="subtitle">
-              Explore a swampy Florida labyrinth — walk, jump, find the flag.
+              Pac-style swamp maze — chomp snacks, dodge critters, clear the marsh.
             </p>
             <ul class="start-list">
-              <li>Wander mud banks, moss steps, and cypress walls</li>
-              <li>Jump the gaps — no ladders, just swampy paths</li>
-              <li>Grab snacks, dodge hazards, touch ? for quizzes</li>
-              <li>Find the green flag on the upper trail</li>
+              <li>Steer your gator through a glowing Florida maze</li>
+              <li>Eat every snack pellet to clear the level</li>
+              <li>Grab a big lily for power — then chomp the critters!</li>
+              <li>50 levels · haptics · progress saves on this device</li>
             </ul>
             <div class="btn-row">
               <button type="button" class="game-btn game-btn-primary" id="btn-start">
@@ -77,10 +77,10 @@
               style="display: none; margin-top: 1rem; background: #fffef5; color: #1a3324"
             >
               <p style="color: #1a3324">
-                <strong>← →</strong> move &nbsp;·&nbsp; <strong>Jump</strong> (Space, Z, or ↑)<br />
-                Use the big buttons under the game on a phone.<br />
-                Climb only by <strong>jumping mud steps</strong> between paths.
-                Avoid murky water gaps. Reach the <strong>green flag</strong> on top!
+                <strong>Move</strong> with arrow keys / WASD, swipe the maze, or the D-pad.<br />
+                Eat all <strong>yellow snacks</strong> to finish a level.<br />
+                <strong>Green lilies</strong> = power mode (you can eat critters for a few seconds).<br />
+                Side tunnels wrap around. Clear 50 swamp mazes!
               </p>
             </div>
             <p class="controls-note">
@@ -117,8 +117,8 @@
               </h2>
               <p id="level-blurb" style="display: none"></p>
             </div>
-            <div class="stage-wrap">
-              <canvas id="game-canvas" width="360" height="560" aria-label="Gator Life game"></canvas>
+            <div class="stage-wrap stage-wrap-arcade">
+              <canvas id="game-canvas" width="360" height="456" aria-label="Gator Life maze"></canvas>
               <div id="comic-overlay" class="comic-overlay" aria-modal="true" role="dialog">
                 <div class="meme-panel">
                   <div class="meme-npc" aria-hidden="true">
@@ -137,24 +137,24 @@
                       id="comic-continue"
                       style="display: none"
                     >
-                      Back to the run!
+                      Back to the maze!
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-            <p class="play-hint" id="play-hint">← → move · Jump mud steps · Flag on the top path →</p>
-            <div class="control-pads" aria-label="Game controls">
-              <button type="button" class="game-btn game-btn-secondary pad-btn" id="pad-left">
-                ◀
-              </button>
-              <button type="button" class="game-btn game-btn-primary pad-btn pad-jump" id="pad-jump">
-                Jump
-              </button>
-              <button type="button" class="game-btn game-btn-secondary pad-btn" id="pad-right">
-                ▶
-              </button>
+            <p class="play-hint" id="play-hint">Swipe or use the D-pad · Eat all snacks!</p>
+
+            <div class="dpad" aria-label="Direction pad">
+              <button type="button" class="game-btn game-btn-secondary dpad-btn dpad-up" id="pad-up">▲</button>
+              <div class="dpad-mid">
+                <button type="button" class="game-btn game-btn-secondary dpad-btn" id="pad-left">◀</button>
+                <button type="button" class="game-btn game-btn-primary dpad-btn dpad-center" disabled aria-hidden="true">🐊</button>
+                <button type="button" class="game-btn game-btn-secondary dpad-btn" id="pad-right">▶</button>
+              </div>
+              <button type="button" class="game-btn game-btn-secondary dpad-btn dpad-down" id="pad-down">▼</button>
             </div>
+
             <div class="btn-row" style="margin-top: 0.45rem">
               <button type="button" class="game-btn game-btn-secondary" id="btn-quit-play" style="min-height: 40px; font-size: 0.8rem">
                 Quit to menu
