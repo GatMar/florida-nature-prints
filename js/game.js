@@ -1194,26 +1194,40 @@
 
   function updatePlayer(dt) {
     const p = world.player;
-    const sp = 2.6 + Math.min(1.3, world.idx * 0.025);
+    const sp = 2.8 + Math.min(1.3, world.idx * 0.025);
     let move = 0;
     if (keys["arrowleft"] || keys["a"]) move -= 1;
     if (keys["arrowright"] || keys["d"]) move += 1;
     p.vx = move * sp;
     if (move) p.facing = move > 0 ? 1 : -1;
-    if ((keys["arrowup"] || keys["w"] || keys[" "] || keys["z"]) && p.onGround) {
-      p.vy = -8.2 - Math.min(1.2, world.idx * 0.03);
-      p.onGround = false;
-    }
-    p.vy += GRAV;
-    if (p.vy > 11) p.vy = 11;
 
-    // Jump callout (edge-trigger-ish)
-    if (
-      (keys["arrowup"] || keys["w"] || keys[" "] || keys["z"]) &&
-      p.onGround &&
-      Math.random() < 0.35
-    ) {
-      gatorLine("jump");
+    const climb = climbAt(p);
+    p.onClimb = !!climb;
+    const up = keys["arrowup"] || keys["w"];
+    const down = keys["arrowdown"] || keys["s"];
+    const jumpKey = keys[" "] || keys["z"];
+
+    if (climb && (up || down)) {
+      p.vx *= 0.35;
+      p.vy = up ? -3.6 : 3.6;
+      p.x += (climb.x + climb.w / 2 - (p.x + p.w / 2)) * 0.18;
+      if (up && Math.random() < 0.02) gatorSay("Gotta go faster!", false);
+    } else if ((up || jumpKey) && p.onGround && !climb) {
+      if (Math.random() < 0.35) gatorLine("jump");
+      p.vy = -8.4 - Math.min(1.2, world.idx * 0.03);
+      p.onGround = false;
+    } else if (climb && !up && !down) {
+      p.vy *= 0.45;
+      if (Math.abs(p.vy) < 0.15) p.vy = 0;
+    } else if (!climb) {
+      p.vy += GRAV;
+      if (p.vy > 11) p.vy = 11;
+    }
+
+    // Jump off a ladder/snake with space
+    if (climb && jumpKey && !up) {
+      p.vy = -6.5;
+      p.onClimb = false;
     }
 
     // horizontal
@@ -1238,10 +1252,15 @@
       p.vy = 0;
     }
 
+    if (climb) {
+      if (p.y < climb.y - 6) p.y = climb.y - 6;
+      if (p.y + p.h > climb.y + climb.h + 6) p.y = climb.y + climb.h - p.h + 6;
+    }
+
     if (p.y > H + 40) {
       hurt();
       p.x = 48;
-      p.y = 400;
+      p.y = 420;
       p.vy = 0;
       world.camera = 0;
     }
