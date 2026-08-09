@@ -307,22 +307,22 @@
 
   /** Display size for gator by stage - baby smaller, adult much bigger */
   function gatorDrawSize(idx) {
-    // Base height in canvas pixels (portrait sprite)
-    if (idx < 5) return { w: 52, h: 78 }; // egg/newborn
-    if (idx < 10) return { w: 64, h: 96 }; // baby
-    if (idx < 20) return { w: 80, h: 120 }; // hatchling
-    if (idx < 30) return { w: 100, h: 150 }; // juvenile
-    if (idx < 40) return { w: 120, h: 180 }; // sub-adult
-    return { w: 140, h: 210 }; // adult
+    // Portrait figurine aspect ~2:3 (clear photo gator, not pixel mesh)
+    if (idx < 5) return { w: 72, h: 108 }; // newborn
+    if (idx < 10) return { w: 88, h: 132 }; // baby
+    if (idx < 20) return { w: 108, h: 162 }; // hatchling
+    if (idx < 30) return { w: 128, h: 192 }; // juvenile
+    if (idx < 40) return { w: 148, h: 222 }; // sub-adult
+    return { w: 168, h: 252 }; // adult
   }
 
-  /** Older gators: darker, less "baby yellow" via canvas filters */
+  /** Older gators: slightly darker/greener adult look (same figurine) */
   function gatorAgeFilter(idx) {
     if (idx < 10) return "none";
-    if (idx < 20) return "saturate(0.95) brightness(0.98)";
-    if (idx < 30) return "saturate(0.85) brightness(0.92) contrast(1.05)";
-    if (idx < 40) return "saturate(0.7) brightness(0.88) contrast(1.08) hue-rotate(-6deg)";
-    return "saturate(0.55) brightness(0.82) contrast(1.12) hue-rotate(-12deg)";
+    if (idx < 20) return "saturate(0.98) brightness(0.99)";
+    if (idx < 30) return "saturate(0.9) brightness(0.95) contrast(1.04)";
+    if (idx < 40) return "saturate(0.78) brightness(0.9) contrast(1.06) hue-rotate(-5deg)";
+    return "saturate(0.65) brightness(0.86) contrast(1.1) hue-rotate(-10deg)";
   }
 
   function stageName(i) {
@@ -638,13 +638,14 @@
 
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(img, dx, dy, dw, dh);
-    // Soft darken so pixel characters stay readable (not a second landscape)
-    ctx.fillStyle = "rgba(10, 25, 18, 0.28)";
+    // Soft darken so the figurine stays readable on bright photos
+    ctx.fillStyle = "rgba(10, 25, 18, 0.22)";
     ctx.fillRect(0, 0, W, H);
     // Light bottom shade for platform readability only
-    ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+    ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
     ctx.fillRect(0, H - 40, W, 40);
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
   }
 
   function drawPlatforms(cam) {
@@ -1105,7 +1106,7 @@
 
     drawPixelGator(p, gatorScale(world.idx), p.facing);
 
-    // Companion Florida screech owl (small, rides near gator)
+    // Small owl buddy (simple, not pixel-mesh)
     drawOwlCompanion(p);
 
     // Owl cheer bubble
@@ -1152,22 +1153,13 @@
   }
 
   function drawOwlCompanion(p) {
-    const ox = Math.floor(p.x - world.camera + (p.facing > 0 ? -10 : p.w + 2));
-    const bob = Math.sin((world.time || 0) * 6) * 2;
-    const oy = Math.floor(p.y - 6 + bob);
-    // tiny screech-owl-ish pixels (original, not a trademarked character)
-    ctx.fillStyle = "#6b5b45";
-    ctx.fillRect(ox + 2, oy + 2, 8, 7);
-    ctx.fillStyle = "#c4a574";
-    ctx.fillRect(ox + 3, oy + 4, 6, 4);
-    ctx.fillStyle = "#f0e8c8";
-    ctx.fillRect(ox + 3, oy + 1, 3, 3);
-    ctx.fillRect(ox + 7, oy + 1, 3, 3);
-    ctx.fillStyle = "#111";
-    ctx.fillRect(ox + 4, oy + 2, 1, 1);
-    ctx.fillRect(ox + 8, oy + 2, 1, 1);
-    ctx.fillStyle = "#e8a020";
-    ctx.fillRect(ox + 5, oy + 5, 3, 2);
+    // Soft round companion (emoji-scale) so we stay non-pixel
+    const ox = Math.floor(p.x - world.camera + (p.facing > 0 ? -28 : p.w + 4));
+    const bob = Math.sin((world.time || 0) * 5) * 3;
+    const oy = Math.floor(p.y + 8 + bob);
+    ctx.font = "28px serif";
+    ctx.textBaseline = "top";
+    ctx.fillText("🦉", ox, oy);
   }
 
   /* ---------- Physics ---------- */

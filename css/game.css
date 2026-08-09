@@ -75,10 +75,16 @@
 /* Start / levels */
 .start-hero {
   text-align: center;
-  font-size: 2.75rem;
-  line-height: 1.15;
-  margin: 0.35rem 0 0.75rem;
-  image-rendering: pixelated;
+  margin: 0.35rem 0 0.9rem;
+}
+
+.start-gator-fig {
+  display: inline-block;
+  height: min(28vh, 200px);
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
+  image-rendering: auto;
 }
 
 .start-list {
