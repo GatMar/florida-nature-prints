@@ -514,6 +514,9 @@
       floatScores: [],
       // Close-up “fish dies” side panel when hatchling eats
       eatCam: null,
+      // Every 10 fish: digestion education close-up
+      digiCam: null,
+      lastDigiAt: 0,
       player: {
         x: start.x,
         y: start.y,
@@ -801,6 +804,9 @@
     // Little player gator
     drawLittleGator();
 
+    // Left-side bloody fish tally (5 per row)
+    drawKillTally();
+
     // Eating focus vignette (darken edges, spotlight on gator)
     if (world.focus > 0) {
       const f = Math.min(1, world.focus);
@@ -828,6 +834,8 @@
 
     // Side close-up: fish death / catch (bigger angled view)
     drawEatCloseup();
+    // Digestion lesson every 10 fish
+    drawDigiCloseup();
 
     // HUD strip
     ctx.fillStyle = "rgba(5, 18, 12, 0.78)";
@@ -841,7 +849,9 @@
         " · " +
         stageName(world.idx) +
         " · Fish " +
-        world.fishLeft,
+        world.fishLeft +
+        " · Eaten " +
+        (world.fishEaten || 0),
       8,
       12
     );
@@ -982,25 +992,206 @@
     ctx.restore();
   }
 
-  /** Side panel: dramatic close-up of fish being eaten */
+  /** Left tally: dead headless bloody fish icons, 5 per row */
+  function drawKillTally() {
+    const n = world.fishEaten || 0;
+    if (n <= 0) return;
+    const perRow = 5;
+    const iconW = 18;
+    const iconH = 14;
+    const gapX = 3;
+    const gapY = 4;
+    const startX = 6;
+    const startY = 24;
+    const maxShow = 40; // keep UI readable
+    const show = Math.min(n, maxShow);
+
+    // Panel backdrop
+    const rows = Math.ceil(show / perRow);
+    const panelH = 18 + rows * (iconH + gapY) + 6;
+    const panelW = 10 + perRow * (iconW + gapX);
+    ctx.fillStyle = "rgba(20, 8, 8, 0.72)";
+    ctx.strokeStyle = "rgba(180, 40, 40, 0.75)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(startX - 4, startY - 14, panelW, panelH, 8);
+    else ctx.rect(startX - 4, startY - 14, panelW, panelH);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255, 160, 140, 0.95)";
+    ctx.font = "bold 9px system-ui,sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("CATCHES", startX, startY - 4);
+
+    for (let i = 0; i < show; i++) {
+      const col = i % perRow;
+      const row = Math.floor(i / perRow);
+      const ix = startX + col * (iconW + gapX);
+      const iy = startY + 6 + row * (iconH + gapY);
+      drawDeadFishIcon(ix, iy, iconW, iconH, i);
+    }
+    if (n > maxShow) {
+      ctx.fillStyle = "#ffb0a0";
+      ctx.font = "bold 10px system-ui,sans-serif";
+      ctx.fillText("+" + (n - maxShow), startX, startY + panelH - 18);
+    }
+  }
+
+  function drawDeadFishIcon(x, y, w, h, seed) {
+    ctx.save();
+    ctx.translate(x + w / 2, y + h / 2);
+    ctx.rotate(-0.25 + (seed % 3) * 0.08);
+    // Body stump (headless)
+    const body = ctx.createLinearGradient(-6, 0, 6, 0);
+    body.addColorStop(0, "#6a3030");
+    body.addColorStop(0.5, "#a85a4a");
+    body.addColorStop(1, "#4a2020");
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.ellipse(1, 0, 6.5, 3.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Bloody neck stump (no head)
+    ctx.fillStyle = "#8b1515";
+    ctx.beginPath();
+    ctx.ellipse(7, 0, 2.2, 3.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(200, 30, 30, 0.9)";
+    ctx.beginPath();
+    ctx.arc(7.5, -1, 1.2, 0, Math.PI * 2);
+    ctx.arc(8, 1.5, 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    // Drip
+    ctx.fillStyle = "rgba(160, 20, 20, 0.85)";
+    ctx.fillRect(7, 2.5, 1.5, 3);
+    // Tail
+    ctx.fillStyle = "#704040";
+    ctx.beginPath();
+    ctx.moveTo(-5, 0);
+    ctx.lineTo(-9, -3.5);
+    ctx.lineTo(-7.5, 0);
+    ctx.lineTo(-9, 3.5);
+    ctx.closePath();
+    ctx.fill();
+    // X where head was
+    ctx.strokeStyle = "rgba(40,10,10,0.7)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(5.5, -2.5);
+    ctx.lineTo(8.5, 2.5);
+    ctx.moveTo(8.5, -2.5);
+    ctx.lineTo(5.5, 2.5);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /** Draw fish split in half with gore (close-up chomp) */
+  function drawFishBrokenInHalf(cx, cy, big, t) {
+    const s = big ? 3.4 : 3.0;
+    // Left half (tail side) flies left
+    const sep = t * 18;
+    ctx.save();
+    ctx.translate(cx - sep, cy + t * 6);
+    ctx.rotate(-0.4 - t * 0.8);
+    drawFishHalf(s, false, true);
+    ctx.restore();
+    // Right half (head side) flies right
+    ctx.save();
+    ctx.translate(cx + sep * 0.9, cy - t * 4);
+    ctx.rotate(0.35 + t * 0.7);
+    drawFishHalf(s, true, true);
+    ctx.restore();
+    // Blood burst
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2 + t;
+      const d = 6 + t * 22 + (i % 3) * 3;
+      ctx.fillStyle = "rgba(160, 20, 30," + (0.85 - t * 0.5) + ")";
+      ctx.beginPath();
+      ctx.ellipse(
+        cx + Math.cos(a) * d,
+        cy + Math.sin(a) * d * 0.65,
+        2.5 + (i % 3),
+        1.5 + (i % 2),
+        a,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+  }
+
+  function drawFishHalf(s, headHalf, bloody) {
+    if (headHalf) {
+      const body = ctx.createLinearGradient(0, 0, 10 * s, 0);
+      body.addColorStop(0, "#a0c8d4");
+      body.addColorStop(1, "#4a7080");
+      ctx.fillStyle = body;
+      ctx.beginPath();
+      ctx.ellipse(3 * s, 0, 5 * s, 4 * s, 0, -Math.PI / 2, Math.PI / 2);
+      ctx.fill();
+      // eye
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(5 * s, -1 * s, 1.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#222";
+      ctx.beginPath();
+      ctx.arc(5.2 * s, -1 * s, 0.7 * s, 0, Math.PI * 2);
+      ctx.fill();
+      // bloody cut edge
+      if (bloody) {
+        ctx.fillStyle = "#8a1515";
+        ctx.fillRect(-1 * s, -4 * s, 2.5 * s, 8 * s);
+        ctx.fillStyle = "rgba(200,40,40,0.9)";
+        ctx.beginPath();
+        ctx.arc(0, -2 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.arc(0.5 * s, 2 * s, 1 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      const body = ctx.createLinearGradient(-8 * s, 0, 0, 0);
+      body.addColorStop(0, "#3d6070");
+      body.addColorStop(1, "#90b8c4");
+      ctx.fillStyle = body;
+      ctx.beginPath();
+      ctx.ellipse(-2 * s, 0, 5.5 * s, 3.8 * s, 0, Math.PI / 2, -Math.PI / 2);
+      ctx.fill();
+      // tail
+      ctx.fillStyle = "#6a90a0";
+      ctx.beginPath();
+      ctx.moveTo(-6 * s, 0);
+      ctx.lineTo(-11 * s, -4.5 * s);
+      ctx.lineTo(-9 * s, 0);
+      ctx.lineTo(-11 * s, 4.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      if (bloody) {
+        ctx.fillStyle = "#8a1515";
+        ctx.fillRect(-1 * s, -3.8 * s, 2.2 * s, 7.6 * s);
+        ctx.fillStyle = "rgba(180,30,30,0.85)";
+        ctx.fillRect(0, 2 * s, 1.5 * s, 4 * s);
+      }
+    }
+  }
+
+  /** Side panel: gator chomps fish in half (all levels) */
   function drawEatCloseup() {
     const cam = world.eatCam;
     if (!cam || cam.life <= 0) return;
-    const t = 1 - cam.life / cam.max; // 0..1 progress
+    const t = 1 - cam.life / cam.max;
     const fade =
-      t < 0.12 ? t / 0.12 : t > 0.75 ? Math.max(0, (1 - t) / 0.25) : 1;
+      t < 0.1 ? t / 0.1 : t > 0.8 ? Math.max(0, (1 - t) / 0.2) : 1;
 
-    const panelW = 118;
-    const panelH = 150;
+    const panelW = 124;
+    const panelH = 158;
     const px = W - panelW - 8;
     const py = 26;
 
     ctx.save();
     ctx.globalAlpha = fade;
 
-    // Panel frame
-    ctx.fillStyle = "rgba(6, 16, 12, 0.88)";
-    ctx.strokeStyle = "rgba(255, 220, 100, 0.95)";
+    ctx.fillStyle = "rgba(18, 6, 6, 0.92)";
+    ctx.strokeStyle = "rgba(220, 60, 50, 0.95)";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     if (ctx.roundRect) ctx.roundRect(px, py, panelW, panelH, 12);
@@ -1008,91 +1199,252 @@
     ctx.fill();
     ctx.stroke();
 
-    // Header
-    ctx.fillStyle = "#ffe566";
+    ctx.fillStyle = "#ff6b5a";
     ctx.font = "bold 11px system-ui,sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(cam.big ? "BIG CATCH!" : "CHOMP!", px + panelW / 2, py + 16);
+    ctx.fillText(cam.big ? "SNAPPED IN HALF!" : "CHOMPED!", px + panelW / 2, py + 16);
 
-    // Water backdrop in panel
-    const wg = ctx.createLinearGradient(px, py + 24, px, py + panelH - 20);
-    wg.addColorStop(0, "rgba(30, 90, 100, 0.9)");
-    wg.addColorStop(1, "rgba(15, 50, 60, 0.95)");
+    // Water + blood wash
+    const wg = ctx.createLinearGradient(px, py + 22, px, py + panelH);
+    wg.addColorStop(0, "rgba(40, 70, 80, 0.95)");
+    wg.addColorStop(0.6, "rgba(60, 30, 30, 0.9)");
+    wg.addColorStop(1, "rgba(40, 15, 15, 0.95)");
     ctx.fillStyle = wg;
-    ctx.fillRect(px + 6, py + 24, panelW - 12, panelH - 48);
+    ctx.fillRect(px + 6, py + 22, panelW - 12, panelH - 52);
 
-    // Close-up angle: fish large, flopping, then crushed
     const cx = px + panelW / 2;
-    const cy = py + 78;
-    const die = Math.min(1, Math.max(0, (t - 0.15) / 0.7));
-    ctx.save();
-    // Camera tilt for “bigger close up angle”
-    ctx.translate(cx, cy);
-    ctx.rotate(-0.35);
-    ctx.scale(1.15, 1.05);
-    ctx.translate(-cx, -cy);
-    drawFishRealistic(cx, cy, cam.big, world.time * 2, 3.1, die);
-    ctx.restore();
+    const cy = py + 82;
+    const chomp = Math.min(1, Math.max(0, (t - 0.08) / 0.55));
 
-    // Gator snout silhouette entering frame mid-anim
-    if (t > 0.2) {
-      const sn = Math.min(1, (t - 0.2) / 0.35);
-      ctx.fillStyle = "rgba(40, 100, 55, 0.92)";
+    // Whole fish first, then broken
+    if (chomp < 0.35) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(-0.4);
+      ctx.scale(1.1, 1.05);
+      ctx.translate(-cx, -cy);
+      drawFishRealistic(cx, cy, cam.big, world.time * 3, 3.0, chomp * 2);
+      ctx.restore();
+    } else {
+      drawFishBrokenInHalf(cx, cy, cam.big, (chomp - 0.35) / 0.65);
+    }
+
+    // Gator jaws clamp
+    if (t > 0.12) {
+      const sn = Math.min(1, (t - 0.12) / 0.4);
+      // upper jaw
+      ctx.fillStyle = "rgba(35, 90, 48, 0.95)";
       ctx.beginPath();
-      ctx.ellipse(
-        px + 8 + sn * 36,
-        py + panelH - 38,
-        34,
-        16,
-        -0.2,
-        0,
-        Math.PI * 2
-      );
+      ctx.ellipse(px + 20 + sn * 40, py + 55, 40, 14, -0.15, 0, Math.PI * 2);
       ctx.fill();
-      // teeth
-      ctx.fillStyle = "#f5f5f0";
-      for (let i = 0; i < 4; i++) {
+      // lower jaw
+      ctx.beginPath();
+      ctx.ellipse(px + 22 + sn * 38, py + 118, 38, 12, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      // teeth upper
+      ctx.fillStyle = "#f0ebe0";
+      for (let i = 0; i < 6; i++) {
+        const tx = px + 28 + sn * 36 + i * 8;
         ctx.beginPath();
-        ctx.moveTo(px + 18 + sn * 30 + i * 7, py + panelH - 30);
-        ctx.lineTo(px + 21 + sn * 30 + i * 7, py + panelH - 22);
-        ctx.lineTo(px + 24 + sn * 30 + i * 7, py + panelH - 30);
+        ctx.moveTo(tx, py + 62);
+        ctx.lineTo(tx + 3, py + 72);
+        ctx.lineTo(tx + 6, py + 62);
         ctx.fill();
+      }
+      // blood on teeth after snap
+      if (chomp > 0.4) {
+        ctx.fillStyle = "rgba(160, 20, 30, 0.85)";
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.arc(px + 36 + sn * 36 + i * 9, py + 68, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     }
 
-    // Splash droplets
-    if (t > 0.25 && t < 0.85) {
-      const sp = (t - 0.25) / 0.6;
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * Math.PI * 2;
-        const d = 12 + sp * 28;
-        ctx.fillStyle = "rgba(200, 235, 245, 0.75)";
-        ctx.beginPath();
-        ctx.arc(
-          cx + Math.cos(a) * d,
-          cy + Math.sin(a) * d * 0.7,
-          2 + (i % 3),
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-      }
-    }
-
-    // Points stamp
     ctx.fillStyle = "#fff";
-    ctx.font = "bold 16px system-ui,sans-serif";
-    ctx.fillText("+" + cam.pts, px + panelW / 2, py + panelH - 10);
-
-    // Caption
-    ctx.fillStyle = "rgba(200, 230, 210, 0.9)";
+    ctx.font = "bold 15px system-ui,sans-serif";
+    ctx.fillText("+" + cam.pts, px + panelW / 2, py + panelH - 12);
+    ctx.fillStyle = "rgba(255, 180, 170, 0.9)";
     ctx.font = "10px system-ui,sans-serif";
     ctx.fillText(
-      die > 0.5 ? "swallowed" : "struggling…",
+      chomp > 0.45 ? "broken in half" : "jaws closing…",
       px + panelW / 2,
-      py + 28
+      py + 30
     );
 
+    ctx.restore();
+  }
+
+  /**
+   * Every 10 fish: educational gut journey
+   * 10 → throat, 20 → stomach, 30 → waste/poop, then cycles
+   */
+  function drawDigiCloseup() {
+    const d = world.digiCam;
+    if (!d || d.life <= 0) return;
+    const t = 1 - d.life / d.max;
+    const fade =
+      t < 0.08 ? t / 0.08 : t > 0.85 ? Math.max(0, (1 - t) / 0.15) : 1;
+
+    const panelW = Math.min(W - 20, 300);
+    const panelH = 168;
+    const px = (W - panelW) / 2;
+    const py = H - panelH - 10;
+
+    ctx.save();
+    ctx.globalAlpha = fade;
+
+    ctx.fillStyle = "rgba(8, 14, 12, 0.94)";
+    ctx.strokeStyle =
+      d.stage === 3
+        ? "rgba(160, 120, 70, 0.95)"
+        : "rgba(255, 200, 90, 0.95)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(px, py, panelW, panelH, 14);
+    else ctx.rect(px, py, panelW, panelH);
+    ctx.fill();
+    ctx.stroke();
+
+    const titles = {
+      1: "INSIDE: DOWN THE THROAT",
+      2: "INSIDE: INTO THE STOMACH",
+      3: "INSIDE: WHAT GOES OUT",
+    };
+    const captions = {
+      1: "After the chomp, the fish slides down the hatchling’s throat.",
+      2: "Strong stomach acid breaks the meal into energy to grow.",
+      3: "Leftovers leave as waste — nature’s messy but normal cycle.",
+    };
+
+    ctx.fillStyle = "#ffe566";
+    ctx.font = "bold 12px system-ui,sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(titles[d.stage] || "INSIDE LOOK", px + panelW / 2, py + 18);
+
+    ctx.fillStyle = "rgba(210, 230, 215, 0.92)";
+    ctx.font = "10px system-ui,sans-serif";
+    ctx.fillText(captions[d.stage] || "", px + panelW / 2, py + panelH - 12);
+
+    // Diagram area
+    const dx = px + 16;
+    const dy = py + 32;
+    const dw = panelW - 32;
+    const dh = panelH - 54;
+    ctx.fillStyle = "rgba(20, 40, 32, 0.9)";
+    ctx.fillRect(dx, dy, dw, dh);
+
+    // Side-view gator outline
+    const gx = dx + 70;
+    const gy = dy + dh / 2 + 8;
+    ctx.save();
+    ctx.translate(gx, gy);
+    // body
+    const gbody = ctx.createLinearGradient(-50, 0, 80, 0);
+    gbody.addColorStop(0, "#1a4a2a");
+    gbody.addColorStop(1, "#2f7a45");
+    ctx.fillStyle = gbody;
+    ctx.beginPath();
+    ctx.ellipse(10, 0, 58, 28, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // head/snout
+    ctx.beginPath();
+    ctx.ellipse(62, 2, 28, 16, 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    // eye
+    ctx.fillStyle = "#e8d050";
+    ctx.beginPath();
+    ctx.arc(48, -10, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(49, -10, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    // legs hint
+    ctx.fillStyle = "#1f5530";
+    ctx.fillRect(-20, 18, 14, 8);
+    ctx.fillRect(20, 18, 14, 8);
+
+    // Internal path highlight
+    ctx.strokeStyle = "rgba(255, 200, 120, 0.85)";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(70, 4);
+    ctx.quadraticCurveTo(40, 6, 10, 4);
+    ctx.quadraticCurveTo(-10, 2, -20, 8);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Animated fish / bolus position by stage + time
+    const prog = Math.min(1, t * 1.15);
+    let fx = 70;
+    let fy = 4;
+    if (d.stage === 1) {
+      // throat: snout → neck
+      fx = 70 - prog * 50;
+      fy = 4 + Math.sin(prog * 6) * 2;
+      drawFishRealistic(fx, fy, false, world.time, 0.55, 0.3);
+      ctx.fillStyle = "#ffe8a0";
+      ctx.font = "bold 9px system-ui,sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("throat", -5, -22);
+    } else if (d.stage === 2) {
+      // stomach: mid-body churn
+      fx = 5 + Math.sin(prog * 8) * 6;
+      fy = 6 + Math.cos(prog * 7) * 4;
+      // bolus blob instead of whole fish
+      ctx.fillStyle = "rgba(180, 80, 60, 0.9)";
+      ctx.beginPath();
+      ctx.ellipse(fx, fy, 10, 7, prog, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(120, 40, 30, 0.7)";
+      ctx.beginPath();
+      ctx.ellipse(fx - 2, fy + 1, 5, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // acid bubbles
+      ctx.fillStyle = "rgba(200, 220, 100, 0.5)";
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(fx + Math.sin(prog * 10 + i) * 12, fy - 8 - i * 2, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#ffe8a0";
+      ctx.font = "bold 9px system-ui,sans-serif";
+      ctx.fillText("stomach", -30, -22);
+    } else {
+      // waste leaving
+      fx = -35 - prog * 15;
+      fy = 22 + prog * 8;
+      ctx.fillStyle = "rgba(90, 65, 40, 0.95)";
+      ctx.beginPath();
+      ctx.ellipse(fx, fy, 7 + prog * 2, 4, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(70, 50, 30, 0.8)";
+      ctx.beginPath();
+      ctx.ellipse(fx - 3, fy + 1, 4, 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // little splash
+      ctx.fillStyle = "rgba(100, 80, 50, 0.5)";
+      ctx.beginPath();
+      ctx.arc(fx + 6, fy + 4, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#e8d0a0";
+      ctx.font = "bold 9px system-ui,sans-serif";
+      ctx.fillText("waste leaves body", -50, -22);
+      ctx.fillStyle = "rgba(200, 190, 160, 0.85)";
+      ctx.font = "8px system-ui,sans-serif";
+      ctx.fillText("(yes — hatchlings poop too!)", -50, 40);
+    }
+
+    // Milestone badge
+    ctx.fillStyle = "rgba(255, 220, 100, 0.95)";
+    ctx.font = "bold 10px system-ui,sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(d.milestone + " fish!", 95, -28);
+
+    ctx.restore();
     ctx.restore();
   }
 
@@ -1350,15 +1702,30 @@
       state.score += pts;
       p.growPulse = 1;
       p.bite = 1;
-      world.focus = 0.85;
-      world.flash = big ? 0.35 : 0.22;
-      // Side close-up of the catch / fish dying
+      world.focus = 0.95;
+      world.flash = big ? 0.4 : 0.28;
+      // Side close-up: jaws break fish in half (every level including 1)
       world.eatCam = {
-        life: 1.15,
-        max: 1.15,
+        life: 1.25,
+        max: 1.25,
         big: big,
         pts: pts,
       };
+      // Every 10 fish → digestion lesson (throat → stomach → waste)
+      const eaten = world.fishEaten;
+      if (eaten > 0 && eaten % 10 === 0 && eaten !== world.lastDigiAt) {
+        world.lastDigiAt = eaten;
+        const cycle = (eaten / 10 - 1) % 3; // 0,1,2
+        world.digiCam = {
+          life: 3.4,
+          max: 3.4,
+          stage: cycle + 1, // 1 throat, 2 stomach, 3 waste
+          milestone: eaten,
+        };
+        // Brief soft pause feel via longer focus
+        world.focus = 1.2;
+        haptic([15, 30, 15, 30, 20]);
+      }
       popScore(p.px, p.py, pts);
       sfxEat(pts);
       haptic(big ? [12, 25, 12] : [10, 15]);
@@ -1476,6 +1843,10 @@
     if (world.eatCam) {
       world.eatCam.life -= dt;
       if (world.eatCam.life <= 0) world.eatCam = null;
+    }
+    if (world.digiCam) {
+      world.digiCam.life -= dt;
+      if (world.digiCam.life <= 0) world.digiCam = null;
     }
     // Float +pts upward
     if (world.floatScores && world.floatScores.length) {
