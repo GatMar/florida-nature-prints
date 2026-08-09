@@ -6,7 +6,7 @@
     <title>Gator Life - Florida Nature Prints</title>
     <meta
       name="description"
-      content="Gator Life: a free Florida alligator adventure game with 50 levels, pixel art, and comic-book wildlife quizzes."
+      content="Gator Life: a free Florida swamp labyrinth game — walk, jump, and explore with wildlife quizzes."
     />
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/game.css" />
@@ -52,13 +52,13 @@
             </div>
             <h1>Gator Life</h1>
             <p class="subtitle">
-              A simple Florida gator adventure — walk, jump, learn, grow.
+              Explore a swampy Florida labyrinth — walk, jump, find the flag.
             </p>
             <ul class="start-list">
-              <li>Move right and jump over little hazards</li>
-              <li>Grab golden snacks and touch ? for fun quizzes</li>
-              <li>Reach the green flag to finish each short level</li>
-              <li>Real Florida photos from this site as your world</li>
+              <li>Wander mud banks, moss steps, and cypress walls</li>
+              <li>Jump the gaps — no ladders, just swampy paths</li>
+              <li>Grab snacks, dodge hazards, touch ? for quizzes</li>
+              <li>Find the green flag on the upper trail</li>
             </ul>
             <div class="btn-row">
               <button type="button" class="game-btn game-btn-primary" id="btn-start">
@@ -70,14 +70,6 @@
               <button type="button" class="game-btn game-btn-secondary" id="btn-how">
                 How to play
               </button>
-              <button
-                type="button"
-                class="game-btn game-btn-secondary"
-                data-voice-toggle
-                aria-pressed="true"
-              >
-                Voice: On
-              </button>
             </div>
             <div
               id="how-box"
@@ -85,11 +77,10 @@
               style="display: none; margin-top: 1rem; background: #fffef5; color: #1a3324"
             >
               <p style="color: #1a3324">
-                Super simple:<br />
                 <strong>← →</strong> move &nbsp;·&nbsp; <strong>Jump</strong> (Space, Z, or ↑)<br />
-                Or use the big buttons under the game.<br />
-                Walk right to the <strong>green flag</strong>. Hop over fire.
-                Yellow <strong>?</strong> = optional quiz. Have fun!
+                Use the big buttons under the game on a phone.<br />
+                Climb only by <strong>jumping mud steps</strong> between paths.
+                Avoid murky water gaps. Reach the <strong>green flag</strong> on top!
               </p>
             </div>
             <p class="controls-note">
@@ -119,15 +110,6 @@
               <span>LV <span id="play-hud-level">1</span></span>
               <span class="hearts" id="play-hud-hearts">♥♥♥</span>
               <span>Score <span id="play-hud-score">0</span></span>
-              <button
-                type="button"
-                class="game-btn game-btn-secondary"
-                data-voice-toggle
-                style="min-height: 36px; padding: 0.35rem 0.65rem; font-size: 0.75rem"
-                aria-pressed="true"
-              >
-                Voice: On
-              </button>
             </div>
             <div class="level-intro" style="margin-bottom: 0.5rem">
               <h2 id="level-title" style="font-size: 1rem; color: #b8f0c8; text-align: center">
@@ -161,7 +143,7 @@
                 </div>
               </div>
             </div>
-            <p class="play-hint" id="play-hint">← → move · Jump · Reach the green flag →</p>
+            <p class="play-hint" id="play-hint">← → move · Jump mud steps · Flag on the top path →</p>
             <div class="control-pads" aria-label="Game controls">
               <button type="button" class="game-btn game-btn-secondary pad-btn" id="pad-left">
                 ◀

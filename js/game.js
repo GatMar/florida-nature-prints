@@ -6,14 +6,14 @@
 (function () {
   "use strict";
 
-  const STORAGE = "gatorLifeProgress_v3";
+  const STORAGE = "gatorLifeProgress_v4";
   // Portrait playfield: taller than wide so the action reads vertically
   const W = 360;
   const H = 560;
   // Soft gravity + easy jumps (kid-friendly)
   const GRAV = 0.38;
-  const JUMP = -9.2;
-  const MOVE_SPEED = 3.2;
+  const JUMP = -9.4;
+  const MOVE_SPEED = 3.15;
   const TOTAL_LEVELS = 50;
 
   const state = {
@@ -26,7 +26,6 @@
     lives: 3,
     playSeed: 1,
     usedQ: {},
-    voiceOn: true,
   };
 
   let canvas, ctx;
@@ -34,200 +33,14 @@
   let keys = {};
   let world = null;
   let pausedForQuiz = false;
-  let lastGatorLineAt = 0;
-  let voiceSupported =
-    typeof window !== "undefined" && "speechSynthesis" in window;
 
-  /* ---------- Voice (browser text-to-speech) ---------- */
-  function stopVoice() {
-    if (!voiceSupported) return;
-    try {
-      window.speechSynthesis.cancel();
-    } catch (e) {}
-  }
-
-  function scoreVoice(v, prefer) {
-    const n = ((v.name || "") + " " + (v.lang || "")).toLowerCase();
-    const lang = (v.lang || "").toLowerCase();
-    let s = 0;
-
-    // Strong preference: American English only
-    if (lang === "en-us" || lang.indexOf("en-us") === 0) s += 20;
-    else if (lang === "en_us") s += 20;
-    else if (/en[-_]?us/.test(lang)) s += 18;
-    else if (lang.indexOf("en") === 0) s += 2; // other English (weak)
-    else s -= 25; // non-English
-
-    // Penalize non-American accents / locales when labeled in the name
-    if (
-      /chinese|mandarin|cantonese|japanese|korean|taiwan|hong kong|india|hindi|tamil|vietnamese|thai|filipino|indonesian|malay|singapore|ja-jp|zh-|ko-kr|hi-in|en-in|en-gb|en-au|en-ie|en-za|british|australian|irish|scottish|indian|asian/i.test(
-        n
-      )
-    ) {
-      s -= 30;
-    }
-
-    // Prefer common natural US voices on Apple / Google / Microsoft
-    if (
-      /samantha|susan|allison|ava|zoe|nicky|siri|jenny|aria|guy|davis|jane|sara|nancy|natural|neural|premium|enhanced|google us|microsoft (aria|jenny|guy|davis)/i.test(
-        n
-      )
-    ) {
-      s += 10;
-    }
-
-    if (prefer === "gator" || prefer === "owl") {
-      // Kid-like American voices when available
-      if (/samantha|karen|ava|susan|allison|nicky|zoe|girl|child|kids|junior/i.test(n)) s += 8;
-      if (/female|woman/i.test(n)) s += 3;
-      // Avoid deep male defaults for kid gator
-      if (/fred|daniel|alex|bruce|david|mark|tom|james|john/i.test(n) && !/female/i.test(n))
-        s -= 2;
-    }
-    if (prefer === "npc") {
-      if (/samantha|susan|ava|jenny|aria|zira/i.test(n)) s += 4;
-    }
-
-    if (/robot|compact|eloquence|novelty/i.test(n)) s -= 4;
-    return s;
-  }
-
-  function pickVoice(prefer) {
-    if (!voiceSupported) return null;
-    let list = window.speechSynthesis.getVoices() || [];
-    if (!list.length) return null;
-
-    // Prefer strictly American English voices first
-    const us = list.filter(function (v) {
-      const lang = (v.lang || "").toLowerCase();
-      return lang === "en-us" || lang.indexOf("en-us") === 0 || /en[-_]?us/.test(lang);
-    });
-    if (us.length) list = us;
-
-    // Drop clearly non-US / Asian-labeled voices even if lang is odd
-    list = list.filter(function (v) {
-      const n = ((v.name || "") + " " + (v.lang || "")).toLowerCase();
-      return !/chinese|mandarin|cantonese|japanese|korean|taiwan|ja-jp|zh-|ko-kr|hi-in|en-in|en-gb|en-au|british|indian|asian/i.test(
-        n
-      );
-    });
-    if (!list.length) {
-      list = (window.speechSynthesis.getVoices() || []).filter(function (v) {
-        return /en/i.test(v.lang || "");
-      });
-    }
-    if (!list.length) list = window.speechSynthesis.getVoices() || [];
-
-    let best = list[0];
-    let bestScore = -999;
-    for (let i = 0; i < list.length; i++) {
-      const sc = scoreVoice(list[i], prefer);
-      if (sc > bestScore) {
-        bestScore = sc;
-        best = list[i];
-      }
-    }
-    return best;
-  }
-
-  /** Kid energy: bright, quick, excited (browser TTS limits apply) */
-  function kidify(text) {
-    return String(text)
-      .replace(/!+/g, "!")
-      .replace(/\.$/, "!");
-  }
-
-  function speak(text, kind, opts) {
-    if (!state.voiceOn || !voiceSupported || !text) return;
-    opts = opts || {};
-    try {
-      if (!opts.queue) stopVoice();
-      let said = String(text);
-      if (kind === "gator" || kind === "owl") said = kidify(said);
-      const u = new SpeechSynthesisUtterance(said);
-      // Force American English locale for all speech
-      u.lang = "en-US";
-      const prefer =
-        kind === "npc" ? "npc" : kind === "owl" ? "owl" : "gator";
-      const v = pickVoice(prefer);
-      if (v) {
-        u.voice = v;
-        // Keep utterance lang aligned to voice when it is en-US
-        if (v.lang && /en[-_]?us/i.test(v.lang)) u.lang = v.lang;
-        else u.lang = "en-US";
-      }
-      if (kind === "gator") {
-        // ~7–9 year old excitement (American voice preferred)
-        u.rate = 1.16;
-        u.pitch = 1.65;
-        u.volume = 1;
-      } else if (kind === "owl") {
-        u.rate = 1.1;
-        u.pitch = 1.42;
-        u.volume = 1;
-      } else if (kind === "npc") {
-        u.rate = 1.04;
-        u.pitch = 1.12;
-        u.volume = 1;
-      } else {
-        u.rate = 1.06;
-        u.pitch = 1.08;
-        u.volume = 1;
-      }
-      window.speechSynthesis.speak(u);
-    } catch (e) {}
-  }
-
-  function gatorSay(line, force) {
-    const now = Date.now();
-    if (!force && now - lastGatorLineAt < 2800) return;
-    lastGatorLineAt = now;
-    speak(line, "gator");
-  }
-
-  let lastOwlLineAt = 0;
-  function owlSay(line, force) {
-    const now = Date.now();
-    if (!force && now - lastOwlLineAt < 3200) return;
-    lastOwlLineAt = now;
-    // Voice only during play - speech bubbles reserved for quiz pop-ups
-    speak(line, "owl");
-  }
-
-  const GATOR_START_LINE =
-    "C'mon, let's get this show on the road! Get set, survival mode on!";
-
-  const GATOR_LINES = {
-    jump: ["Weee!", "Boing!", "Up up!"],
-    fire: ["Hot hot hot!", "Jump the fire!", "Gotta go faster!"],
-    cave: ["Through the cave!", "Now now!", "Zip zip!"],
-    hurt: ["Owie!", "Hey!", "I'm okay!"],
-    snack: ["Yum yum!", "Snack attack!"],
-    quiz: ["Okay, brain time!", "I can do this!"],
-    win: ["Yay! We did it!", "Survival mode success!"],
-    nearFlag: ["Almost there!", "Go go go!"],
-  };
-
-  const OWL_LINES = [
-    "Nice job! Now let's do the next!",
-    "Nice job! On to the next!",
-    "Whoo-hoo! Nice job! Let's do the next!",
-    "You got it! Now let's do the next!",
-    "Awesome! Nice job! Keep going!",
-    "Nice job, buddy! Next step!",
-  ];
-
-  function gatorLine(kind, force) {
-    const arr = GATOR_LINES[kind];
-    if (!arr) return;
-    const line = arr[Math.floor(Math.random() * arr.length)];
-    gatorSay(line, force);
-  }
-
-  function owlCheer(force) {
-    const line = OWL_LINES[Math.floor(Math.random() * OWL_LINES.length)];
-    owlSay(line, force);
-  }
+  /* ---------- Voice disabled for now ---------- */
+  function stopVoice() {}
+  function speak() {}
+  function gatorSay() {}
+  function owlSay() {}
+  function gatorLine() {}
+  function owlCheer() {}
 
   // Your site photos only - used as full game backgrounds (no drawn scenery)
   const BG_FILES = [
@@ -349,7 +162,6 @@
       state.completed = d.completed || {};
       state.playSeed = d.playSeed || 1;
       state.usedQ = d.usedQ || {};
-      if (typeof d.voiceOn === "boolean") state.voiceOn = d.voiceOn;
     } catch (e) {}
   }
 
@@ -362,25 +174,8 @@
         completed: state.completed,
         playSeed: state.playSeed,
         usedQ: state.usedQ,
-        voiceOn: state.voiceOn,
       })
     );
-  }
-
-  function syncVoiceButton() {
-    const labels = document.querySelectorAll("[data-voice-toggle]");
-    labels.forEach(function (btn) {
-      btn.textContent = state.voiceOn ? "Voice: On" : "Voice: Off";
-      btn.setAttribute("aria-pressed", state.voiceOn ? "true" : "false");
-    });
-  }
-
-  function toggleVoice() {
-    state.voiceOn = !state.voiceOn;
-    if (!state.voiceOn) stopVoice();
-    save();
-    syncVoiceButton();
-    if (state.voiceOn) gatorSay("Voice on! Let's go!", true);
   }
 
   function show(name) {
@@ -408,81 +203,206 @@
     if (g) g.textContent = String(state.totalScore);
   }
 
-  /* ---------- Level geometry (simple, easy path) ---------- */
+  /* ---------- Swamp labyrinth (no ladders — jump/step only) ---------- */
+  function seeded(idx, n) {
+    // Stable pseudo-random 0..1 for level layout
+    const x = Math.sin(idx * 12.9898 + n * 78.233) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
+  function addSteps(platforms, fromY, toY, startX, dir) {
+    // Walkable mud steps between maze floors (NOT ladders)
+    const rise = fromY - toY;
+    const steps = Math.max(4, Math.round(rise / 28));
+    const run = 36;
+    for (let s = 0; s < steps; s++) {
+      const x = dir > 0 ? startX + s * run : startX - s * run;
+      platforms.push({
+        x: x,
+        y: fromY - ((s + 1) / steps) * rise,
+        w: run + 14,
+        h: 14,
+        moss: true,
+        step: true,
+      });
+    }
+  }
+
   function buildLevel(idx) {
     const platforms = [];
     const hazards = [];
     const quizzes = [];
     const items = [];
-    // Short levels - walk right, jump a few times, reach flag
-    const len = 780 + Math.min(320, idx * 8);
-    const groundY = 470;
+    const water = [];
+    const decor = [];
+    const len = 1000 + Math.min(380, idx * 10);
+    // Three swamp corridors (bottom → mid → top)
+    const floors = [490, 355, 220];
+    const groundY = floors[0];
 
-    // Continuous safe ground
-    platforms.push({ x: 0, y: groundY, w: len, h: 100 });
+    // --- Mud banks / corridor floors (segmented labyrinth) ---
+    for (let f = 0; f < floors.length; f++) {
+      const fy = floors[f];
+      // Zigzag openings so it feels like a maze
+      const openLeft = f % 2 === 0;
+      let x = 0;
+      let seg = 0;
+      while (x < len) {
+        // Wider banks early; slightly choppier later
+        const bankW =
+          130 +
+          Math.floor(seeded(idx, f * 20 + seg) * 90) +
+          (f === 0 ? 40 : 0) -
+          Math.min(30, idx);
+        const gap =
+          f === 0
+            ? 28 + Math.floor(seeded(idx, 100 + seg) * (20 + Math.min(30, idx)))
+            : 22 + Math.floor(seeded(idx, 200 + seg) * 18);
 
-    // A few easy step-up platforms (wide, low, no maze)
-    const padCount = 2 + (idx % 3);
-    for (let i = 0; i < padCount; i++) {
-      const px = 180 + i * Math.floor((len - 280) / Math.max(1, padCount));
-      const py = groundY - 70 - (i % 2) * 28;
-      platforms.push({ x: px, y: py, w: 110 + (i % 2) * 20, h: 16 });
-      // snack on pad
-      items.push({ x: px + 40, y: py - 28, taken: false });
-    }
+        // Skip first gap on a floor if it would strand the player
+        const placeGap = seg > 0 && !(f > 0 && seg === 1 && openLeft);
 
-    // Ground snacks (generous, easy to touch)
-    for (let i = 0; i < 5; i++) {
-      items.push({
-        x: 120 + i * Math.floor((len - 200) / 5),
-        y: groundY - 36,
-        taken: false,
+        if (placeGap && x + gap < len - 80) {
+          // Swamp water under the gap
+          water.push({ x: x, y: fy + 8, w: gap, h: H - fy });
+          decor.push({ kind: "lily", x: x + gap * 0.3, y: fy + 6 });
+          decor.push({ kind: "reed", x: x + 4, y: fy });
+          decor.push({ kind: "reed", x: x + gap - 14, y: fy });
+          x += gap;
+        }
+
+        const w = Math.min(bankW, len - x);
+        if (w > 20) {
+          platforms.push({
+            x: x,
+            y: fy,
+            w: w,
+            h: f === 0 ? 80 : 16,
+            moss: true,
+            floor: f,
+          });
+          // Snacks on banks
+          if (seg % 2 === 0) {
+            items.push({
+              x: x + w * 0.45,
+              y: fy - 32,
+              taken: false,
+            });
+          }
+          // Cypress knee / mud walls as maze blockers (not on first segment of start floor)
+          if (seg > 0 && seg % 2 === 1 && f < floors.length - 1) {
+            const wallH = floors[f] - floors[f + 1] - 20;
+            const wx = openLeft ? x + w - 18 : x + 4;
+            platforms.push({
+              x: wx,
+              y: floors[f + 1] + 12,
+              w: 18,
+              h: wallH,
+              wall: true,
+              cypress: true,
+            });
+            decor.push({ kind: "vine", x: wx, y: floors[f + 1] + 12, h: wallH });
+          }
+          // Reeds along mud
+          if (seeded(idx, 300 + f * 10 + seg) > 0.4) {
+            decor.push({ kind: "reed", x: x + 20, y: fy });
+            decor.push({ kind: "reed", x: x + w * 0.6, y: fy });
+          }
+        }
+        x += Math.max(w, 1);
+        seg++;
+      }
+      // Side walls of the swamp tunnel
+      platforms.push({ x: -8, y: fy - 100, w: 16, h: 110, wall: true, cypress: true });
+      platforms.push({
+        x: len - 8,
+        y: fy - 100,
+        w: 16,
+        h: 110,
+        wall: true,
+        cypress: true,
       });
     }
 
-    // Hazards: only ground bonfires to hop over + one slow critter max
-    // Level 1 = almost free walk; difficulty ramps gently
-    const fireCount = idx === 0 ? 0 : idx < 5 ? 1 : idx < 15 ? 2 : 3;
+    // --- Step-up mud paths between floors (jumpable stairs, no ladders) ---
+    // Bottom → mid near left or right depending on level
+    const stepA = 140 + Math.floor(seeded(idx, 7) * 80);
+    addSteps(platforms, floors[0], floors[1], stepA, 1);
+    // Mid → top further along
+    const stepB = 420 + Math.floor(seeded(idx, 9) * (len * 0.25));
+    addSteps(platforms, floors[1], floors[2], stepB, 1);
+    // Alternate route mid → bottom near the end (for maze feel)
+    if (idx >= 2) {
+      addSteps(platforms, floors[0], floors[1], len - 280, -1);
+    }
+    // Extra mid floating moss pads
+    for (let i = 0; i < 3; i++) {
+      const px = 260 + i * 220 + (idx % 5) * 12;
+      const py = floors[1] - 55 - (i % 2) * 20;
+      if (px < len - 100) {
+        platforms.push({ x: px, y: py, w: 88, h: 14, moss: true });
+        items.push({ x: px + 36, y: py - 28, taken: false });
+      }
+    }
+
+    // Hazards: swamp gas fires + slow critters on corridors
+    const fireCount = idx === 0 ? 0 : idx < 6 ? 1 : idx < 18 ? 2 : 3;
     for (let i = 0; i < fireCount; i++) {
-      const fx = 220 + i * Math.floor((len - 320) / Math.max(1, fireCount)) + 40;
+      const f = i % floors.length;
+      const fx =
+        200 +
+        i * Math.floor((len - 280) / Math.max(1, fireCount)) +
+        Math.floor(seeded(idx, 50 + i) * 40);
       hazards.push({
         kind: "fire",
         x: fx,
-        y: groundY - 2,
-        w: 36,
-        h: 34,
+        y: floors[f] - 2,
+        w: 34,
+        h: 32,
         vx: 0,
-        baseY: groundY - 2,
+        baseY: floors[f] - 2,
         phase: i,
-        tall: 28,
+        tall: 26,
       });
     }
 
-    // One slow walker on later levels (easy to jump over)
-    if (idx >= 3) {
+    if (idx >= 2) {
       const kinds = ["rattler", "raccoon", "bird"];
       const k = kinds[idx % kinds.length];
+      const f = idx % floors.length;
       const fly = k === "bird";
       hazards.push({
         kind: k,
-        x: len * 0.45,
-        y: fly ? groundY - 120 : groundY - 40,
-        w: 34,
-        h: 32,
-        vx: 0.45 + Math.min(0.35, idx * 0.01),
-        baseY: fly ? groundY - 120 : groundY - 40,
+        x: len * (0.35 + seeded(idx, 11) * 0.3),
+        y: fly ? floors[f] - 110 : floors[f] - 38,
+        w: 32,
+        h: 30,
+        vx: 0.4 + Math.min(0.3, idx * 0.008),
+        baseY: fly ? floors[f] - 110 : floors[f] - 38,
         phase: 0,
       });
     }
 
-    // One optional quiz block mid-level (touch to open - no pressure)
+    // Quiz on mid corridor
     if (idx >= 1) {
       quizzes.push({
-        x: Math.floor(len * 0.55),
-        y: groundY - 90,
+        x: Math.floor(len * 0.5),
+        y: floors[1] - 88,
         hit: false,
       });
     }
+
+    // Flag on the top corridor near the far end
+    const goalFloor = floors[floors.length - 1];
+    const goalX = len - 100;
+    // Ensure solid ground under the flag
+    platforms.push({
+      x: goalX - 40,
+      y: goalFloor,
+      w: 140,
+      h: 16,
+      moss: true,
+    });
 
     const sz = gatorDrawSize(idx);
     const pw = sz.w;
@@ -490,8 +410,10 @@
     return {
       idx: idx,
       len: len,
-      floors: [groundY],
+      floors: floors,
       platforms: platforms,
+      water: water,
+      decor: decor,
       climbs: [],
       hazards: hazards,
       quizzes: quizzes,
@@ -499,8 +421,8 @@
       explosions: [],
       asteroids: [],
       astroTimer: 9999,
-      goalX: len - 90,
-      goalY: groundY,
+      goalX: goalX,
+      goalY: goalFloor,
       camera: 0,
       time: 0,
       inv: 0,
@@ -510,7 +432,7 @@
       owlCheer: null,
       climbHint: false,
       player: {
-        x: 40,
+        x: 36,
         y: groundY - ph - 2,
         vx: 0,
         vy: 0,
@@ -531,132 +453,159 @@
     owlCheer(reason === "quiz" || reason === "flag");
   }
 
-  /* ---------- Drawing (original pixel style) ---------- */
+  /* ---------- Swamp labyrinth drawing ---------- */
   function drawBackground(cam, t, idx) {
     const img = bgForLevel(idx);
-    // Fallback solid only if photos failed to load
-    if (!img) {
-      ctx.fillStyle = "#3d6a55";
-      ctx.fillRect(0, 0, W, H);
-      return;
-    }
-
-    // Draw ONLY your photo as the full backdrop (cover + gentle parallax)
-    const iw = img.naturalWidth || img.width;
-    const ih = img.naturalHeight || img.height;
-    const scale = Math.max(W / iw, H / ih) * 1.08;
-    const dw = iw * scale;
-    const dh = ih * scale;
-    // Parallax: photo drifts slower than gameplay camera
-    const maxShift = Math.max(0, dw - W);
-    const shift = maxShift ? ((cam * 0.15) % maxShift) : 0;
-    const dx = -shift;
-    const dy = (H - dh) * 0.45;
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(img, dx, dy, dw, dh);
-    // Soft darken so the figurine stays readable on bright photos
-    ctx.fillStyle = "rgba(10, 25, 18, 0.22)";
-    ctx.fillRect(0, 0, W, H);
-    // Light bottom shade for platform readability only
-    ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
-    ctx.fillRect(0, H - 40, W, 40);
     ctx.imageSmoothingEnabled = true;
     if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
+
+    if (img) {
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      const scale = Math.max(W / iw, H / ih) * 1.1;
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const maxShift = Math.max(0, dw - W);
+      const shift = maxShift ? ((cam * 0.12) % maxShift) : 0;
+      ctx.drawImage(img, -shift, (H - dh) * 0.4, dw, dh);
+    } else {
+      // Deep swamp gradient fallback
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, "#1a3a28");
+      g.addColorStop(0.55, "#0f2a1c");
+      g.addColorStop(1, "#0a1a12");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Murky swamp wash (green-brown fog)
+    ctx.fillStyle = "rgba(12, 40, 28, 0.42)";
+    ctx.fillRect(0, 0, W, H);
+    // Soft canopy shade at top
+    const canopy = ctx.createLinearGradient(0, 0, 0, 120);
+    canopy.addColorStop(0, "rgba(5, 20, 12, 0.55)");
+    canopy.addColorStop(1, "rgba(5, 20, 12, 0)");
+    ctx.fillStyle = canopy;
+    ctx.fillRect(0, 0, W, 120);
+    // Mist bands
+    const mistY = 180 + Math.sin((t || 0) * 0.6) * 8;
+    ctx.fillStyle = "rgba(160, 200, 170, 0.07)";
+    ctx.fillRect(0, mistY, W, 40);
+    ctx.fillRect(0, mistY + 90, W, 28);
+  }
+
+  function drawWater(cam, t) {
+    if (!world.water) return;
+    world.water.forEach(function (w) {
+      const x = Math.floor(w.x - cam);
+      if (x > W || x + w.w < 0) return;
+      // Murky pool
+      const g = ctx.createLinearGradient(0, w.y, 0, w.y + 50);
+      g.addColorStop(0, "rgba(30, 70, 55, 0.85)");
+      g.addColorStop(1, "rgba(15, 40, 30, 0.95)");
+      ctx.fillStyle = g;
+      ctx.fillRect(x, w.y, w.w, Math.min(w.h, H - w.y));
+      // Ripple lines
+      ctx.strokeStyle = "rgba(120, 180, 140, 0.35)";
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < 3; i++) {
+        const yy = w.y + 8 + i * 10 + Math.sin((t || 0) * 3 + i + w.x) * 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, yy);
+        ctx.lineTo(x + w.w - 4, yy + Math.sin((t || 0) * 2 + i) * 2);
+        ctx.stroke();
+      }
+      // Danger lip
+      ctx.fillStyle = "rgba(40, 90, 60, 0.5)";
+      ctx.fillRect(x, w.y, w.w, 4);
+    });
+  }
+
+  function drawDecor(cam, t) {
+    if (!world.decor) return;
+    world.decor.forEach(function (d) {
+      const x = Math.floor(d.x - cam);
+      if (x < -40 || x > W + 40) return;
+      if (d.kind === "reed") {
+        ctx.strokeStyle = "rgba(60, 110, 50, 0.9)";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+          const sway = Math.sin((t || 0) * 2 + d.x + i) * 3;
+          ctx.beginPath();
+          ctx.moveTo(x + i * 5, d.y);
+          ctx.quadraticCurveTo(
+            x + i * 5 + sway,
+            d.y - 28,
+            x + i * 5 + sway * 0.5,
+            d.y - 48 - (i % 2) * 8
+          );
+          ctx.stroke();
+          // Cattail tip
+          ctx.fillStyle = "rgba(90, 60, 30, 0.85)";
+          ctx.fillRect(x + i * 5 + sway * 0.5 - 2, d.y - 52 - (i % 2) * 8, 5, 10);
+        }
+      } else if (d.kind === "lily") {
+        ctx.fillStyle = "rgba(50, 120, 70, 0.75)";
+        ctx.beginPath();
+        ctx.ellipse(x, d.y + 4, 14, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(220, 180, 60, 0.7)";
+        ctx.beginPath();
+        ctx.arc(x + 2, d.y + 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (d.kind === "vine") {
+        ctx.strokeStyle = "rgba(50, 100, 45, 0.7)";
+        ctx.lineWidth = 2;
+        for (let yy = 0; yy < (d.h || 40); yy += 12) {
+          const wob = Math.sin(yy * 0.2 + (t || 0)) * 3;
+          ctx.beginPath();
+          ctx.moveTo(x + 4, d.y + yy);
+          ctx.lineTo(x + 10 + wob, d.y + yy + 10);
+          ctx.stroke();
+        }
+      }
+    });
   }
 
   function drawPlatforms(cam) {
     world.platforms.forEach(function (p) {
       const x = Math.floor(p.x - cam);
-      if (x > W || x + p.w < 0) return;
-      if (p.wall) {
-        ctx.fillStyle = "rgba(45, 55, 40, 0.72)";
+      if (x > W + 4 || x + p.w < -4) return;
+
+      if (p.wall || p.cypress) {
+        // Cypress / mud pillar walls
+        ctx.fillStyle = "rgba(55, 42, 28, 0.92)";
         ctx.fillRect(x, p.y, p.w, p.h);
-        ctx.fillStyle = "rgba(70, 90, 55, 0.5)";
-        for (let yy = p.y; yy < p.y + p.h; yy += 10) {
-          ctx.fillRect(x + 2, yy, p.w - 4, 2);
+        ctx.fillStyle = "rgba(40, 70, 40, 0.55)";
+        for (let yy = p.y; yy < p.y + p.h; yy += 9) {
+          ctx.fillRect(x + 2, yy, p.w - 4, 3);
         }
+        // Moss cap
+        ctx.fillStyle = "rgba(70, 120, 55, 0.8)";
+        ctx.fillRect(x - 2, p.y, p.w + 4, 6);
         return;
       }
-      // Semi-transparent ledges so your photo still shows through
-      ctx.fillStyle = "rgba(40, 55, 35, 0.6)";
-      ctx.fillRect(x, p.y, p.w, p.h);
-      ctx.fillStyle = "rgba(90, 140, 70, 0.8)";
-      ctx.fillRect(x, p.y, p.w, 4);
-    });
-  }
 
-  function drawClimbs(cam) {
-    if (!world.climbs) return;
-    world.climbs.forEach(function (c) {
-      const x = Math.floor(c.x - cam);
-      if (x > W + 20 || x + c.w < -20) return;
-      if (c.type === "stairs") {
-        // Soft highlight behind stairs so they're obvious
-        ctx.fillStyle = "rgba(255, 220, 120, 0.12)";
-        ctx.fillRect(x, c.y, c.w, c.h);
-        return;
-      }
-      if (c.type === "ladder") {
-        ctx.fillStyle = "rgba(140, 90, 45, 0.95)";
-        ctx.fillRect(x + 4, c.y, 10, c.h);
-        ctx.fillRect(x + c.w - 14, c.y, 10, c.h);
-        ctx.fillStyle = "rgba(200, 140, 70, 0.98)";
-        for (let yy = c.y + 12; yy < c.y + c.h - 6; yy += 18) {
-          ctx.fillRect(x + 4, yy, c.w - 8, 8);
-        }
-        ctx.fillStyle = "rgba(255, 230, 120, 0.18)";
-        ctx.fillRect(x - 6, c.y, c.w + 12, c.h);
+      // Mud bank body
+      if (p.h > 30) {
+        ctx.fillStyle = "rgba(48, 38, 24, 0.88)";
+        ctx.fillRect(x, p.y, p.w, p.h);
+        // Waterline under bank
+        ctx.fillStyle = "rgba(25, 55, 42, 0.5)";
+        ctx.fillRect(x, p.y + 10, p.w, 6);
       } else {
-        // Snake rope
-        ctx.fillStyle = "#3d9a45";
-        for (let yy = 0; yy < c.h; yy += 5) {
-          const wob = Math.sin(yy * 0.18 + (world.time || 0) * 3) * 4;
-          ctx.fillRect(x + c.w / 2 - 6 + wob, c.y + yy, 12, 8);
-        }
-        ctx.fillStyle = "#d4b060";
-        ctx.fillRect(x + c.w / 2 - 12, c.y, 24, 18);
-        ctx.fillStyle = "#111";
-        ctx.fillRect(x + c.w / 2 - 6, c.y + 6, 3, 3);
-        ctx.fillRect(x + c.w / 2 + 4, c.y + 6, 3, 3);
-        ctx.fillStyle = "#e8d080";
-        ctx.fillRect(x + c.w / 2 - 8, c.y + c.h - 14, 16, 10);
-        ctx.fillStyle = "rgba(255, 230, 120, 0.14)";
-        ctx.fillRect(x - 6, c.y, c.w + 12, c.h);
+        ctx.fillStyle = "rgba(55, 45, 28, 0.82)";
+        ctx.fillRect(x, p.y, p.w, p.h);
       }
+      // Mossy top edge
+      ctx.fillStyle = p.step
+        ? "rgba(120, 160, 70, 0.95)"
+        : "rgba(70, 130, 60, 0.92)";
+      ctx.fillRect(x, p.y, p.w, 5);
+      // Soft highlight so path is readable
+      ctx.fillStyle = "rgba(160, 200, 100, 0.25)";
+      ctx.fillRect(x + 2, p.y + 1, Math.max(0, p.w - 4), 2);
     });
-  }
-
-  function climbAt(p) {
-    if (!world || !world.climbs) return null;
-    // Very generous grab zone (big character + stairs)
-    let best = null;
-    let bestDist = 99999;
-    for (let i = 0; i < world.climbs.length; i++) {
-      const c = world.climbs[i];
-      const grabW = Math.max(c.w, 80);
-      const cx = c.x + c.w / 2 - grabW / 2;
-      const top = c.y - 40;
-      const bot = c.y + c.h + 50;
-      if (
-        p.x + p.w > cx &&
-        p.x < cx + grabW &&
-        p.y + p.h > top &&
-        p.y < bot
-      ) {
-        const mid = c.x + c.w / 2;
-        const d = Math.abs(p.x + p.w / 2 - mid);
-        if (d < bestDist) {
-          bestDist = d;
-          best = c;
-        }
-      }
-    }
-    return best;
-  }
-
-  function nearClimb(p) {
-    return !!climbAt(p);
   }
 
   /**
@@ -1041,8 +990,9 @@
     const p = world.player;
     const cam = world.camera;
     drawBackground(cam, world.time, world.idx);
+    drawWater(cam, world.time);
     drawPlatforms(cam);
-    // Climbs removed from easy mode (no maze floors)
+    drawDecor(cam, world.time);
 
     // snacks - big golden bites
     world.items.forEach(function (it) {
@@ -1109,13 +1059,13 @@
       13
     );
 
-    // Always-on easy direction tip
-    if (p.x < world.len * 0.35) {
+    // Maze tip early in the level
+    if (p.x < world.len * 0.22) {
       ctx.fillStyle = "rgba(255, 245, 180, 0.9)";
-      ctx.fillRect(W / 2 - 100, H - 34, 200, 26);
+      ctx.fillRect(W / 2 - 118, H - 36, 236, 28);
       ctx.fillStyle = "#143d22";
-      ctx.font = "bold 13px system-ui,sans-serif";
-      ctx.fillText("Go right → to the flag!", W / 2 - 78, H - 16);
+      ctx.font = "bold 12px system-ui,sans-serif";
+      ctx.fillText("Jump the mud steps · flag on top!", W / 2 - 100, H - 17);
     }
   }
 
@@ -1130,15 +1080,29 @@
   }
 
   /* ---------- Physics ---------- */
-  function solidAt(x, y, w, h, opts) {
-    opts = opts || {};
+  function solidAt(x, y, w, h) {
     for (let i = 0; i < world.platforms.length; i++) {
       const p = world.platforms[i];
-      // While climbing, ignore floor ledges so gator can pass between stories
-      if (opts.climbing && !p.wall) continue;
       if (x < p.x + p.w && x + w > p.x && y < p.y + p.h && y + h > p.y) return p;
     }
     return null;
+  }
+
+  function inSwampWater(p) {
+    if (!world.water) return false;
+    for (let i = 0; i < world.water.length; i++) {
+      const w = world.water[i];
+      // Only count if feet dip into the murky gap
+      if (
+        p.x + p.w * 0.3 < w.x + w.w &&
+        p.x + p.w * 0.7 > w.x &&
+        p.y + p.h > w.y + 6 &&
+        p.y + p.h < w.y + 50
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function updatePlayer(dt) {
@@ -1154,7 +1118,6 @@
     if (move) p.facing = move > 0 ? 1 : -1;
 
     if (jumpKey && p.onGround) {
-      if (Math.random() < 0.3) gatorLine("jump");
       p.vy = JUMP;
       p.onGround = false;
     } else {
@@ -1189,13 +1152,15 @@
     if (p.x < 8) p.x = 8;
     if (p.x + p.w > world.len - 8) p.x = world.len - 8 - p.w;
 
-    if (p.y > H + 40) {
-      // gentle respawn (no maze fall-through frustration)
-      p.x = 40;
-      p.y = (world.goalY || 470) - p.h - 2;
+    // Fell into swamp water or off the map — soft respawn nearby
+    if (inSwampWater(p) || p.y > H + 20) {
+      hurt();
+      // Snap back onto nearest lower bank
+      const fy = (world.floors && world.floors[0]) || 490;
+      p.x = Math.max(24, p.x - 70);
+      p.y = fy - p.h - 2;
       p.vy = 0;
-      world.camera = 0;
-      world.inv = 1.5;
+      p.onGround = true;
     }
 
     world.camera = Math.max(0, Math.min(world.len - W, p.x - 90));
@@ -1324,11 +1289,12 @@
         }
       }
     }
-    // Reach the flag anywhere near the end of the ground path
-    const gy = world.goalY || 470;
+    // Flag sits on the top swamp corridor — reach it to clear
+    const gy = world.goalY || 220;
     if (
-      world.player.x + world.player.w >= world.goalX - 20 &&
-      world.player.y + world.player.h >= gy - 120
+      world.player.x + world.player.w >= world.goalX - 24 &&
+      world.player.y + world.player.h >= gy - 30 &&
+      world.player.y < gy + 40
     ) {
       world.won = true;
       finishLevel();
@@ -1584,13 +1550,10 @@
       blurb.textContent = "";
     }
     $("#play-hint").textContent =
-      "← → move · Jump · Reach the green flag →";
+      "← → move · Jump mud steps · Flag is on the top path →";
     show("play");
     world._last = 0;
-    lastGatorLineAt = 0;
-    lastOwlLineAt = 0;
     loopId = requestAnimationFrame(tick);
-    gatorSay(GATOR_START_LINE, true);
   }
 
   function renderLevels() {
@@ -1735,17 +1698,6 @@
 
     bindTouch();
     updateHud();
-    syncVoiceButton();
-    document.querySelectorAll("[data-voice-toggle]").forEach(function (btn) {
-      btn.addEventListener("click", toggleVoice);
-    });
-    // Chrome loads voices async
-    if (voiceSupported) {
-      window.speechSynthesis.onvoiceschanged = function () {};
-      try {
-        window.speechSynthesis.getVoices();
-      } catch (e) {}
-    }
     const qc = window.GATOR_QUESTIONS ? window.GATOR_QUESTIONS.count : 0;
     const meta = $("#q-count");
     if (meta) meta.textContent = String(qc);
