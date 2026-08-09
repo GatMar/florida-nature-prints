@@ -388,6 +388,86 @@
     return cell === T.LOG || cell === T.ROCK;
   }
 
+  /** Breakable obstacles (not outer border) */
+  function isSmashable(g, x, y) {
+    if (x <= 0 || y <= 0 || x >= COLS - 1 || y >= ROWS - 1) return false;
+    const c = g[y][x];
+    return c === T.BLOCK || c === T.ROCK;
+  }
+
+  /** Big BAM smash — hatchling or big gator breaks through */
+  function smashTile(x, y, who) {
+    if (!world || !isSmashable(world.grid, x, y)) return false;
+    const wasRock = world.grid[y][x] === T.ROCK;
+    world.grid[y][x] = T.RIVER;
+    if (world.fishMeta && world.fishMeta[y]) world.fishMeta[y][x] = null;
+
+    world.bams = world.bams || [];
+    world.bams.push({
+      x: (x + 0.5) * TILE,
+      y: (y + 0.5) * TILE,
+      life: 0.7,
+      max: 0.7,
+      who: who || "gator",
+      rock: wasRock,
+    });
+    world.flash = Math.max(world.flash || 0, 0.28);
+    sfxBam(wasRock);
+    haptic(who === "hatchling" ? [18, 25, 35] : [25, 30, 45]);
+    if (who === "hatchling") {
+      state.score += wasRock ? 12 : 8;
+      popScore((x + 0.5) * TILE, (y + 0.5) * TILE, wasRock ? 12 : 8);
+      updateHud();
+    }
+    return true;
+  }
+
+  function sfxBam(heavy) {
+    const ctxA = ensureAudio();
+    if (!ctxA) {
+      playTone(heavy ? 90 : 120, 0.12, "square", 0.12, 0);
+      playTone(heavy ? 60 : 80, 0.18, "triangle", 0.1, 0.02);
+      return;
+    }
+    const t0 = ctxA.currentTime;
+    // Low impact boom
+    playTone(heavy ? 70 : 95, 0.14, "sine", 0.22, 0);
+    playTone(heavy ? 55 : 75, 0.2, "triangle", 0.14, 0.01);
+    // Crack / debris noise
+    const n = Math.floor(ctxA.sampleRate * 0.22);
+    const buf = ctxA.createBuffer(1, n, ctxA.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.2);
+    }
+    const src = ctxA.createBufferSource();
+    src.buffer = buf;
+    const bp = ctxA.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.setValueAtTime(heavy ? 400 : 600, t0);
+    bp.frequency.exponentialRampToValueAtTime(120, t0 + 0.18);
+    const g = ctxA.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.45, t0 + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(ctxA.destination);
+    src.start(t0);
+    src.stop(t0 + 0.25);
+    // Vocal-ish "BAM" thump (short TTS optional)
+    try {
+      if (window.speechSynthesis && Math.random() > 0.35) {
+        const u = new SpeechSynthesisUtterance("Bam!");
+        u.lang = "en-US";
+        u.rate = 1.4;
+        u.pitch = 0.85;
+        u.volume = 0.7;
+        window.speechSynthesis.speak(u);
+      }
+    } catch (e) {}
+  }
+
   /* ---------- Swirly river labyrinth generation ---------- */
   function buildLevel(idx) {
     // Start solid land
@@ -637,6 +717,8 @@
         speed: 1.05 + Math.min(0.9, idx * 0.025) + i * 0.08,
         phase: i * 1.7,
         wiggle: 0,
+        smashCharge: 0,
+        smashCd: 0.4 + i * 0.15,
       });
     }
 
@@ -670,8 +752,11 @@
         onLand: false,
         growPulse: 0,
         bite: 0,
+        smashCharge: 0,
+        smashCd: 0,
       },
       bigs: bigs,
+      bams: [],
       inv: 0,
       time: 0,
       won: false,
@@ -718,23 +803,40 @@
     return Math.abs(px - c.x) < 2.4 && Math.abs(py - c.y) < 2.4;
   }
 
-  function trySetDir(entity, dir) {
+  function trySetDir(entity, dir, opts) {
+    opts = opts || {};
     const d = DIRS[dir];
     if (!d) return false;
     const nx = entity.x + d.x;
     const ny = entity.y + d.y;
-    if (isBlocked(world.grid, nx, ny)) return false;
+    if (isBlocked(world.grid, nx, ny)) {
+      // Allow turning into a smashable wall if ready to break
+      if (
+        opts.canSmash &&
+        (!entity.smashCd || entity.smashCd <= 0) &&
+        isSmashable(world.grid, nx, ny)
+      ) {
+        entity.dir = dir;
+        return true;
+      }
+      return false;
+    }
     entity.dir = dir;
     return true;
   }
 
-  function moveEntity(entity, speed) {
+  /**
+   * opts.canSmash — hatchling / big gator may BAM through BLOCK/ROCK
+   * opts.who — "hatchling" | "big"
+   */
+  function moveEntity(entity, speed, opts) {
+    opts = opts || {};
     const d = DIRS[entity.dir] || DIRS.right;
     const c = tileCenter(entity.x, entity.y);
 
     if (entity.nextDir && entity.nextDir !== entity.dir) {
       if (nearCenter(entity.px, entity.py, entity.x, entity.y)) {
-        if (trySetDir(entity, entity.nextDir)) {
+        if (trySetDir(entity, entity.nextDir, opts)) {
           entity.px = c.x;
           entity.py = c.y;
         }
@@ -744,6 +846,27 @@
     const nx = entity.x + d.x;
     const ny = entity.y + d.y;
     if (isBlocked(world.grid, nx, ny)) {
+      // Build smash charge while pushing into obstacle
+      if (opts.canSmash && isSmashable(world.grid, nx, ny)) {
+        entity.smashCharge = (entity.smashCharge || 0) + 1;
+        // Hatchling smashes faster when bigger; big gators smash hard
+        const need =
+          opts.who === "big"
+            ? 14
+            : Math.max(8, 16 - Math.floor((world.fishEaten || 0) * 0.35));
+        if ((!entity.smashCd || entity.smashCd <= 0) && entity.smashCharge >= need) {
+          if (smashTile(nx, ny, opts.who === "big" ? "big" : "hatchling")) {
+            entity.smashCharge = 0;
+            entity.smashCd = opts.who === "big" ? 1.1 : 0.55;
+            // lunge through
+            entity.px = (nx + 0.5) * TILE;
+            entity.py = (ny + 0.5) * TILE;
+            entity.x = nx;
+            entity.y = ny;
+            return;
+          }
+        }
+      }
       if (d.x !== 0) {
         if ((d.x > 0 && entity.px >= c.x) || (d.x < 0 && entity.px <= c.x)) {
           entity.px = c.x;
@@ -755,8 +878,10 @@
           return;
         }
       }
+      return;
     }
 
+    entity.smashCharge = 0;
     entity.px += d.x * speed;
     entity.py += d.y * speed;
 
@@ -1162,6 +1287,55 @@
       ctx.fillStyle = "#ff3b3b";
       ctx.fillText("OUCH!", 0, 0);
       ctx.restore();
+    }
+
+    // Big BAM smash bursts
+    if (world.bams && world.bams.length) {
+      world.bams.forEach(function (b) {
+        const a = Math.max(0, b.life / b.max);
+        const grow = 1 + (1 - a) * 1.4;
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.scale(grow, grow);
+        ctx.globalAlpha = Math.min(1, a * 1.5);
+        // Debris ring
+        for (let i = 0; i < 10; i++) {
+          const ang = (i / 10) * Math.PI * 2 + a * 2;
+          const d = 12 + (1 - a) * 28;
+          ctx.fillStyle = b.rock
+            ? "rgba(120, 120, 120, 0.9)"
+            : "rgba(90, 70, 40, 0.9)";
+          ctx.beginPath();
+          ctx.rect(
+            Math.cos(ang) * d - 3,
+            Math.sin(ang) * d - 3,
+            5 + (i % 3),
+            4 + (i % 2)
+          );
+          ctx.fill();
+        }
+        // Shockwave
+        ctx.strokeStyle = "rgba(255, 220, 80, " + a + ")";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 16 + (1 - a) * 40, 0, Math.PI * 2);
+        ctx.stroke();
+        // BAM text
+        ctx.strokeStyle = "#4a2000";
+        ctx.lineWidth = 5;
+        ctx.font = "bold 36px system-ui,Impact,sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.strokeText("BAM!", 0, 0);
+        ctx.fillStyle = "#ffcc33";
+        ctx.fillText("BAM!", 0, 0);
+        if (b.who === "big") {
+          ctx.font = "bold 11px system-ui,sans-serif";
+          ctx.fillStyle = "#ff8866";
+          ctx.fillText("SMASH", 0, 22);
+        }
+        ctx.restore();
+      });
     }
 
     if (world.flash > 0) {
@@ -2292,7 +2466,7 @@
     if (p.nextDir) {
       const rev = { left: "right", right: "left", up: "down", down: "up" };
       if (p.nextDir === rev[p.dir] || nearCenter(p.px, p.py, p.x, p.y)) {
-        trySetDir(p, p.nextDir);
+        trySetDir(p, p.nextDir, { canSmash: true, who: "hatchling" });
       }
     }
 
@@ -2303,9 +2477,11 @@
     if (cell === T.ROAD) spd *= 1.08;
     if (cell === T.RIVER || cell === T.FISH || cell === T.BIGFISH) spd *= 1.05;
 
+    if (p.smashCd > 0) p.smashCd -= dt;
+
     // Freeze brief moment during splat
     if (world.splat <= 0.55) {
-      moveEntity(p, spd);
+      moveEntity(p, spd, { canSmash: true, who: "hatchling" });
       p.bob += dt * 8;
       collectFish();
     }
@@ -2313,14 +2489,23 @@
     world.bigs.forEach(function (b) {
       b.wiggle += dt * 6;
       b.phase += dt;
+      if (b.smashCd > 0) b.smashCd -= dt;
       if (nearCenter(b.px, b.py, b.x, b.y)) {
         b.px = (b.x + 0.5) * TILE;
         b.py = (b.y + 0.5) * TILE;
         pickBigDir(b);
       }
-      // Big gators prefer river/road but can use any walkable
-      moveEntity(b, b.speed);
+      // Big gators smash through banks & rocks with BAM
+      moveEntity(b, b.speed, { canSmash: true, who: "big" });
     });
+
+    // BAM particle timers
+    if (world.bams && world.bams.length) {
+      world.bams = world.bams.filter(function (b) {
+        b.life -= dt;
+        return b.life > 0;
+      });
+    }
 
     if (world.splat <= 0.4) collideBigs();
   }
@@ -2362,7 +2547,7 @@
     const hint = $("#play-hint");
     if (hint) {
       hint.textContent =
-        "Match fish pairs in order · Tap LOG/ROCK to move tiles · Dodge BIG gators";
+        "Match fish · Tap LOG/ROCK · Hold into banks/rocks to BAM through · Dodge BIG gators";
     }
     show("play");
     world._last = 0;
