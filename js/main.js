@@ -84,11 +84,11 @@
     }
   });
 
-  // ---- Gallery cards (shared markup) ----
+  // ---- Photo helpers ----
   function photoCardHtml(photo, withBuy) {
     return (
       '<article class="photo-card" data-category="' +
-      escapeHtml(photo.category || "all") +
+      escapeHtml(photo.category || "") +
       '">' +
       '<div class="photo-img-wrap">' +
       '<img class="photo-img" src="' +
@@ -116,19 +116,90 @@
     );
   }
 
-  // ---- Gallery with category tabs ----
+  function photosInCategory(catId) {
+    return (SITE_CONFIG.photos || []).filter(function (p) {
+      return (p.category || "") === catId;
+    });
+  }
+
+  function categoryMeta(catId) {
+    const list = SITE_CONFIG.categories || [];
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === catId) return list[i];
+    }
+    return null;
+  }
+
+  /** One cover card per category — used on home + gallery front */
+  function categoryChoiceHtml(cat, opts) {
+    opts = opts || {};
+    const count = photosInCategory(cat.id).length;
+    const cover = cat.cover || (photosInCategory(cat.id)[0] || {}).file || "";
+    const asLink = opts.asLink !== false;
+    const tag = asLink ? "a" : "button";
+    const href =
+      tag === "a"
+        ? ' href="gallery.html?cat=' + encodeURIComponent(cat.id) + '"'
+        : ' type="button"';
+    return (
+      "<" +
+      tag +
+      href +
+      ' class="category-choice" data-category="' +
+      escapeHtml(cat.id) +
+      '">' +
+      '<div class="category-choice-img">' +
+      (cover
+        ? '<img src="' +
+          photoUrl(cover) +
+          '" alt="' +
+          escapeHtml(cat.label) +
+          '" loading="lazy" />'
+        : "") +
+      "</div>" +
+      '<div class="category-choice-body">' +
+      "<h3>" +
+      escapeHtml(cat.label) +
+      "</h3>" +
+      "<p>" +
+      escapeHtml(cat.blurb || "") +
+      "</p>" +
+      '<span class="category-choice-meta">' +
+      count +
+      (count === 1 ? " photo" : " photos") +
+      " · Open ▾</span>" +
+      "</div>" +
+      "</" +
+      tag +
+      ">"
+    );
+  }
+
+  // ---- Gallery: front covers + dropdown browse ----
+  const galleryFront = document.getElementById("gallery-front");
+  const galleryBrowse = document.getElementById("gallery-browse");
   const galleryGrid = document.getElementById("gallery-grid");
-  const galleryTabs = document.getElementById("gallery-tabs");
-  if (galleryGrid && SITE_CONFIG.photos) {
-    function renderGallery(category) {
-      const cat = category || "all";
-      const list = SITE_CONFIG.photos.filter(function (photo) {
-        if (cat === "all") return true;
-        return (photo.category || "") === cat;
-      });
+  const categoryChoiceGrid = document.getElementById("category-choice-grid");
+  const gallerySelect = document.getElementById("gallery-select");
+  const galleryBack = document.getElementById("gallery-back");
+
+  if (galleryGrid && SITE_CONFIG.photos && SITE_CONFIG.categories) {
+    function showFront() {
+      if (galleryFront) galleryFront.hidden = false;
+      if (galleryBrowse) galleryBrowse.hidden = true;
+      // Clean URL when returning to front (keep path)
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, "", "gallery.html");
+      }
+    }
+
+    function renderCategoryPhotos(catId) {
+      const list = photosInCategory(catId);
+      const countEl = document.getElementById("gallery-count");
       if (!list.length) {
         galleryGrid.innerHTML =
           '<p class="gallery-empty">No photos in this category yet.</p>';
+        if (countEl) countEl.textContent = "0 photos";
         return;
       }
       galleryGrid.innerHTML = list
@@ -136,67 +207,89 @@
           return photoCardHtml(photo, true);
         })
         .join("");
-      const countEl = document.getElementById("gallery-count");
       if (countEl) {
         countEl.textContent =
           list.length + (list.length === 1 ? " photo" : " photos");
       }
     }
 
-    if (galleryTabs && SITE_CONFIG.categories) {
-      galleryTabs.innerHTML = SITE_CONFIG.categories
-        .map(function (c, i) {
+    function openCategory(catId) {
+      const meta = categoryMeta(catId);
+      if (!meta) {
+        showFront();
+        return;
+      }
+      if (galleryFront) galleryFront.hidden = true;
+      if (galleryBrowse) galleryBrowse.hidden = false;
+      if (gallerySelect) gallerySelect.value = catId;
+      renderCategoryPhotos(catId);
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(
+          {},
+          "",
+          "gallery.html?cat=" + encodeURIComponent(catId)
+        );
+      }
+      // Scroll browse into view on mobile
+      if (galleryBrowse && galleryBrowse.scrollIntoView) {
+        galleryBrowse.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    // Populate category cover grid
+    if (categoryChoiceGrid) {
+      categoryChoiceGrid.innerHTML = SITE_CONFIG.categories
+        .map(function (cat) {
+          return categoryChoiceHtml(cat, { asLink: false });
+        })
+        .join("");
+      categoryChoiceGrid.addEventListener("click", function (e) {
+        const card = e.target.closest(".category-choice");
+        if (!card) return;
+        openCategory(card.getAttribute("data-category"));
+      });
+    }
+
+    // Dropdown
+    if (gallerySelect) {
+      gallerySelect.innerHTML = SITE_CONFIG.categories
+        .map(function (cat) {
           return (
-            '<button type="button" class="gallery-tab' +
-            (i === 0 ? " is-active" : "") +
-            '" data-category="' +
-            escapeHtml(c.id) +
-            '" role="tab" aria-selected="' +
-            (i === 0 ? "true" : "false") +
+            '<option value="' +
+            escapeHtml(cat.id) +
             '">' +
-            escapeHtml(c.label) +
-            "</button>"
+            escapeHtml(cat.label) +
+            "</option>"
           );
         })
         .join("");
+      gallerySelect.addEventListener("change", function () {
+        openCategory(gallerySelect.value);
+      });
+    }
 
-      galleryTabs.addEventListener("click", function (e) {
-        const btn = e.target.closest(".gallery-tab");
-        if (!btn) return;
-        const cat = btn.getAttribute("data-category") || "all";
-        galleryTabs.querySelectorAll(".gallery-tab").forEach(function (tab) {
-          const on = tab === btn;
-          tab.classList.toggle("is-active", on);
-          tab.setAttribute("aria-selected", on ? "true" : "false");
-        });
-        renderGallery(cat);
+    if (galleryBack) {
+      galleryBack.addEventListener("click", function () {
+        showFront();
       });
     }
 
     // Deep link: gallery.html?cat=gators
     const params = new URLSearchParams(window.location.search);
-    const startCat = params.get("cat") || "all";
-    if (galleryTabs && startCat !== "all") {
-      const match = galleryTabs.querySelector(
-        '.gallery-tab[data-category="' + startCat + '"]'
-      );
-      if (match) {
-        galleryTabs.querySelectorAll(".gallery-tab").forEach(function (tab) {
-          const on = tab === match;
-          tab.classList.toggle("is-active", on);
-          tab.setAttribute("aria-selected", on ? "true" : "false");
-        });
-      }
+    const startCat = params.get("cat");
+    if (startCat && categoryMeta(startCat)) {
+      openCategory(startCat);
+    } else {
+      showFront();
     }
-    renderGallery(startCat);
   }
 
+  // ---- Home: one front picture per category ----
   const featuredGrid = document.getElementById("featured-grid");
-  if (featuredGrid && SITE_CONFIG.photos) {
-    const featured = SITE_CONFIG.photos.slice(0, 3);
-    featuredGrid.innerHTML = featured
-      .map(function (photo) {
-        return photoCardHtml(photo, false);
+  if (featuredGrid && SITE_CONFIG.categories && SITE_CONFIG.photos) {
+    featuredGrid.innerHTML = SITE_CONFIG.categories
+      .map(function (cat) {
+        return categoryChoiceHtml(cat, { asLink: true });
       })
       .join("");
   }
@@ -240,9 +333,31 @@
 
   const printSelect = document.getElementById("order-print");
   if (printSelect && SITE_CONFIG.photos) {
-    printSelect.innerHTML =
-      '<option value="">Choose a print…</option>' +
-      SITE_CONFIG.photos
+    // Group shop prints by category in the dropdown
+    let opts = '<option value="">Choose a print…</option>';
+    if (SITE_CONFIG.categories && SITE_CONFIG.categories.length) {
+      SITE_CONFIG.categories.forEach(function (cat) {
+        const group = photosInCategory(cat.id);
+        if (!group.length) return;
+        opts +=
+          '<optgroup label="' +
+          escapeHtml(cat.label) +
+          '">' +
+          group
+            .map(function (p) {
+              return (
+                '<option value="' +
+                escapeHtml(p.title) +
+                '">' +
+                escapeHtml(p.title) +
+                "</option>"
+              );
+            })
+            .join("") +
+          "</optgroup>";
+      });
+    } else {
+      opts += SITE_CONFIG.photos
         .map(function (p) {
           return (
             '<option value="' +
@@ -253,6 +368,8 @@
           );
         })
         .join("");
+    }
+    printSelect.innerHTML = opts;
 
     // Pre-select from URL ?print=Title
     const params = new URLSearchParams(window.location.search);

@@ -36,17 +36,48 @@ const SITE_CONFIG = {
   ],
 
   /**
-   * ---- Gallery categories (tabs) ----
+   * ---- Gallery categories ----
+   * Front of the gallery shows one cover photo per category.
    * id must match photo.category values below.
+   * cover = filename in images/prints/ used as the category picture
    */
   categories: [
-    { id: "all", label: "All" },
-    { id: "sunsets", label: "Sunsets" },
-    { id: "beaches", label: "Beaches" },
-    { id: "gators", label: "Gators" },
-    { id: "herons", label: "Herons" },
-    { id: "anhinga", label: "Anhinga" },
-    { id: "storks", label: "Storks" },
+    {
+      id: "sunsets",
+      label: "Sunsets",
+      cover: "crimson-marsh.jpeg",
+      blurb: "Skies on fire over Florida water",
+    },
+    {
+      id: "beaches",
+      label: "Beaches",
+      cover: "golden-gulf.jpeg",
+      blurb: "Soft sand, gulf light, quiet shores",
+    },
+    {
+      id: "gators",
+      label: "Gators",
+      cover: "gator-mid-yawn.jpeg",
+      blurb: "Scaly neighbors of the wetlands",
+    },
+    {
+      id: "herons",
+      label: "Herons",
+      cover: "great-blue-heron.jpeg",
+      blurb: "Herons, egrets, and tall waders",
+    },
+    {
+      id: "anhinga",
+      label: "Anhinga",
+      cover: "anhinga-portrait.JPG",
+      blurb: "Snakebirds sunning by the water",
+    },
+    {
+      id: "storks",
+      label: "Storks",
+      cover: "wood-stork-standing-tall.jpeg",
+      blurb: "Wood storks of the marsh",
+    },
   ],
 
   /**
