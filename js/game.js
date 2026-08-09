@@ -44,6 +44,8 @@
   let gatorImg = null;
   let gatorImgReady = false;
   const bgImages = [];
+  let audioCtx = null;
+  let audioReady = false;
 
   const BG_FILES = [
     "golden-gulf.jpeg",
@@ -72,6 +74,137 @@
     try {
       if (navigator.vibrate) navigator.vibrate(pattern);
     } catch (e) {}
+  }
+
+  /* ---------- Web Audio: eat blip + water-balloon OUCH splash ---------- */
+  function ensureAudio() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      audioReady = true;
+      return audioCtx;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function playTone(freq, dur, type, vol, when) {
+    const ctxA = ensureAudio();
+    if (!ctxA) return;
+    const t0 = ctxA.currentTime + (when || 0);
+    const osc = ctxA.createOscillator();
+    const g = ctxA.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g);
+    g.connect(ctxA.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+
+  /** Soft musical nibble when hatchling scores */
+  function sfxEat(points) {
+    const big = points >= 35;
+    // light rising chime
+    playTone(big ? 660 : 520, 0.07, "sine", 0.09, 0);
+    playTone(big ? 880 : 700, 0.1, "triangle", 0.07, 0.04);
+    if (big) playTone(1040, 0.12, "sine", 0.05, 0.08);
+  }
+
+  /** Noise burst shaped like a water balloon pop / liquid splash */
+  function sfxWaterBalloonPop() {
+    const ctxA = ensureAudio();
+    if (!ctxA) return;
+    const t0 = ctxA.currentTime;
+    const dur = 0.38;
+    // White-noise buffer
+    const n = Math.floor(ctxA.sampleRate * dur);
+    const buf = ctxA.createBuffer(1, n, ctxA.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) {
+      // decaying noise with a sharp attack
+      const env = Math.pow(1 - i / n, 1.6);
+      data[i] = (Math.random() * 2 - 1) * env;
+    }
+    const src = ctxA.createBufferSource();
+    src.buffer = buf;
+    // Bandpass for “wet” splash body
+    const bp = ctxA.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.setValueAtTime(900, t0);
+    bp.frequency.exponentialRampToValueAtTime(280, t0 + 0.28);
+    bp.Q.value = 0.7;
+    // Low shelf boom
+    const low = ctxA.createBiquadFilter();
+    low.type = "lowshelf";
+    low.frequency.value = 180;
+    low.gain.value = 8;
+    const g = ctxA.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.55, t0 + 0.012); // pop attack
+    g.gain.exponentialRampToValueAtTime(0.12, t0 + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(bp);
+    bp.connect(low);
+    low.connect(g);
+    g.connect(ctxA.destination);
+    src.start(t0);
+    src.stop(t0 + dur + 0.02);
+
+    // Musical “plink” over the splash (like a balloon skin snap)
+    playTone(220, 0.08, "triangle", 0.14, 0);
+    playTone(140, 0.18, "sine", 0.1, 0.02);
+    playTone(90, 0.22, "sine", 0.08, 0.04);
+  }
+
+  /** Quick vocal “ouch!” + splash */
+  function sfxOuch() {
+    sfxWaterBalloonPop();
+    // Quick spoken ouch (browser TTS — short & punchy)
+    try {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance("Ouch!");
+      u.lang = "en-US";
+      u.rate = 1.25;
+      u.pitch = 1.35;
+      u.volume = 1;
+      // Prefer a US voice if available
+      const voices = window.speechSynthesis.getVoices() || [];
+      for (let i = 0; i < voices.length; i++) {
+        if (/en-US|en_US|English.*United States/i.test(voices[i].lang + voices[i].name)) {
+          u.voice = voices[i];
+          break;
+        }
+      }
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  function growthScale() {
+    // Grows with fish eaten this level (and a bit with score)
+    const eaten = (world && world.fishEaten) || 0;
+    const base = 0.72;
+    const perFish = 0.045;
+    const cap = 1.85;
+    return Math.min(cap, base + eaten * perFish);
+  }
+
+  function popScore(px, py, pts) {
+    if (!world) return;
+    world.floatScores = world.floatScores || [];
+    world.floatScores.push({
+      x: px,
+      y: py - 18,
+      pts: pts,
+      life: 0.85,
+      max: 0.85,
+    });
   }
 
   function load() {
@@ -376,6 +509,9 @@
     return {
       grid: g,
       fishLeft: fishLeft,
+      fishEaten: 0,
+      fishTotal: fishLeft,
+      floatScores: [],
       player: {
         x: start.x,
         y: start.y,
@@ -386,6 +522,7 @@
         speed: 2.05,
         bob: 0,
         onLand: false,
+        growPulse: 0,
       },
       bigs: bigs,
       inv: 0,
@@ -750,40 +887,73 @@
             ? Math.PI / 2
             : -Math.PI / 2;
 
+    // Visual growth from eating fish + brief “pop” when scoring
+    const grow = growthScale() * (1 + (p.growPulse || 0) * 0.18);
+    const body = TILE * 1.15 * grow;
+
     ctx.save();
     ctx.translate(p.px, p.py + (onLand ? 0 : Math.sin(p.bob) * 2));
+
+    // Score counter floating above the hatchling (screen-aligned)
+    ctx.save();
+    ctx.translate(0, -body * 0.62);
+    // pill background
+    const label = String(state.score);
+    ctx.font = "bold 11px system-ui,sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const tw = Math.max(28, ctx.measureText(label).width + 12);
+    ctx.fillStyle = "rgba(8, 30, 18, 0.82)";
+    ctx.strokeStyle = "rgba(180, 255, 160, 0.9)";
+    ctx.lineWidth = 1.5;
+    const rr = 8;
+    const bx = -tw / 2;
+    const by = -9;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, by, tw, 16, rr);
+    else ctx.rect(bx, by, tw, 16);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#b8f0c8";
+    ctx.fillText(label, 0, 0);
+    // tiny “pts” cue when just scored
+    if (p.growPulse > 0.05) {
+      ctx.fillStyle = "rgba(255, 240, 120, " + Math.min(1, p.growPulse * 2) + ")";
+      ctx.font = "bold 9px system-ui,sans-serif";
+      ctx.fillText("yum!", 0, -14);
+    }
+    ctx.restore();
+
     ctx.rotate(ang);
 
     if (world.inv > 0 && Math.floor(world.time * 14) % 2 === 0) {
       ctx.globalAlpha = 0.35;
     }
 
-    // Swim wake in water
+    // Swim wake in water (scales with size)
     if (!onLand) {
       ctx.fillStyle = "rgba(200, 240, 255, 0.35)";
       ctx.beginPath();
-      ctx.ellipse(-TILE * 0.35, 0, 8, 4, 0, 0, Math.PI * 2);
+      ctx.ellipse(-body * 0.28, 0, 7 * grow, 3.5 * grow, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
     if (gatorImgReady && gatorImg) {
-      const s = TILE * 1.25;
+      const s = body;
       ctx.imageSmoothingEnabled = true;
-      // Shadow
       ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.beginPath();
-      ctx.ellipse(0, s * 0.28, s * 0.28, 4, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, s * 0.28, s * 0.28, 4 * grow, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.drawImage(gatorImg, -s / 2, -s / 2, s, s);
     } else {
-      // fallback baby gator
       ctx.fillStyle = "#3cb371";
       ctx.beginPath();
-      ctx.ellipse(0, 0, 11, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 10 * grow, 6.5 * grow, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#fff";
       ctx.beginPath();
-      ctx.arc(5, -2, 2, 0, Math.PI * 2);
+      ctx.arc(4 * grow, -2 * grow, 2 * grow, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -793,10 +963,28 @@
       ctx.fillStyle = "rgba(255, 230, 120, 0.9)";
       ctx.font = "bold 9px system-ui,sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(cell === T.HILL ? "⬆ hill" : "road", 0, -TILE * 0.55);
+      ctx.fillText(cell === T.HILL ? "⬆ hill" : "road", 0, -body * 0.55);
     }
 
     ctx.restore();
+
+    // Floating +points pops
+    if (world.floatScores && world.floatScores.length) {
+      world.floatScores.forEach(function (fs) {
+        const a = Math.max(0, fs.life / fs.max);
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.fillStyle = "#ffe566";
+        ctx.strokeStyle = "rgba(20,40,20,0.7)";
+        ctx.lineWidth = 3;
+        ctx.font = "bold 14px system-ui,sans-serif";
+        ctx.textAlign = "center";
+        const text = "+" + fs.pts;
+        ctx.strokeText(text, fs.x, fs.y);
+        ctx.fillText(text, fs.x, fs.y);
+        ctx.restore();
+      });
+    }
   }
 
   /* ---------- Logic ---------- */
@@ -828,19 +1016,17 @@
   function collectFish() {
     const p = world.player;
     const cell = world.grid[p.y][p.x];
-    if (cell === T.FISH) {
+    if (cell === T.FISH || cell === T.BIGFISH) {
+      const pts = cell === T.BIGFISH ? 40 : 15;
       world.grid[p.y][p.x] = T.RIVER;
       world.fishLeft--;
-      state.score += 15;
-      haptic(8);
-      updateHud();
-      if (world.fishLeft <= 0) winLevel();
-    } else if (cell === T.BIGFISH) {
-      world.grid[p.y][p.x] = T.RIVER;
-      world.fishLeft--;
-      state.score += 40;
-      world.flash = 0.25;
-      haptic([10, 20, 10]);
+      world.fishEaten = (world.fishEaten || 0) + 1;
+      state.score += pts;
+      p.growPulse = 1;
+      popScore(p.px, p.py, pts);
+      sfxEat(pts);
+      haptic(cell === T.BIGFISH ? [10, 20, 10] : 8);
+      if (cell === T.BIGFISH) world.flash = 0.25;
       updateHud();
       if (world.fishLeft <= 0) winLevel();
     }
@@ -868,6 +1054,7 @@
     world.inv = 2.5;
     world.flash = 0.5;
     state.lives -= 1;
+    sfxOuch();
     haptic([50, 40, 80, 40, 100]);
     updateHud();
 
@@ -904,6 +1091,7 @@
       if (state.lives <= 0) {
         state.lives = 3;
         state.score = Math.max(0, state.score - 25);
+        state._fishEatenCarry = (world && world.fishEaten) || 0;
         startLevel(state.level, true);
       }
     }, 650);
@@ -947,6 +1135,15 @@
     if (world.ouch > 0) world.ouch -= dt;
 
     const p = world.player;
+    if (p.growPulse > 0) p.growPulse = Math.max(0, p.growPulse - dt * 2.2);
+    // Float +pts upward
+    if (world.floatScores && world.floatScores.length) {
+      world.floatScores = world.floatScores.filter(function (fs) {
+        fs.life -= dt;
+        fs.y -= 28 * dt;
+        return fs.life > 0;
+      });
+    }
     if (keys["arrowleft"] || keys["a"]) p.nextDir = "left";
     if (keys["arrowright"] || keys["d"]) p.nextDir = "right";
     if (keys["arrowup"] || keys["w"]) p.nextDir = "up";
@@ -1013,6 +1210,10 @@
       state.lives = 3;
     }
     world = buildLevel(idx);
+    // Keep growth progress within a soft restart of the same run
+    if (soft && typeof state._fishEatenCarry === "number") {
+      world.fishEaten = state._fishEatenCarry;
+    }
     updateHud();
     const title = $("#level-title");
     if (title) {
@@ -1021,11 +1222,12 @@
     const hint = $("#play-hint");
     if (hint) {
       hint.textContent =
-        "Swim rivers · Climb hills & roads · Eat fish · Avoid BIG gators!";
+        "Eat fish to grow · Score floats above you · Dodge BIG gators!";
     }
     show("play");
     world._last = 0;
     loopId = requestAnimationFrame(tick);
+    ensureAudio();
     haptic(12);
   }
 
@@ -1276,6 +1478,7 @@
     });
 
     $("#btn-start").addEventListener("click", function () {
+      ensureAudio(); // unlock sound on user gesture (required on phones)
       let startAt = 0;
       for (let i = 0; i < state.unlocked && i < TOTAL_LEVELS; i++) {
         if (!state.completed[i]) {
