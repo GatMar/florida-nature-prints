@@ -512,6 +512,8 @@
       fishEaten: 0,
       fishTotal: fishLeft,
       floatScores: [],
+      // Close-up “fish dies” side panel when hatchling eats
+      eatCam: null,
       player: {
         x: start.x,
         y: start.y,
@@ -523,12 +525,14 @@
         bob: 0,
         onLand: false,
         growPulse: 0,
+        bite: 0,
       },
       bigs: bigs,
       inv: 0,
       time: 0,
       won: false,
       flash: 0,
+      focus: 0, // brief screen focus pulse when eating
       splat: 0,
       splatX: 0,
       splatY: 0,
@@ -622,21 +626,27 @@
     if (d.y !== 0) entity.px += (c.x - entity.px) * 0.32;
   }
 
-  /* ---------- Drawing: river swamp (not arcade maze) ---------- */
+  /* ---------- Drawing: more realistic swamp ---------- */
   function drawPhotoBg() {
     const img = bgForLevel(world.idx);
     if (img) {
       const iw = img.naturalWidth || img.width;
       const ih = img.naturalHeight || img.height;
-      const scale = Math.max(W / iw, H / ih) * 1.05;
+      const scale = Math.max(W / iw, H / ih) * 1.08;
       const dw = iw * scale;
       const dh = ih * scale;
+      ctx.imageSmoothingEnabled = true;
+      if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
     } else {
-      ctx.fillStyle = "#0c281c";
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, "#1a3d2e");
+      g.addColorStop(1, "#0a1810");
+      ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
     }
-    ctx.fillStyle = "rgba(6, 18, 14, 0.38)";
+    // Gentle darken so game pieces read on bright photos
+    ctx.fillStyle = "rgba(4, 14, 12, 0.32)";
     ctx.fillRect(0, 0, W, H);
   }
 
@@ -645,97 +655,141 @@
     const t = world.time;
     drawPhotoBg();
 
-    // Soft land wash on blocked cells
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         const cell = g[y][x];
         const px = x * TILE;
         const py = y * TILE;
         if (cell === T.BLOCK) {
-          ctx.fillStyle = "rgba(28, 48, 28, 0.28)";
+          // Soft marsh bank / mud
+          const mud = ctx.createLinearGradient(px, py, px, py + TILE);
+          mud.addColorStop(0, "rgba(42, 58, 32, 0.42)");
+          mud.addColorStop(1, "rgba(28, 40, 22, 0.5)");
+          ctx.fillStyle = mud;
           ctx.fillRect(px, py, TILE, TILE);
-          // reeds
-          if ((x + y) % 3 === 0) {
-            ctx.strokeStyle = "rgba(50, 100, 55, 0.45)";
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(px + 8, py + TILE);
-            ctx.quadraticCurveTo(
-              px + 10 + Math.sin(t + x) * 2,
-              py + 8,
-              px + 6,
-              py + 2
-            );
-            ctx.stroke();
+          // Cattail reeds
+          if ((x * 3 + y * 5) % 4 === 0) {
+            for (let r = 0; r < 3; r++) {
+              const rx = px + 5 + r * 6;
+              const sway = Math.sin(t * 1.8 + x + r) * 2.5;
+              ctx.strokeStyle = "rgba(46, 90, 40, 0.75)";
+              ctx.lineWidth = 1.6;
+              ctx.beginPath();
+              ctx.moveTo(rx, py + TILE - 1);
+              ctx.quadraticCurveTo(rx + sway, py + 10, rx + sway * 0.6, py + 2);
+              ctx.stroke();
+              ctx.fillStyle = "rgba(90, 55, 28, 0.8)";
+              ctx.fillRect(rx + sway * 0.6 - 1.5, py + 1, 3.2, 7);
+            }
           }
         } else if (cell === T.RIVER || cell === T.FISH || cell === T.BIGFISH) {
-          // Swirly river water
-          const wave = Math.sin(t * 2 + x * 0.7 + y * 0.5) * 2;
+          // Realistic river water with depth + caustics
+          const wave = Math.sin(t * 2.2 + x * 0.8 + y * 0.55) * 2.2;
           const grd = ctx.createLinearGradient(px, py, px + TILE, py + TILE);
-          grd.addColorStop(0, "rgba(30, 110, 130, 0.72)");
-          grd.addColorStop(0.5, "rgba(40, 140, 120, 0.65)");
-          grd.addColorStop(1, "rgba(25, 90, 110, 0.7)");
+          grd.addColorStop(0, "rgba(22, 78, 92, 0.78)");
+          grd.addColorStop(0.45, "rgba(35, 120, 118, 0.7)");
+          grd.addColorStop(1, "rgba(18, 70, 88, 0.8)");
           ctx.fillStyle = grd;
           ctx.beginPath();
-          ctx.moveTo(px, py + 4 + wave);
-          ctx.quadraticCurveTo(px + TILE / 2, py - 2 + wave, px + TILE, py + 4 - wave);
-          ctx.lineTo(px + TILE, py + TILE - 2);
-          ctx.quadraticCurveTo(px + TILE / 2, py + TILE + 2, px, py + TILE - 2);
+          ctx.moveTo(px - 1, py + 5 + wave);
+          ctx.bezierCurveTo(
+            px + TILE * 0.35,
+            py - 1 + wave,
+            px + TILE * 0.65,
+            py + 2 - wave,
+            px + TILE + 1,
+            py + 5 - wave
+          );
+          ctx.lineTo(px + TILE + 1, py + TILE - 1);
+          ctx.bezierCurveTo(
+            px + TILE * 0.6,
+            py + TILE + 2,
+            px + TILE * 0.35,
+            py + TILE,
+            px - 1,
+            py + TILE - 1
+          );
           ctx.closePath();
           ctx.fill();
-          // bank edge
-          ctx.strokeStyle = "rgba(90, 140, 70, 0.55)";
-          ctx.lineWidth = 1.5;
+          // Surface shimmer
+          ctx.strokeStyle = "rgba(180, 230, 220, 0.28)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(px + 3, py + 9 + wave);
+          ctx.quadraticCurveTo(px + TILE / 2, py + 6 + wave, px + TILE - 3, py + 10 - wave);
+          ctx.stroke();
+          // Mud bank rim
+          ctx.strokeStyle = "rgba(70, 95, 45, 0.55)";
+          ctx.lineWidth = 2;
           ctx.stroke();
         } else if (cell === T.ROAD) {
-          ctx.fillStyle = "rgba(70, 65, 55, 0.78)";
-          ctx.fillRect(px + 1, py + 6, TILE - 2, TILE - 12);
-          ctx.strokeStyle = "rgba(230, 210, 80, 0.7)";
+          // Asphalt-like road
+          const road = ctx.createLinearGradient(px, py, px, py + TILE);
+          road.addColorStop(0, "rgba(62, 60, 55, 0.88)");
+          road.addColorStop(0.5, "rgba(48, 46, 42, 0.9)");
+          road.addColorStop(1, "rgba(58, 56, 50, 0.88)");
+          ctx.fillStyle = road;
+          ctx.fillRect(px + 1, py + 5, TILE - 2, TILE - 10);
+          // Edge gravel
+          ctx.strokeStyle = "rgba(120, 110, 90, 0.55)";
           ctx.lineWidth = 1;
-          ctx.setLineDash([4, 4]);
+          ctx.strokeRect(px + 1.5, py + 5.5, TILE - 3, TILE - 11);
+          // Center dashed line
+          ctx.strokeStyle = "rgba(240, 210, 70, 0.75)";
+          ctx.lineWidth = 1.4;
+          ctx.setLineDash([5, 4]);
           ctx.beginPath();
-          ctx.moveTo(px + 2, py + TILE / 2);
-          ctx.lineTo(px + TILE - 2, py + TILE / 2);
+          ctx.moveTo(px + 3, py + TILE / 2);
+          ctx.lineTo(px + TILE - 3, py + TILE / 2);
           ctx.stroke();
           ctx.setLineDash([]);
         } else if (cell === T.HILL) {
-          // Grassy hill mound
-          ctx.fillStyle = "rgba(55, 110, 50, 0.82)";
+          // Earthy grassy hill
+          const hill = ctx.createRadialGradient(
+            px + TILE * 0.45,
+            py + TILE * 0.45,
+            2,
+            px + TILE / 2,
+            py + TILE * 0.6,
+            TILE * 0.55
+          );
+          hill.addColorStop(0, "rgba(120, 160, 75, 0.92)");
+          hill.addColorStop(0.55, "rgba(70, 120, 55, 0.9)");
+          hill.addColorStop(1, "rgba(45, 80, 40, 0.85)");
+          ctx.fillStyle = hill;
           ctx.beginPath();
           ctx.ellipse(
             px + TILE / 2,
-            py + TILE * 0.65,
-            TILE * 0.48,
-            TILE * 0.38,
+            py + TILE * 0.62,
+            TILE * 0.5,
+            TILE * 0.4,
             0,
             0,
             Math.PI * 2
           );
           ctx.fill();
-          ctx.fillStyle = "rgba(100, 160, 70, 0.7)";
-          ctx.beginPath();
-          ctx.ellipse(
-            px + TILE / 2,
-            py + TILE * 0.5,
-            TILE * 0.32,
-            TILE * 0.22,
-            0,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
+          // Grass tufts
+          ctx.strokeStyle = "rgba(90, 150, 60, 0.8)";
+          ctx.lineWidth = 1.2;
+          for (let i = 0; i < 4; i++) {
+            const gx = px + 6 + i * 5;
+            ctx.beginPath();
+            ctx.moveTo(gx, py + TILE * 0.55);
+            ctx.lineTo(gx + Math.sin(t + i) * 1.5, py + TILE * 0.28);
+            ctx.stroke();
+          }
         }
       }
     }
 
-    // Fish
+    // Fish in water
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         const cell = g[y][x];
         if (cell !== T.FISH && cell !== T.BIGFISH) continue;
         const cx = x * TILE + TILE / 2;
-        const cy = y * TILE + TILE / 2 + Math.sin(t * 4 + x) * 1.5;
-        drawFish(cx, cy, cell === T.BIGFISH, t + x);
+        const cy = y * TILE + TILE / 2 + Math.sin(t * 3.5 + x) * 1.8;
+        drawFishRealistic(cx, cy, cell === T.BIGFISH, t + x, 1, false);
       }
     }
 
@@ -747,8 +801,36 @@
     // Little player gator
     drawLittleGator();
 
+    // Eating focus vignette (darken edges, spotlight on gator)
+    if (world.focus > 0) {
+      const f = Math.min(1, world.focus);
+      const p = world.player;
+      const grd = ctx.createRadialGradient(
+        p.px,
+        p.py,
+        TILE * 0.8,
+        p.px,
+        p.py,
+        TILE * 5
+      );
+      grd.addColorStop(0, "rgba(0,0,0,0)");
+      grd.addColorStop(0.45, "rgba(0,0,0," + 0.15 * f + ")");
+      grd.addColorStop(1, "rgba(0,0,0," + 0.55 * f + ")");
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, W, H);
+      // Bite ring
+      ctx.strokeStyle = "rgba(255, 240, 120," + 0.85 * f + ")";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(p.px, p.py, TILE * (0.9 + (1 - f) * 1.2), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Side close-up: fish death / catch (bigger angled view)
+    drawEatCloseup();
+
     // HUD strip
-    ctx.fillStyle = "rgba(5, 18, 12, 0.72)";
+    ctx.fillStyle = "rgba(5, 18, 12, 0.78)";
     ctx.fillRect(0, 0, W, 18);
     ctx.fillStyle = "#e8f5ec";
     ctx.font = "bold 11px system-ui,sans-serif";
@@ -767,7 +849,6 @@
     // Splat + OUCH overlay
     if (world.splat > 0) {
       const a = Math.min(1, world.splat);
-      // red splash blobs
       for (let i = 0; i < 14; i++) {
         const ang = (i / 14) * Math.PI * 2;
         const dist = (1 - a) * 40 + 10 + (i % 3) * 8;
@@ -788,7 +869,6 @@
       ctx.translate(W / 2, H / 2);
       ctx.scale(scale, scale);
       ctx.globalAlpha = Math.min(1, p * 1.4);
-      ctx.fillStyle = "#fff";
       ctx.strokeStyle = "#8b0000";
       ctx.lineWidth = 6;
       ctx.font = "bold 64px system-ui,Impact,sans-serif";
@@ -801,30 +881,218 @@
     }
 
     if (world.flash > 0) {
-      ctx.fillStyle = "rgba(255,220,180," + Math.min(0.4, world.flash) + ")";
+      ctx.fillStyle = "rgba(255, 250, 200," + Math.min(0.45, world.flash) + ")";
       ctx.fillRect(0, 0, W, H);
     }
   }
 
-  function drawFish(cx, cy, big, phase) {
-    const s = big ? 1.35 : 1;
+  /** Realistic silver/gold fish (world size or close-up scale) */
+  function drawFishRealistic(cx, cy, big, phase, scale, dying) {
+    scale = scale || 1;
+    const s = (big ? 1.4 : 1) * scale;
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(Math.sin(phase * 2) * 0.25);
-    ctx.fillStyle = big ? "#ffb347" : "#7ec8e3";
+    if (dying) {
+      // flop / death angle
+      ctx.rotate(-0.55 + Math.sin(phase * 18) * 0.35 * Math.max(0, 1 - dying));
+      ctx.scale(1, 1 - dying * 0.25);
+    } else {
+      ctx.rotate(Math.sin(phase * 2.2) * 0.3);
+    }
+
+    // Soft shadow in water
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
     ctx.beginPath();
-    ctx.ellipse(0, 0, 6 * s, 3.5 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(1, 3 * s, 7 * s, 2.5 * s, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Body gradient
+    const body = ctx.createLinearGradient(-8 * s, -4 * s, 8 * s, 4 * s);
+    if (big) {
+      body.addColorStop(0, "#c9822a");
+      body.addColorStop(0.4, "#f0b14a");
+      body.addColorStop(1, "#8a5018");
+    } else {
+      body.addColorStop(0, "#6a9aaa");
+      body.addColorStop(0.45, "#c5e4ef");
+      body.addColorStop(1, "#3d6a7a");
+    }
+    ctx.fillStyle = body;
     ctx.beginPath();
-    ctx.moveTo(-6 * s, 0);
-    ctx.lineTo(-10 * s, -4 * s);
-    ctx.lineTo(-10 * s, 4 * s);
+    ctx.ellipse(0, 0, 7.5 * s, 4.2 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Scale hint
+    ctx.strokeStyle = "rgba(255,255,255,0.22)";
+    ctx.lineWidth = 0.6 * scale;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.arc(-1 * s, i * 1.2 * s, 2.2 * s, -0.6, 0.6);
+      ctx.stroke();
+    }
+
+    // Tail
+    ctx.fillStyle = big ? "#d4923a" : "#8eb8c8";
+    ctx.beginPath();
+    ctx.moveTo(-6.5 * s, 0);
+    ctx.lineTo(-12 * s, -5 * s);
+    ctx.lineTo(-10 * s, 0);
+    ctx.lineTo(-12 * s, 5 * s);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#111";
+
+    // Fin
+    ctx.globalAlpha = 0.85;
     ctx.beginPath();
-    ctx.arc(3 * s, -0.5 * s, 1 * s, 0, Math.PI * 2);
+    ctx.moveTo(0, -3.5 * s);
+    ctx.lineTo(3 * s, -7 * s);
+    ctx.lineTo(4 * s, -2 * s);
+    ctx.closePath();
     ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Eye
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(4 * s, -1 * s, 1.6 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = dying ? "#444" : "#111";
+    ctx.beginPath();
+    ctx.arc(4.3 * s, -1 * s, 0.85 * s, 0, Math.PI * 2);
+    ctx.fill();
+
+    // X eyes when dying late
+    if (dying && dying > 0.45) {
+      ctx.strokeStyle = "#222";
+      ctx.lineWidth = 1.2 * scale;
+      ctx.beginPath();
+      ctx.moveTo(3 * s, -2.2 * s);
+      ctx.lineTo(5.2 * s, 0);
+      ctx.moveTo(5.2 * s, -2.2 * s);
+      ctx.lineTo(3 * s, 0);
+      ctx.stroke();
+    }
+
+    // Belly highlight
+    ctx.fillStyle = "rgba(255,255,255,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(1 * s, 1.5 * s, 4 * s, 1.4 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  /** Side panel: dramatic close-up of fish being eaten */
+  function drawEatCloseup() {
+    const cam = world.eatCam;
+    if (!cam || cam.life <= 0) return;
+    const t = 1 - cam.life / cam.max; // 0..1 progress
+    const fade =
+      t < 0.12 ? t / 0.12 : t > 0.75 ? Math.max(0, (1 - t) / 0.25) : 1;
+
+    const panelW = 118;
+    const panelH = 150;
+    const px = W - panelW - 8;
+    const py = 26;
+
+    ctx.save();
+    ctx.globalAlpha = fade;
+
+    // Panel frame
+    ctx.fillStyle = "rgba(6, 16, 12, 0.88)";
+    ctx.strokeStyle = "rgba(255, 220, 100, 0.95)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(px, py, panelW, panelH, 12);
+    else ctx.rect(px, py, panelW, panelH);
+    ctx.fill();
+    ctx.stroke();
+
+    // Header
+    ctx.fillStyle = "#ffe566";
+    ctx.font = "bold 11px system-ui,sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(cam.big ? "BIG CATCH!" : "CHOMP!", px + panelW / 2, py + 16);
+
+    // Water backdrop in panel
+    const wg = ctx.createLinearGradient(px, py + 24, px, py + panelH - 20);
+    wg.addColorStop(0, "rgba(30, 90, 100, 0.9)");
+    wg.addColorStop(1, "rgba(15, 50, 60, 0.95)");
+    ctx.fillStyle = wg;
+    ctx.fillRect(px + 6, py + 24, panelW - 12, panelH - 48);
+
+    // Close-up angle: fish large, flopping, then crushed
+    const cx = px + panelW / 2;
+    const cy = py + 78;
+    const die = Math.min(1, Math.max(0, (t - 0.15) / 0.7));
+    ctx.save();
+    // Camera tilt for “bigger close up angle”
+    ctx.translate(cx, cy);
+    ctx.rotate(-0.35);
+    ctx.scale(1.15, 1.05);
+    ctx.translate(-cx, -cy);
+    drawFishRealistic(cx, cy, cam.big, world.time * 2, 3.1, die);
+    ctx.restore();
+
+    // Gator snout silhouette entering frame mid-anim
+    if (t > 0.2) {
+      const sn = Math.min(1, (t - 0.2) / 0.35);
+      ctx.fillStyle = "rgba(40, 100, 55, 0.92)";
+      ctx.beginPath();
+      ctx.ellipse(
+        px + 8 + sn * 36,
+        py + panelH - 38,
+        34,
+        16,
+        -0.2,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      // teeth
+      ctx.fillStyle = "#f5f5f0";
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(px + 18 + sn * 30 + i * 7, py + panelH - 30);
+        ctx.lineTo(px + 21 + sn * 30 + i * 7, py + panelH - 22);
+        ctx.lineTo(px + 24 + sn * 30 + i * 7, py + panelH - 30);
+        ctx.fill();
+      }
+    }
+
+    // Splash droplets
+    if (t > 0.25 && t < 0.85) {
+      const sp = (t - 0.25) / 0.6;
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const d = 12 + sp * 28;
+        ctx.fillStyle = "rgba(200, 235, 245, 0.75)";
+        ctx.beginPath();
+        ctx.arc(
+          cx + Math.cos(a) * d,
+          cy + Math.sin(a) * d * 0.7,
+          2 + (i % 3),
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+
+    // Points stamp
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 16px system-ui,sans-serif";
+    ctx.fillText("+" + cam.pts, px + panelW / 2, py + panelH - 10);
+
+    // Caption
+    ctx.fillStyle = "rgba(200, 230, 210, 0.9)";
+    ctx.font = "10px system-ui,sans-serif";
+    ctx.fillText(
+      die > 0.5 ? "swallowed" : "struggling…",
+      px + panelW / 2,
+      py + 28
+    );
+
     ctx.restore();
   }
 
@@ -839,38 +1107,86 @@
             : -Math.PI / 2;
     ctx.save();
     ctx.translate(b.px, b.py);
-    ctx.rotate(ang + Math.sin(b.wiggle) * 0.08);
-    // Large menacing body
-    const len = TILE * 1.55;
-    const thick = TILE * 0.55;
-    ctx.fillStyle = "#1f5c32";
+    ctx.rotate(ang + Math.sin(b.wiggle) * 0.06);
+
+    const len = TILE * 1.65;
+    const thick = TILE * 0.58;
+
+    // Shadow
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.beginPath();
-    ctx.ellipse(0, 0, len * 0.45, thick * 0.55, 0, 0, Math.PI * 2);
+    ctx.ellipse(2, 6, len * 0.42, 5, 0, 0, Math.PI * 2);
     ctx.fill();
-    // snout
-    ctx.fillStyle = "#2a7a42";
+
+    // Body with gradient scales
+    const body = ctx.createLinearGradient(-len * 0.4, -thick, len * 0.4, thick);
+    body.addColorStop(0, "#0f3d22");
+    body.addColorStop(0.45, "#2a6b3e");
+    body.addColorStop(1, "#163d24");
+    ctx.fillStyle = body;
     ctx.beginPath();
-    ctx.ellipse(len * 0.28, 0, len * 0.22, thick * 0.35, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, len * 0.46, thick * 0.52, 0, 0, Math.PI * 2);
     ctx.fill();
-    // eye
-    ctx.fillStyle = "#f0e060";
+
+    // Scale ridges
+    ctx.strokeStyle = "rgba(20, 50, 30, 0.55)";
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.ellipse(i * 5, -2, 4, 2.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Snout
+    const snout = ctx.createLinearGradient(len * 0.1, 0, len * 0.5, 0);
+    snout.addColorStop(0, "#2f7a48");
+    snout.addColorStop(1, "#1a5030");
+    ctx.fillStyle = snout;
     ctx.beginPath();
-    ctx.arc(len * 0.2, -thick * 0.2, 3.2, 0, Math.PI * 2);
+    ctx.ellipse(len * 0.28, 1, len * 0.24, thick * 0.32, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Nostrils
+    ctx.fillStyle = "#0a2010";
+    ctx.beginPath();
+    ctx.arc(len * 0.42, -2, 1.2, 0, Math.PI * 2);
+    ctx.arc(len * 0.42, 3, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye ridge + eye
+    ctx.fillStyle = "#1a4a28";
+    ctx.beginPath();
+    ctx.ellipse(len * 0.12, -thick * 0.28, 5, 3.5, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#e8d060";
+    ctx.beginPath();
+    ctx.arc(len * 0.14, -thick * 0.28, 3.4, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#111";
     ctx.beginPath();
-    ctx.arc(len * 0.22, -thick * 0.2, 1.5, 0, Math.PI * 2);
+    ctx.arc(len * 0.16, -thick * 0.28, 1.6, 0, Math.PI * 2);
     ctx.fill();
-    // teeth hint
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(len * 0.35, 2, 3, 2);
-    ctx.fillRect(len * 0.42, 2, 3, 2);
-    // label
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.beginPath();
+    ctx.arc(len * 0.13, -thick * 0.32, 0.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Teeth
+    ctx.fillStyle = "#f4f0e0";
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.moveTo(len * 0.28 + i * 4, thick * 0.12);
+      ctx.lineTo(len * 0.3 + i * 4, thick * 0.28);
+      ctx.lineTo(len * 0.32 + i * 4, thick * 0.12);
+      ctx.fill();
+    }
+
+    // Label
     ctx.rotate(-ang);
-    ctx.fillStyle = "rgba(255,80,80,0.9)";
+    ctx.fillStyle = "rgba(200,40,40,0.92)";
     ctx.font = "bold 9px system-ui,sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("BIG", 0, -TILE * 0.55);
+    ctx.fillText("BIG", 0, -TILE * 0.62);
     ctx.restore();
   }
 
@@ -887,63 +1203,77 @@
             ? Math.PI / 2
             : -Math.PI / 2;
 
-    // Visual growth from eating fish + brief “pop” when scoring
-    const grow = growthScale() * (1 + (p.growPulse || 0) * 0.18);
-    const body = TILE * 1.15 * grow;
+    // Visual growth from eating + bite lunge
+    const grow = growthScale() * (1 + (p.growPulse || 0) * 0.22);
+    const bite = p.bite || 0;
+    const body = TILE * 1.15 * grow * (1 + bite * 0.12);
 
     ctx.save();
     ctx.translate(p.px, p.py + (onLand ? 0 : Math.sin(p.bob) * 2));
 
-    // Score counter floating above the hatchling (screen-aligned)
+    // Score counter floating above the hatchling
     ctx.save();
-    ctx.translate(0, -body * 0.62);
-    // pill background
+    ctx.translate(0, -body * 0.68);
     const label = String(state.score);
-    ctx.font = "bold 11px system-ui,sans-serif";
+    ctx.font = "bold 12px system-ui,sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const tw = Math.max(28, ctx.measureText(label).width + 12);
-    ctx.fillStyle = "rgba(8, 30, 18, 0.82)";
-    ctx.strokeStyle = "rgba(180, 255, 160, 0.9)";
-    ctx.lineWidth = 1.5;
-    const rr = 8;
+    const tw = Math.max(32, ctx.measureText(label).width + 14);
+    ctx.fillStyle = "rgba(8, 30, 18, 0.88)";
+    ctx.strokeStyle =
+      bite > 0.1
+        ? "rgba(255, 230, 80, 0.95)"
+        : "rgba(180, 255, 160, 0.9)";
+    ctx.lineWidth = 2;
     const bx = -tw / 2;
-    const by = -9;
+    const by = -10;
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(bx, by, tw, 16, rr);
-    else ctx.rect(bx, by, tw, 16);
+    if (ctx.roundRect) ctx.roundRect(bx, by, tw, 18, 9);
+    else ctx.rect(bx, by, tw, 18);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = "#b8f0c8";
+    ctx.fillStyle = "#d4ffc8";
     ctx.fillText(label, 0, 0);
-    // tiny “pts” cue when just scored
     if (p.growPulse > 0.05) {
-      ctx.fillStyle = "rgba(255, 240, 120, " + Math.min(1, p.growPulse * 2) + ")";
-      ctx.font = "bold 9px system-ui,sans-serif";
-      ctx.fillText("yum!", 0, -14);
+      ctx.fillStyle =
+        "rgba(255, 240, 120, " + Math.min(1, p.growPulse * 2) + ")";
+      ctx.font = "bold 11px system-ui,sans-serif";
+      ctx.fillText("CHOMP!", 0, -16);
     }
     ctx.restore();
 
+    // Lunge slightly forward when biting
     ctx.rotate(ang);
+    ctx.translate(bite * 6, 0);
 
     if (world.inv > 0 && Math.floor(world.time * 14) % 2 === 0) {
       ctx.globalAlpha = 0.35;
     }
 
-    // Swim wake in water (scales with size)
+    // Swim wake
     if (!onLand) {
-      ctx.fillStyle = "rgba(200, 240, 255, 0.35)";
+      ctx.fillStyle = "rgba(200, 240, 255, 0.4)";
       ctx.beginPath();
-      ctx.ellipse(-body * 0.28, 0, 7 * grow, 3.5 * grow, 0, 0, Math.PI * 2);
+      ctx.ellipse(-body * 0.3, 0, 8 * grow, 4 * grow, 0, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // Jaw snap flash
+    if (bite > 0.2) {
+      ctx.strokeStyle = "rgba(255,255,200," + bite + ")";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(body * 0.15, 0, body * 0.4, -0.8, 0.8);
+      ctx.stroke();
     }
 
     if (gatorImgReady && gatorImg) {
       const s = body;
       ctx.imageSmoothingEnabled = true;
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
+      ctx.fillStyle = "rgba(0,0,0,0.28)";
       ctx.beginPath();
-      ctx.ellipse(0, s * 0.28, s * 0.28, 4 * grow, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, s * 0.3, s * 0.3, 4.5 * grow, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.drawImage(gatorImg, -s / 2, -s / 2, s, s);
     } else {
@@ -951,13 +1281,8 @@
       ctx.beginPath();
       ctx.ellipse(0, 0, 10 * grow, 6.5 * grow, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(4 * grow, -2 * grow, 2 * grow, 0, Math.PI * 2);
-      ctx.fill();
     }
 
-    // Climb marker on hills/roads
     if (onLand) {
       ctx.rotate(-ang);
       ctx.fillStyle = "rgba(255, 230, 120, 0.9)";
@@ -968,16 +1293,16 @@
 
     ctx.restore();
 
-    // Floating +points pops
+    // Floating +points
     if (world.floatScores && world.floatScores.length) {
       world.floatScores.forEach(function (fs) {
         const a = Math.max(0, fs.life / fs.max);
         ctx.save();
         ctx.globalAlpha = a;
         ctx.fillStyle = "#ffe566";
-        ctx.strokeStyle = "rgba(20,40,20,0.7)";
-        ctx.lineWidth = 3;
-        ctx.font = "bold 14px system-ui,sans-serif";
+        ctx.strokeStyle = "rgba(20,40,20,0.75)";
+        ctx.lineWidth = 3.5;
+        ctx.font = "bold 16px system-ui,sans-serif";
         ctx.textAlign = "center";
         const text = "+" + fs.pts;
         ctx.strokeText(text, fs.x, fs.y);
@@ -1017,16 +1342,26 @@
     const p = world.player;
     const cell = world.grid[p.y][p.x];
     if (cell === T.FISH || cell === T.BIGFISH) {
-      const pts = cell === T.BIGFISH ? 40 : 15;
+      const big = cell === T.BIGFISH;
+      const pts = big ? 40 : 15;
       world.grid[p.y][p.x] = T.RIVER;
       world.fishLeft--;
       world.fishEaten = (world.fishEaten || 0) + 1;
       state.score += pts;
       p.growPulse = 1;
+      p.bite = 1;
+      world.focus = 0.85;
+      world.flash = big ? 0.35 : 0.22;
+      // Side close-up of the catch / fish dying
+      world.eatCam = {
+        life: 1.15,
+        max: 1.15,
+        big: big,
+        pts: pts,
+      };
       popScore(p.px, p.py, pts);
       sfxEat(pts);
-      haptic(cell === T.BIGFISH ? [10, 20, 10] : 8);
-      if (cell === T.BIGFISH) world.flash = 0.25;
+      haptic(big ? [12, 25, 12] : [10, 15]);
       updateHud();
       if (world.fishLeft <= 0) winLevel();
     }
@@ -1136,11 +1471,17 @@
 
     const p = world.player;
     if (p.growPulse > 0) p.growPulse = Math.max(0, p.growPulse - dt * 2.2);
+    if (p.bite > 0) p.bite = Math.max(0, p.bite - dt * 2.8);
+    if (world.focus > 0) world.focus = Math.max(0, world.focus - dt * 1.6);
+    if (world.eatCam) {
+      world.eatCam.life -= dt;
+      if (world.eatCam.life <= 0) world.eatCam = null;
+    }
     // Float +pts upward
     if (world.floatScores && world.floatScores.length) {
       world.floatScores = world.floatScores.filter(function (fs) {
         fs.life -= dt;
-        fs.y -= 28 * dt;
+        fs.y -= 34 * dt;
         return fs.life > 0;
       });
     }
