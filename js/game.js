@@ -22,6 +22,7 @@
     lives: 3,
     playSeed: 1,
     usedQ: {},
+    voiceOn: true,
   };
 
   let canvas, ctx;
@@ -29,6 +30,101 @@
   let keys = {};
   let world = null;
   let pausedForQuiz = false;
+  let lastGatorLineAt = 0;
+  let voiceSupported =
+    typeof window !== "undefined" && "speechSynthesis" in window;
+
+  /* ---------- Voice (browser text-to-speech) ---------- */
+  function stopVoice() {
+    if (!voiceSupported) return;
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
+  }
+
+  function pickVoice(prefer) {
+    if (!voiceSupported) return null;
+    const list = window.speechSynthesis.getVoices() || [];
+    if (!list.length) return null;
+    const en = list.filter(function (v) {
+      return (v.lang || "").toLowerCase().indexOf("en") === 0;
+    });
+    const pool = en.length ? en : list;
+    if (prefer === "npc") {
+      // Slightly higher / different voice when possible
+      return (
+        pool.find(function (v) {
+          return /female|samantha|victoria|karen|moira|zira/i.test(v.name);
+        }) || pool[pool.length - 1]
+      );
+    }
+    // Gator: prefer a steadier default English voice
+    return (
+      pool.find(function (v) {
+        return /male|daniel|alex|fred|david|mark/i.test(v.name);
+      }) || pool[0]
+    );
+  }
+
+  function speak(text, kind, opts) {
+    if (!state.voiceOn || !voiceSupported || !text) return;
+    opts = opts || {};
+    try {
+      if (!opts.queue) stopVoice();
+      const u = new SpeechSynthesisUtterance(String(text));
+      u.lang = "en-US";
+      const v = pickVoice(kind === "npc" ? "npc" : "gator");
+      if (v) u.voice = v;
+      if (kind === "npc") {
+        u.rate = 1.02;
+        u.pitch = 1.25;
+      } else if (kind === "gator") {
+        u.rate = 1.08;
+        u.pitch = 0.85;
+      } else {
+        u.rate = 1;
+        u.pitch = 1;
+      }
+      u.volume = 1;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  function gatorSay(line, force) {
+    const now = Date.now();
+    if (!force && now - lastGatorLineAt < 2800) return;
+    lastGatorLineAt = now;
+    speak(line, "gator");
+  }
+
+  const GATOR_LINES = {
+    start: [
+      "Let's go!",
+      "Marsh time!",
+      "I got this!",
+      "Swim strong!",
+      "Florida run!",
+    ],
+    jump: ["Up we go!", "Boing!", "Higher!"],
+    fire: [
+      "Hot hot hot!",
+      "Jump the fire!",
+      "Must climb faster!",
+      "Too toasty!",
+    ],
+    cave: ["Dash the cave!", "Now! Through!", "Watch the rocks!"],
+    hurt: ["Oof!", "Not cool!", "I'm okay!", "Yow!"],
+    snack: ["Yum!", "Snack secured!", "Tasty!"],
+    quiz: ["Okay, think!", "I know this!", "Brain mode!"],
+    win: ["Yes! Level clear!", "Nailed it!", "Flag time!"],
+    nearFlag: ["Almost there!", "Go go go!", "Must climb faster!"],
+  };
+
+  function gatorLine(kind, force) {
+    const arr = GATOR_LINES[kind] || GATOR_LINES.start;
+    const line = arr[Math.floor(Math.random() * arr.length)];
+    gatorSay(line, force);
+  }
 
   // Your site photos only - used as full game backgrounds (no drawn scenery)
   const BG_FILES = [
@@ -114,6 +210,7 @@
       state.completed = d.completed || {};
       state.playSeed = d.playSeed || 1;
       state.usedQ = d.usedQ || {};
+      if (typeof d.voiceOn === "boolean") state.voiceOn = d.voiceOn;
     } catch (e) {}
   }
 
@@ -126,8 +223,25 @@
         completed: state.completed,
         playSeed: state.playSeed,
         usedQ: state.usedQ,
+        voiceOn: state.voiceOn,
       })
     );
+  }
+
+  function syncVoiceButton() {
+    const labels = document.querySelectorAll("[data-voice-toggle]");
+    labels.forEach(function (btn) {
+      btn.textContent = state.voiceOn ? "Voice: On" : "Voice: Off";
+      btn.setAttribute("aria-pressed", state.voiceOn ? "true" : "false");
+    });
+  }
+
+  function toggleVoice() {
+    state.voiceOn = !state.voiceOn;
+    if (!state.voiceOn) stopVoice();
+    save();
+    syncVoiceButton();
+    if (state.voiceOn) gatorSay("Voice on! Let's go!", true);
   }
 
   function show(name) {
@@ -584,6 +698,15 @@
     p.vy += GRAV;
     if (p.vy > 6) p.vy = 6;
 
+    // Jump callout (edge-trigger-ish)
+    if (
+      (keys["arrowup"] || keys["w"] || keys[" "] || keys["z"]) &&
+      p.onGround &&
+      Math.random() < 0.35
+    ) {
+      gatorLine("jump");
+    }
+
     // horizontal
     p.x += p.vx;
     let hit = solidAt(p.x, p.y, p.w, p.h);
@@ -622,10 +745,12 @@
     state.lives -= 1;
     world.inv = 1.2;
     updateHud();
+    gatorLine("hurt");
     if (state.lives <= 0) {
       // gentle restart level
       state.lives = 3;
       state.score = Math.max(0, state.score - 20);
+      gatorSay("Reset! Let's go again!", true);
       startLevel(state.level, true);
     }
   }
@@ -642,6 +767,10 @@
         // Stay on ground; damage if player walks through flames
         h.y = h.baseY;
         const box = { x: h.x, y: h.y - (h.tall || 14), w: h.w, h: (h.tall || 14) + 8 };
+        const near =
+          Math.abs(world.player.x - h.x) < 40 &&
+          Math.abs(world.player.y - h.y) < 50;
+        if (near && Math.random() < 0.01) gatorLine("fire");
         if (world.inv <= 0 && aabb(world.player, box)) hurt();
         return;
       }
@@ -650,6 +779,8 @@
         // Opening / closing rock jaws - only hurts when closing on you
         const cycle = (h.phase % h.period) / h.period;
         h.open = cycle < 0.55;
+        const nearCave = Math.abs(world.player.x - h.x) < 36;
+        if (nearCave && h.open && Math.random() < 0.012) gatorLine("cave");
         if (!h.open) {
           const box = { x: h.x + 2, y: h.y + 4, w: h.w - 4, h: h.h - 8 };
           if (world.inv <= 0 && aabb(world.player, box)) hurt();
@@ -689,6 +820,7 @@
         it.taken = true;
         state.score += 10;
         updateHud();
+        if (Math.random() < 0.45) gatorLine("snack");
       }
     });
   }
@@ -704,6 +836,8 @@
   }
 
   function updateGoal() {
+    const dist = world.goalX - (world.player.x + world.player.w);
+    if (dist < 120 && dist > 20 && Math.random() < 0.008) gatorLine("nearFlag");
     if (world.player.x + world.player.w >= world.goalX) {
       world.won = true;
       finishLevel();
@@ -802,6 +936,10 @@
     cont.style.display = "none";
     opts.innerHTML = "";
 
+    gatorLine("quiz");
+    // NPC speaks opener + question (meme speech)
+    speak(opener + " " + q.q, "npc");
+
     q.choices.forEach(function (c, idx) {
       const b = document.createElement("button");
       b.type = "button";
@@ -817,6 +955,7 @@
           fb.className = "comic-feedback show";
           fb.textContent =
             npc.emoji + " YESSS! +" + 35 + "  ·  " + q.explain;
+          speak("Yes! " + q.explain, "npc");
         } else {
           b.classList.add("wrong");
           const right = opts.children[q.correct];
@@ -825,6 +964,7 @@
           fb.className = "comic-feedback show";
           fb.textContent =
             npc.emoji + " Close! " + q.explain + " (You still learned it.)";
+          speak("Not quite. " + q.explain, "npc");
         }
         updateHud();
         cont.style.display = "block";
@@ -834,12 +974,16 @@
   }
 
   function closeComicQuiz() {
+    stopVoice();
     $("#comic-overlay").classList.remove("show");
     pausedForQuiz = false;
+    gatorSay("Let's go!", true);
   }
 
   function finishLevel() {
     stopLoop();
+    stopVoice();
+    gatorLine("win", true);
     state.totalScore += state.score;
     state.completed[state.level] = true;
     if (state.unlocked < state.level + 2) state.unlocked = Math.min(TOTAL_LEVELS, state.level + 2);
@@ -914,6 +1058,7 @@
     show("play");
     world._last = 0;
     loopId = requestAnimationFrame(tick);
+    gatorLine("start", true);
   }
 
   function renderLevels() {
@@ -1029,6 +1174,17 @@
 
     bindTouch();
     updateHud();
+    syncVoiceButton();
+    document.querySelectorAll("[data-voice-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", toggleVoice);
+    });
+    // Chrome loads voices async
+    if (voiceSupported) {
+      window.speechSynthesis.onvoiceschanged = function () {};
+      try {
+        window.speechSynthesis.getVoices();
+      } catch (e) {}
+    }
     const qc = window.GATOR_QUESTIONS ? window.GATOR_QUESTIONS.count : 0;
     const meta = $("#q-count");
     if (meta) meta.textContent = String(qc);

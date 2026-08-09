@@ -56,6 +56,7 @@
               <li>
                 Huge question pool (<span id="q-count">2500+</span>) so replays stay fresh
               </li>
+              <li>Voiced NPC quizzes + gator battle lines (browser speech)</li>
               <li>Progress saves on this device</li>
             </ul>
             <div class="btn-row">
@@ -64,6 +65,14 @@
               </button>
               <button type="button" class="game-btn game-btn-secondary" id="btn-how">
                 How to play
+              </button>
+              <button
+                type="button"
+                class="game-btn game-btn-secondary"
+                data-voice-toggle
+                aria-pressed="true"
+              >
+                Voice: On
               </button>
             </div>
             <div
@@ -75,7 +84,9 @@
                 <strong>Move</strong> with arrows / WASD or the on-screen pads.
                 <strong>Jump</strong> with UP, W, Space, or Z.<br />
                 Reach the green flag to finish a level. Yellow <strong>?</strong> blocks open
-                comic quizzes during the run. Wrong answers still teach you - no harsh punishment.
+                meme quizzes during the run (NPCs can speak the question). Your gator also
+                shouts lines like "Let's go!" Turn voice off anytime. Wrong answers still teach
+                you - no harsh punishment.
               </p>
             </div>
             <p class="controls-note">
@@ -105,6 +116,15 @@
               <span>LV <span id="play-hud-level">1</span></span>
               <span class="hearts" id="play-hud-hearts">♥♥♥</span>
               <span>Score <span id="play-hud-score">0</span></span>
+              <button
+                type="button"
+                class="game-btn game-btn-secondary"
+                data-voice-toggle
+                style="min-height: 36px; padding: 0.35rem 0.65rem; font-size: 0.75rem"
+                aria-pressed="true"
+              >
+                Voice: On
+              </button>
             </div>
             <div class="level-intro" style="margin-bottom: 0.5rem">
               <h2 id="level-title" style="font-size: 1rem; color: #b8f0c8; text-align: center">
