@@ -462,18 +462,18 @@
         type: type,
         x: cx,
         y: yTop,
-        w: type === "ladder" ? 22 : 18,
+        w: type === "ladder" ? 40 : 36,
         h: yBottom - yTop,
       });
     }
     // Extra snake ropes in the middle of long rooms
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       const from = Math.floor(Math.random() * (floors.length - 1));
       climbs.push({
         type: "snake",
         x: 200 + Math.random() * (len - 400),
         y: floors[from + 1],
-        w: 18,
+        w: 36,
         h: floors[from] - floors[from + 1],
       });
     }
@@ -674,42 +674,51 @@
       const x = Math.floor(c.x - cam);
       if (x > W + 20 || x + c.w < -20) return;
       if (c.type === "ladder") {
-        // Wooden ladder
-        ctx.fillStyle = "rgba(120, 80, 40, 0.9)";
-        ctx.fillRect(x, c.y, 5, c.h);
-        ctx.fillRect(x + c.w - 5, c.y, 5, c.h);
-        ctx.fillStyle = "rgba(160, 110, 55, 0.95)";
-        for (let yy = c.y + 8; yy < c.y + c.h - 4; yy += 14) {
-          ctx.fillRect(x, yy, c.w, 5);
+        // Wide wooden ladder (easy to see and grab)
+        ctx.fillStyle = "rgba(140, 90, 45, 0.95)";
+        ctx.fillRect(x + 2, c.y, 8, c.h);
+        ctx.fillRect(x + c.w - 10, c.y, 8, c.h);
+        ctx.fillStyle = "rgba(190, 130, 60, 0.98)";
+        for (let yy = c.y + 10; yy < c.y + c.h - 6; yy += 16) {
+          ctx.fillRect(x + 2, yy, c.w - 4, 7);
         }
+        // Glow so players notice climb points
+        ctx.fillStyle = "rgba(255, 230, 120, 0.15)";
+        ctx.fillRect(x - 4, c.y, c.w + 8, c.h);
       } else {
-        // Snake rope (climbable vine-snake)
-        ctx.fillStyle = "#4a8a3a";
-        for (let yy = 0; yy < c.h; yy += 6) {
-          const wob = Math.sin(yy * 0.2 + (world.time || 0) * 3) * 3;
-          ctx.fillRect(x + 6 + wob, c.y + yy, 6, 7);
+        // Snake rope (climbable)
+        ctx.fillStyle = "#3d9a45";
+        for (let yy = 0; yy < c.h; yy += 5) {
+          const wob = Math.sin(yy * 0.18 + (world.time || 0) * 3) * 4;
+          ctx.fillRect(x + c.w / 2 - 5 + wob, c.y + yy, 10, 8);
         }
-        ctx.fillStyle = "#c4a040";
-        ctx.fillRect(x + 4, c.y, 12, 10);
+        ctx.fillStyle = "#d4b060";
+        ctx.fillRect(x + c.w / 2 - 10, c.y, 20, 16);
         ctx.fillStyle = "#111";
-        ctx.fillRect(x + 7, c.y + 3, 2, 2);
-        ctx.fillRect(x + 11, c.y + 3, 2, 2);
+        ctx.fillRect(x + c.w / 2 - 5, c.y + 5, 3, 3);
+        ctx.fillRect(x + c.w / 2 + 3, c.y + 5, 3, 3);
         ctx.fillStyle = "#e8d080";
-        ctx.fillRect(x + 7, c.y + c.h - 8, 8, 5);
+        ctx.fillRect(x + c.w / 2 - 6, c.y + c.h - 12, 14, 8);
+        ctx.fillStyle = "rgba(255, 230, 120, 0.12)";
+        ctx.fillRect(x - 4, c.y, c.w + 8, c.h);
       }
     });
   }
 
   function climbAt(p) {
-    if (!world.climbs) return null;
+    if (!world || !world.climbs) return null;
+    // Generous grab zone so large gator sprites can still catch ladders/snakes
     for (let i = 0; i < world.climbs.length; i++) {
       const c = world.climbs[i];
-      const pad = 6;
+      const grabW = Math.max(c.w, 56);
+      const cx = c.x + c.w / 2 - grabW / 2;
+      const top = c.y - 28;
+      const bot = c.y + c.h + 36;
       if (
-        p.x + p.w > c.x - pad &&
-        p.x < c.x + c.w + pad &&
-        p.y + p.h > c.y &&
-        p.y < c.y + c.h
+        p.x + p.w > cx &&
+        p.x < cx + grabW &&
+        p.y + p.h > top &&
+        p.y < bot
       ) {
         return c;
       }
@@ -717,10 +726,14 @@
     return null;
   }
 
+  function nearClimb(p) {
+    return !!climbAt(p);
+  }
+
   /**
    * Draw your custom gator art (images/game/gator-sprite.png).
-   * Baby years: bright striped look as in the photo.
-   * Older years: larger draw size + age filter (darker adult look).
+   * Smooth (not chunky-pixel) so the alligator is clearly visible.
+   * Baby years: bright striped look. Older: larger + age filter.
    */
   function drawPixelGator(p, scale, facing) {
     const x = Math.floor(p.x - world.camera);
@@ -730,6 +743,10 @@
     const idx = world ? world.idx : 0;
 
     ctx.save();
+    // Always smooth-scale the photo gator (reduce harsh pixelation)
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
+
     if (facing < 0) {
       ctx.translate(x + w / 2, y + h / 2);
       ctx.scale(-1, 1);
@@ -737,24 +754,20 @@
     }
 
     if (gatorImgReady && gatorImg) {
-      ctx.imageSmoothingEnabled = true;
       // Soft shadow under feet
-      ctx.fillStyle = "rgba(0,0,0,0.28)";
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
       ctx.beginPath();
-      ctx.ellipse(x + w / 2, y + h - 2, w * 0.35, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + w / 2, y + h - 1, w * 0.32, 6, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.filter = gatorAgeFilter(idx);
-      // Slight bob when moving
       const bob =
-        world && Math.abs(world.player.vx) > 0.2
+        world && Math.abs((world.player && world.player.vx) || 0) > 0.2
           ? Math.sin((world.time || 0) * 12) * 2
           : 0;
       ctx.drawImage(gatorImg, x, y + bob, w, h);
       ctx.filter = "none";
-      ctx.imageSmoothingEnabled = false;
     } else {
-      // Fallback blob if image missing
       ctx.fillStyle = "#3d8a4a";
       ctx.fillRect(x, y, w, h);
     }
@@ -1125,6 +1138,17 @@
       6,
       12
     );
+
+    // Climb helper text
+    if (world.climbHint) {
+      ctx.fillStyle = "rgba(255, 245, 180, 0.92)";
+      ctx.fillRect(W / 2 - 110, H - 36, 220, 24);
+      ctx.strokeStyle = "#2f6b43";
+      ctx.strokeRect(W / 2 - 110, H - 36, 220, 24);
+      ctx.fillStyle = "#143d22";
+      ctx.font = "bold 12px system-ui,sans-serif";
+      ctx.fillText("Hold UP / W to climb!", W / 2 - 70, H - 20);
+    }
   }
 
   function drawOwlCompanion(p) {
@@ -1147,9 +1171,12 @@
   }
 
   /* ---------- Physics ---------- */
-  function solidAt(x, y, w, h) {
+  function solidAt(x, y, w, h, opts) {
+    opts = opts || {};
     for (let i = 0; i < world.platforms.length; i++) {
       const p = world.platforms[i];
+      // While climbing, ignore floor ledges so gator can pass between stories
+      if (opts.climbing && !p.wall) continue;
       if (x < p.x + p.w && x + w > p.x && y < p.y + p.h && y + h > p.y) return p;
     }
     return null;
@@ -1161,41 +1188,57 @@
     let move = 0;
     if (keys["arrowleft"] || keys["a"]) move -= 1;
     if (keys["arrowright"] || keys["d"]) move += 1;
-    p.vx = move * sp;
-    if (move) p.facing = move > 0 ? 1 : -1;
 
     const climb = climbAt(p);
     p.onClimb = !!climb;
     const up = keys["arrowup"] || keys["w"];
     const down = keys["arrowdown"] || keys["s"];
     const jumpKey = keys[" "] || keys["z"];
+    const climbing = !!(climb && (up || down || p._holdingClimb));
 
-    if (climb && (up || down)) {
-      p.vx *= 0.35;
-      p.vy = up ? -3.6 : 3.6;
-      p.x += (climb.x + climb.w / 2 - (p.x + p.w / 2)) * 0.18;
-      if (up && Math.random() < 0.02) gatorSay("Gotta go faster!", false);
-    } else if ((up || jumpKey) && p.onGround && !climb) {
-      if (Math.random() < 0.35) gatorLine("jump");
-      p.vy = -8.4 - Math.min(1.2, world.idx * 0.03);
-      p.onGround = false;
-    } else if (climb && !up && !down) {
-      p.vy *= 0.45;
-      if (Math.abs(p.vy) < 0.15) p.vy = 0;
-    } else if (!climb) {
-      p.vy += GRAV;
-      if (p.vy > 11) p.vy = 11;
+    // Stick to climb when overlapping and pressing vertical, or already climbing
+    if (climb && (up || down)) p._holdingClimb = true;
+    if (!climb) p._holdingClimb = false;
+    if (climb && jumpKey && !up && !down) p._holdingClimb = false;
+
+    if (climb && (up || down || p._holdingClimb)) {
+      // Climb mode: move up/down the ladder or snake-rope
+      if (up || down) {
+        p.vx = move * sp * 0.25;
+        p.vy = up ? -4.2 : 4.2;
+      } else {
+        p.vx = move * sp * 0.2;
+        p.vy = 0;
+      }
+      if (move) p.facing = move > 0 ? 1 : -1;
+      // Center on climb aid
+      const targetX = climb.x + climb.w / 2 - p.w / 2;
+      p.x += (targetX - p.x) * 0.25;
+      if (up && Math.random() < 0.015) gatorSay("Gotta go faster!", false);
+    } else {
+      p.vx = move * sp;
+      if (move) p.facing = move > 0 ? 1 : -1;
+      if ((up || jumpKey) && p.onGround) {
+        if (Math.random() < 0.35) gatorLine("jump");
+        p.vy = -8.4 - Math.min(1.2, world.idx * 0.03);
+        p.onGround = false;
+      } else {
+        p.vy += GRAV;
+        if (p.vy > 11) p.vy = 11;
+      }
     }
 
-    // Jump off a ladder/snake with space
-    if (climb && jumpKey && !up) {
-      p.vy = -6.5;
-      p.onClimb = false;
+    // Jump off climb with space
+    if (climb && jumpKey && !up && !down) {
+      p.vy = -7;
+      p._holdingClimb = false;
     }
+
+    const useClimbPhys = !!(climb && (up || down || p._holdingClimb));
 
     // horizontal
     p.x += p.vx;
-    let hit = solidAt(p.x, p.y, p.w, p.h);
+    let hit = solidAt(p.x, p.y, p.w, p.h, { climbing: useClimbPhys });
     if (hit) {
       if (p.vx > 0) p.x = hit.x - p.w - 0.01;
       else if (p.vx < 0) p.x = hit.x + hit.w + 0.01;
@@ -1204,20 +1247,30 @@
     // vertical
     p.y += p.vy;
     p.onGround = false;
-    hit = solidAt(p.x, p.y, p.w, p.h);
+    hit = solidAt(p.x, p.y, p.w, p.h, { climbing: useClimbPhys });
     if (hit) {
       if (p.vy > 0) {
         p.y = hit.y - p.h - 0.01;
         p.onGround = true;
+        p._holdingClimb = false;
       } else if (p.vy < 0) {
         p.y = hit.y + hit.h + 0.01;
       }
       p.vy = 0;
     }
 
-    if (climb) {
-      if (p.y < climb.y - 6) p.y = climb.y - 6;
-      if (p.y + p.h > climb.y + climb.h + 6) p.y = climb.y + climb.h - p.h + 6;
+    if (climb && useClimbPhys) {
+      // Allow stepping onto the upper floor above the climb top
+      if (p.y < climb.y - p.h * 0.35) {
+        // Reached top: snap onto floor if any
+        p.y = Math.max(p.y, climb.y - p.h - 2);
+        p._holdingClimb = false;
+        p.onGround = true;
+        p.vy = 0;
+      }
+      if (p.y + p.h > climb.y + climb.h + 20) {
+        p.y = climb.y + climb.h - p.h + 8;
+      }
     }
 
     if (p.y > H + 40) {
@@ -1229,6 +1282,9 @@
     }
 
     world.camera = Math.max(0, Math.min(world.len - W, p.x - 100));
+
+    // On-screen climb hint
+    world.climbHint = !!climb;
   }
 
   function hurt() {
@@ -1602,7 +1658,7 @@
     $("#level-blurb").textContent =
       "Dodge fire pits, closing caves, rattlers, hawks, panthers, and more. Grab snacks and beat the flag!";
     $("#play-hint").textContent =
-      "Labyrinth floors · climb ladders & snake-ropes (UP/DOWN) · asteroids · yellow ? = quiz";
+      "Walk onto a ladder or snake-rope, then hold UP/W to climb (DOWN/S to go down). Space = jump.";
     show("play");
     world._last = 0;
     lastGatorLineAt = 0;
@@ -1643,6 +1699,8 @@
       ["pad-left", "arrowleft"],
       ["pad-right", "arrowright"],
       ["pad-jump", " "],
+      ["pad-up", "arrowup"],
+      ["pad-down", "arrowdown"],
     ];
     map.forEach(function (pair) {
       const el = $("#" + pair[0]);
@@ -1670,7 +1728,9 @@
     ctx = canvas.getContext("2d");
     canvas.width = W;
     canvas.height = H;
-    ctx.imageSmoothingEnabled = false;
+    // Smooth for photo gator; platforms still look fine
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
 
     loadBackgrounds(function () {
       // Photos ready - nothing else required; next draw uses them

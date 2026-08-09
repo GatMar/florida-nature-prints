@@ -220,8 +220,8 @@
   max-height: min(78vh, 720px);
   aspect-ratio: 360 / 560;
   object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  /* Smooth scaling so the photo gator stays clear (not chunky pixels) */
+  image-rendering: auto;
   touch-action: none;
   background: #1a3020;
   margin: 0 auto;
