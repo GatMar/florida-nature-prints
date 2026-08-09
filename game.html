@@ -2,7 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0a1a12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Gator Life - Florida Nature Prints</title>
     <meta
       name="description"
@@ -77,10 +84,9 @@
               style="display: none; margin-top: 1rem; background: #fffef5; color: #1a3324"
             >
               <p style="color: #1a3324">
-                This is a <strong>top-down Pac-Man style</strong> maze (not a platformer).<br />
-                <strong>Move</strong> with arrows / WASD, swipe, or the D-pad.<br />
-                Eat all <strong>yellow dots</strong>. <strong>Big glowing dots</strong> = power mode.<br />
-                Gallery photos are the background. Side tunnels wrap left ↔ right.
+                <strong>Phone:</strong> swipe on the maze, or hold the big D-pad buttons.<br />
+                <strong>Desktop:</strong> arrow keys or WASD.<br />
+                Eat all yellow dots. Big dots = power mode. Side tunnels wrap around.
               </p>
             </div>
             <p class="controls-note">
@@ -106,59 +112,65 @@
 
           <!-- PLAY -->
           <section id="screen-play" class="game-screen">
-            <div class="game-hud">
-              <span>LV <span id="play-hud-level">1</span></span>
-              <span class="hearts" id="play-hud-hearts">♥♥♥</span>
-              <span>Score <span id="play-hud-score">0</span></span>
-            </div>
-            <div class="level-intro" style="margin-bottom: 0.5rem">
-              <h2 id="level-title" style="font-size: 1rem; color: #b8f0c8; text-align: center">
-                Level
-              </h2>
+            <div class="play-layout">
+              <div class="game-hud game-hud-compact">
+                <span>LV <span id="play-hud-level">1</span></span>
+                <span class="hearts" id="play-hud-hearts">♥♥♥</span>
+                <span>Score <span id="play-hud-score">0</span></span>
+                <button
+                  type="button"
+                  class="game-btn game-btn-secondary btn-quit-inline"
+                  id="btn-quit-play"
+                  aria-label="Quit to menu"
+                >
+                  Menu
+                </button>
+              </div>
+              <h2 id="level-title" class="level-title-compact">Level</h2>
               <p id="level-blurb" style="display: none"></p>
-            </div>
-            <div class="stage-wrap stage-wrap-arcade">
-              <canvas id="game-canvas" width="360" height="456" aria-label="Gator Life maze"></canvas>
-              <div id="comic-overlay" class="comic-overlay" aria-modal="true" role="dialog">
-                <div class="meme-panel">
-                  <div class="meme-npc" aria-hidden="true">
-                    <div class="meme-npc-face" id="comic-npc-face">🐍</div>
-                    <div class="meme-npc-name" id="comic-npc-name">Rita the Rattler</div>
-                  </div>
-                  <div class="comic-bubble meme-bubble">
-                    <span class="comic-tag" id="comic-tag">SNAKE SAYS</span>
-                    <p class="meme-npc-line" id="comic-npc-line">Ssssay… answer me this!</p>
-                    <h3 id="comic-question">Question</h3>
-                    <div class="comic-options" id="comic-options"></div>
-                    <div class="comic-feedback" id="comic-feedback"></div>
-                    <button
-                      type="button"
-                      class="game-btn game-btn-primary comic-continue"
-                      id="comic-continue"
-                      style="display: none"
-                    >
-                      Back to the maze!
-                    </button>
+
+              <div class="stage-wrap stage-wrap-arcade" id="stage-wrap">
+                <canvas
+                  id="game-canvas"
+                  width="360"
+                  height="456"
+                  aria-label="Gator Life maze — swipe to move"
+                ></canvas>
+                <div id="comic-overlay" class="comic-overlay" aria-modal="true" role="dialog">
+                  <div class="meme-panel">
+                    <div class="meme-npc" aria-hidden="true">
+                      <div class="meme-npc-face" id="comic-npc-face">🐍</div>
+                      <div class="meme-npc-name" id="comic-npc-name">Rita the Rattler</div>
+                    </div>
+                    <div class="comic-bubble meme-bubble">
+                      <span class="comic-tag" id="comic-tag">SNAKE SAYS</span>
+                      <p class="meme-npc-line" id="comic-npc-line">Ssssay… answer me this!</p>
+                      <h3 id="comic-question">Question</h3>
+                      <div class="comic-options" id="comic-options"></div>
+                      <div class="comic-feedback" id="comic-feedback"></div>
+                      <button
+                        type="button"
+                        class="game-btn game-btn-primary comic-continue"
+                        id="comic-continue"
+                        style="display: none"
+                      >
+                        Back to the maze!
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <p class="play-hint" id="play-hint">Swipe or use the D-pad · Eat all snacks!</p>
 
-            <div class="dpad" aria-label="Direction pad">
-              <button type="button" class="game-btn game-btn-secondary dpad-btn dpad-up" id="pad-up">▲</button>
-              <div class="dpad-mid">
-                <button type="button" class="game-btn game-btn-secondary dpad-btn" id="pad-left">◀</button>
-                <button type="button" class="game-btn game-btn-primary dpad-btn dpad-center" disabled aria-hidden="true">🐊</button>
-                <button type="button" class="game-btn game-btn-secondary dpad-btn" id="pad-right">▶</button>
+              <p class="play-hint" id="play-hint">Swipe the maze or tap the pad</p>
+
+              <!-- Large mobile-friendly D-pad (CSS grid diamond) -->
+              <div class="dpad" id="dpad" aria-label="Direction pad">
+                <button type="button" class="dpad-btn dpad-up" id="pad-up" data-dir="up" aria-label="Up">▲</button>
+                <button type="button" class="dpad-btn dpad-left" id="pad-left" data-dir="left" aria-label="Left">◀</button>
+                <div class="dpad-btn dpad-center" aria-hidden="true">🐊</div>
+                <button type="button" class="dpad-btn dpad-right" id="pad-right" data-dir="right" aria-label="Right">▶</button>
+                <button type="button" class="dpad-btn dpad-down" id="pad-down" data-dir="down" aria-label="Down">▼</button>
               </div>
-              <button type="button" class="game-btn game-btn-secondary dpad-btn dpad-down" id="pad-down">▼</button>
-            </div>
-
-            <div class="btn-row" style="margin-top: 0.45rem">
-              <button type="button" class="game-btn game-btn-secondary" id="btn-quit-play" style="min-height: 40px; font-size: 0.8rem">
-                Quit to menu
-              </button>
             </div>
           </section>
 

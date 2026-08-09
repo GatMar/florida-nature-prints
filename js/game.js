@@ -131,6 +131,10 @@
       const el = $("#screen-" + k);
       if (el) el.classList.toggle("active", k === name);
     });
+    // Mobile: lock page chrome / bounce while playing
+    if (document.body) {
+      document.body.classList.toggle("is-playing", name === "play");
+    }
   }
 
   function hearts() {
@@ -1196,64 +1200,152 @@
     pausedForQuiz = false;
   }
 
-  /* ---------- Input ---------- */
+  /* ---------- Input (mobile-first) ---------- */
+  function setDir(dir) {
+    if (!dir) return;
+    keys["arrow" + dir] = true;
+    // clear other arrow keys so only one direction is held
+    DIR_KEYS.forEach(function (d) {
+      if (d !== dir) keys["arrow" + d] = false;
+    });
+    if (world && world.player) {
+      world.player.nextDir = dir;
+      // reverse immediately feels snappy on phone
+      const rev = { left: "right", right: "left", up: "down", down: "up" };
+      if (world.player.dir === rev[dir]) {
+        trySetDir(world.player, dir, true);
+      }
+    }
+  }
+
+  function clearDir(dir) {
+    if (dir) keys["arrow" + dir] = false;
+  }
+
   function bindPads() {
-    const map = [
-      ["pad-left", "arrowleft"],
-      ["pad-right", "arrowright"],
-      ["pad-up", "arrowup"],
-      ["pad-down", "arrowdown"],
-    ];
-    map.forEach(function (pair) {
-      const el = $("#" + pair[0]);
+    const dpad = $("#dpad");
+    const buttons = ["pad-left", "pad-right", "pad-up", "pad-down"];
+    buttons.forEach(function (id) {
+      const el = $("#" + id);
       if (!el) return;
-      const key = pair[1];
+      const dir = el.getAttribute("data-dir");
       const on = function (e) {
         e.preventDefault();
-        keys[key] = true;
-        if (world && world.player) {
-          const dir = key.replace("arrow", "");
-          world.player.nextDir = dir;
-        }
+        e.stopPropagation();
+        try {
+          el.setPointerCapture(e.pointerId);
+        } catch (err) {}
+        el.classList.add("is-held");
+        setDir(dir);
+        haptic(6);
       };
       const off = function (e) {
         e.preventDefault();
-        keys[key] = false;
+        el.classList.remove("is-held");
+        clearDir(dir);
       };
       el.addEventListener("pointerdown", on);
       el.addEventListener("pointerup", off);
-      el.addEventListener("pointerleave", off);
       el.addEventListener("pointercancel", off);
+      // Don't clear on leave if capture holds — only when pointer ends
+      el.addEventListener("lostpointercapture", off);
     });
+
+    // Sliding finger across the D-pad switches direction
+    if (dpad) {
+      dpad.addEventListener(
+        "pointermove",
+        function (e) {
+          if (e.buttons === 0 && e.pressure === 0) return;
+          const target = document.elementFromPoint(e.clientX, e.clientY);
+          if (!target) return;
+          const btn = target.closest("[data-dir]");
+          if (!btn) return;
+          const dir = btn.getAttribute("data-dir");
+          if (dir) setDir(dir);
+        },
+        { passive: true }
+      );
+    }
   }
 
   function bindSwipe() {
-    if (!canvas) return;
-    canvas.addEventListener(
-      "touchstart",
-      function (e) {
-        if (!e.touches[0]) return;
-        touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      },
-      { passive: true }
-    );
-    canvas.addEventListener(
-      "touchend",
-      function (e) {
-        if (!touchStart || !e.changedTouches[0] || !world) return;
-        const dx = e.changedTouches[0].clientX - touchStart.x;
-        const dy = e.changedTouches[0].clientY - touchStart.y;
-        touchStart = null;
-        if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
-        if (Math.abs(dx) > Math.abs(dy)) {
-          world.player.nextDir = dx > 0 ? "right" : "left";
-        } else {
-          world.player.nextDir = dy > 0 ? "down" : "up";
-        }
-        haptic(5);
-      },
-      { passive: true }
-    );
+    const stage = $("#stage-wrap") || canvas;
+    if (!stage) return;
+
+    let start = null;
+    let lastDir = null;
+
+    const point = function (e) {
+      if (e.touches && e.touches[0]) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    };
+
+    const onStart = function (e) {
+      // Don't steal quiz taps
+      if (pausedForQuiz) return;
+      if (e.target && e.target.closest && e.target.closest(".comic-overlay.show"))
+        return;
+      const p = point(e);
+      start = { x: p.x, y: p.y };
+      lastDir = null;
+      // prevent page scroll while swiping on maze
+      if (e.cancelable) e.preventDefault();
+    };
+
+    const onMove = function (e) {
+      if (!start || !world || !world.player) return;
+      if (e.cancelable) e.preventDefault();
+      const p = point(e);
+      const dx = p.x - start.x;
+      const dy = p.y - start.y;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      // Continuous swipe steering (feels like a virtual stick)
+      if (absX < 16 && absY < 16) return;
+      let dir;
+      if (absX > absY) dir = dx > 0 ? "right" : "left";
+      else dir = dy > 0 ? "down" : "up";
+      if (dir !== lastDir) {
+        lastDir = dir;
+        setDir(dir);
+        haptic(4);
+        // reset origin so small course-corrections work
+        start = { x: p.x, y: p.y };
+      }
+    };
+
+    const onEnd = function (e) {
+      if (!start || !world || !world.player) {
+        start = null;
+        return;
+      }
+      const p =
+        e.changedTouches && e.changedTouches[0]
+          ? { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY }
+          : point(e);
+      const dx = p.x - start.x;
+      const dy = p.y - start.y;
+      start = null;
+      if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+      if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? "right" : "left");
+      else setDir(dy > 0 ? "down" : "up");
+    };
+
+    // Pointer events (works for mouse + touch)
+    stage.addEventListener("pointerdown", onStart, { passive: false });
+    stage.addEventListener("pointermove", onMove, { passive: false });
+    stage.addEventListener("pointerup", onEnd, { passive: true });
+    stage.addEventListener("pointercancel", function () {
+      start = null;
+    });
+
+    // Extra touch listeners for older iOS
+    stage.addEventListener("touchstart", onStart, { passive: false });
+    stage.addEventListener("touchmove", onMove, { passive: false });
+    stage.addEventListener("touchend", onEnd, { passive: true });
   }
 
   function loadGator() {
@@ -1358,6 +1450,22 @@
         show("start");
       });
     }
+
+    // Stop iOS rubber-band scroll while on play screen
+    document.addEventListener(
+      "touchmove",
+      function (e) {
+        if (!document.body.classList.contains("is-playing")) return;
+        // allow scrolling inside quiz popup
+        if (e.target && e.target.closest && e.target.closest(".comic-overlay.show"))
+          return;
+        if (e.target && e.target.closest && e.target.closest(".comic-options"))
+          return;
+        // block background scroll
+        if (e.cancelable) e.preventDefault();
+      },
+      { passive: false }
+    );
     $("#btn-fact-levels").addEventListener("click", function () {
       renderLevels();
       show("levels");
