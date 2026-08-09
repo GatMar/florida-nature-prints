@@ -182,21 +182,69 @@
       });
     }
 
-    // hazards
-    const kinds = ["raccoon", "bird", "log", "snake", "boat", "rival"];
-    const count = 3 + Math.floor(idx / 3);
+    // Exciting hazards unlock with level (fire, caves, predators…)
+    const roster = [
+      "fire",
+      "cave",
+      "rattler",
+      "hawk",
+      "raccoon",
+      "panther",
+      "boar",
+      "boat",
+      "rival",
+      "snake",
+      "bird",
+    ];
+    const count = 5 + Math.floor(idx / 2);
     for (let i = 0; i < count; i++) {
-      const k = kinds[Math.min(kinds.length - 1, Math.floor(i / 2) + Math.floor(idx / 12))];
-      hazards.push({
-        x: 160 + i * (90 - Math.min(40, idx)) + Math.random() * 30,
-        y: groundY - 12,
-        w: 14,
-        h: 12,
-        kind: k,
-        vx: k === "bird" ? 0.6 + idx * 0.02 : k === "boat" ? 0.9 : 0.35,
-        baseY: groundY - 12,
-        phase: Math.random() * 10,
-      });
+      const unlock = Math.min(roster.length - 1, 2 + Math.floor(idx / 4) + (i % 3));
+      const k = roster[Math.floor(Math.random() * (unlock + 1))];
+      const baseX = 140 + i * (75 - Math.min(35, idx * 0.4)) + Math.random() * 40;
+      if (k === "fire") {
+        hazards.push({
+          kind: "fire",
+          x: baseX,
+          y: groundY - 2,
+          w: 22 + (idx % 4) * 2,
+          h: 18,
+          vx: 0,
+          baseY: groundY - 2,
+          phase: Math.random() * 10,
+          tall: 14 + Math.random() * 10,
+        });
+      } else if (k === "cave") {
+        hazards.push({
+          kind: "cave",
+          x: baseX,
+          y: groundY - 36,
+          w: 28,
+          h: 40,
+          open: true,
+          phase: Math.random() * 6,
+          period: 2.2 + Math.random() * 1.4,
+          vx: 0,
+          baseY: groundY - 36,
+        });
+      } else {
+        hazards.push({
+          kind: k,
+          x: baseX,
+          y: k === "hawk" || k === "bird" ? groundY - 50 : groundY - 14,
+          w: k === "panther" || k === "boar" || k === "rival" ? 20 : 14,
+          h: k === "panther" || k === "boar" ? 14 : 12,
+          vx:
+            k === "hawk" || k === "bird"
+              ? 0.75 + idx * 0.02
+              : k === "boat"
+                ? 0.95
+                : k === "panther"
+                  ? 0.55
+                  : 0.4,
+          baseY: k === "hawk" || k === "bird" ? groundY - 50 : groundY - 14,
+          phase: Math.random() * 10,
+        });
+      }
     }
 
     // mid-level quiz triggers (2-4)
@@ -338,34 +386,126 @@
   function drawHazard(h, cam) {
     const x = Math.floor(h.x - cam);
     const y = Math.floor(h.y);
-    if (x < -20 || x > W + 20) return;
-    if (h.kind === "bird") {
-      ctx.fillStyle = "#4a4a4a";
-      ctx.fillRect(x, y, 12, 6);
-      ctx.fillRect(x + 10, y - 2, 6, 4);
+    if (x < -30 || x > W + 30) return;
+    const flick = Math.sin((world ? world.time : 0) * 12 + h.phase) * 0.5 + 0.5;
+
+    if (h.kind === "fire") {
+      const tall = (h.tall || 16) + flick * 6;
+      ctx.fillStyle = "#3a2010";
+      ctx.fillRect(x, y + 10, h.w, 6);
+      ctx.fillStyle = "#ff4400";
+      ctx.fillRect(x + 2, y + 10 - tall, h.w - 4, tall);
+      ctx.fillStyle = "#ffcc00";
+      ctx.fillRect(x + 5, y + 12 - tall * 0.7, h.w - 10, tall * 0.55);
+      ctx.fillStyle = "#fff8c0";
+      ctx.fillRect(x + h.w / 2 - 1, y + 8 - tall, 3, 5);
+      return;
+    }
+
+    if (h.kind === "cave") {
+      // Rock mouth that opens and closes
+      ctx.fillStyle = "#2a2a2a";
+      ctx.fillRect(x, y, h.w, h.h);
+      ctx.fillStyle = "#1a1a1a";
+      const openAmt = h.open ? 0.85 : 0.15;
+      const gap = Math.floor(h.h * openAmt);
+      const topH = Math.floor((h.h - gap) / 2);
+      ctx.fillStyle = "#4a4038";
+      ctx.fillRect(x - 2, y, h.w + 4, topH);
+      ctx.fillRect(x - 2, y + h.h - topH, h.w + 4, topH);
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(x + 4, y + topH, h.w - 8, gap);
+      if (!h.open) {
+        ctx.fillStyle = "rgba(180,40,40,0.35)";
+        ctx.fillRect(x, y, h.w, h.h);
+      }
+      return;
+    }
+
+    if (h.kind === "rattler") {
+      ctx.fillStyle = "#c4a35a";
+      ctx.fillRect(x, y + 6, 18, 4);
+      ctx.fillStyle = "#8b6914";
+      for (let i = 0; i < 5; i++) ctx.fillRect(x + i * 3, y + 5 + (i % 2), 3, 3);
+      ctx.fillStyle = "#d4b060";
+      ctx.fillRect(x + 14, y + 2, 6, 6);
+      ctx.fillStyle = "#111";
+      ctx.fillRect(x + 17, y + 3, 2, 2);
+      // rattle
+      ctx.fillStyle = "#e8d080";
+      ctx.fillRect(x - 3, y + 6, 4, 3);
+      return;
+    }
+
+    if (h.kind === "hawk" || h.kind === "bird") {
+      ctx.fillStyle = h.kind === "hawk" ? "#5a4030" : "#3a3a3a";
+      ctx.fillRect(x, y, 14, 6);
+      ctx.fillRect(x + 12, y - 2, 8, 4);
       ctx.fillStyle = "#222";
-      ctx.fillRect(x + 2, y + 2, 3, 2);
-    } else if (h.kind === "boat") {
+      ctx.fillRect(x + 2, y + 2, 4, 2);
+      if (h.kind === "hawk") {
+        ctx.fillStyle = "#8b4513";
+        ctx.fillRect(x - 4, y + 1, 6, 3);
+        ctx.fillRect(x + 10, y + 1, 6, 3);
+      }
+      return;
+    }
+
+    if (h.kind === "panther") {
+      ctx.fillStyle = "#2a2a2a";
+      ctx.fillRect(x, y, 22, 10);
+      ctx.fillRect(x + 18, y - 2, 8, 8);
+      ctx.fillStyle = "#f0c040";
+      ctx.fillRect(x + 22, y, 2, 2);
+      ctx.fillStyle = "#111";
+      ctx.fillRect(x + 4, y + 9, 3, 4);
+      ctx.fillRect(x + 14, y + 9, 3, 4);
+      return;
+    }
+
+    if (h.kind === "boar") {
+      ctx.fillStyle = "#5c4030";
+      ctx.fillRect(x, y, 18, 11);
+      ctx.fillStyle = "#f5f0e0";
+      ctx.fillRect(x + 16, y + 4, 5, 2);
+      ctx.fillStyle = "#111";
+      ctx.fillRect(x + 3, y + 10, 3, 3);
+      ctx.fillRect(x + 11, y + 10, 3, 3);
+      return;
+    }
+
+    if (h.kind === "boat") {
       ctx.fillStyle = "#8b4513";
-      ctx.fillRect(x, y, 20, 8);
+      ctx.fillRect(x, y, 22, 8);
       ctx.fillStyle = "#c0c0c0";
-      ctx.fillRect(x + 6, y - 6, 3, 6);
-    } else if (h.kind === "raccoon") {
+      ctx.fillRect(x + 8, y - 8, 3, 8);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(x + 11, y - 7, 8, 5);
+      return;
+    }
+
+    if (h.kind === "raccoon") {
       ctx.fillStyle = "#6b5b4b";
       ctx.fillRect(x, y, 12, 8);
       ctx.fillStyle = "#111";
       ctx.fillRect(x + 2, y + 2, 8, 2);
-    } else if (h.kind === "snake") {
-      ctx.fillStyle = "#5a7a3a";
+      return;
+    }
+
+    if (h.kind === "snake") {
+      ctx.fillStyle = "#4a7a3a";
       ctx.fillRect(x, y + 4, 16, 3);
       ctx.fillRect(x + 12, y, 4, 5);
-    } else if (h.kind === "rival") {
+      return;
+    }
+
+    if (h.kind === "rival") {
       drawPixelGator({ x: h.x, y: h.y - 4, w: 18, h: 12 }, 1.1, -1);
       return;
-    } else {
-      ctx.fillStyle = "#5c4030";
-      ctx.fillRect(x, y + 2, 16, 6);
     }
+
+    ctx.fillStyle = "#5c4030";
+    ctx.fillRect(x, y + 2, 16, 6);
   }
 
   function drawWorld() {
@@ -497,16 +637,47 @@
   function updateHazards(dt) {
     world.hazards.forEach(function (h) {
       h.phase += dt;
-      if (h.kind === "bird") {
+
+      if (h.kind === "fire") {
+        // Stay on ground; damage if player walks through flames
+        h.y = h.baseY;
+        const box = { x: h.x, y: h.y - (h.tall || 14), w: h.w, h: (h.tall || 14) + 8 };
+        if (world.inv <= 0 && aabb(world.player, box)) hurt();
+        return;
+      }
+
+      if (h.kind === "cave") {
+        // Opening / closing rock jaws - only hurts when closing on you
+        const cycle = (h.phase % h.period) / h.period;
+        h.open = cycle < 0.55;
+        if (!h.open) {
+          const box = { x: h.x + 2, y: h.y + 4, w: h.w - 4, h: h.h - 8 };
+          if (world.inv <= 0 && aabb(world.player, box)) hurt();
+        }
+        return;
+      }
+
+      if (h.kind === "hawk" || h.kind === "bird") {
         h.x += h.vx * (Math.sin(h.phase) > 0 ? 1 : -1);
-        h.y = h.baseY - 40 + Math.sin(h.phase * 2) * 16;
+        h.y = h.baseY + Math.sin(h.phase * 2.2) * 18;
       } else if (h.kind === "boat") {
-        h.x += h.vx * 0.8;
-        if (h.x > world.len) h.x = -20;
+        h.x += h.vx * 0.85;
+        if (h.x > world.len + 20) h.x = -30;
+      } else if (h.kind === "panther" || h.kind === "boar" || h.kind === "rattler") {
+        h.x += Math.sin(h.phase * 1.1) * h.vx * 1.2;
+        h.y = h.baseY;
+      } else if (h.kind === "rival") {
+        h.x += Math.sin(h.phase * 0.8) * h.vx;
       } else {
         h.x += Math.sin(h.phase) * h.vx * 0.5;
       }
-      const box = { x: h.x, y: h.y, w: h.w || 14, h: h.h || 12 };
+
+      const box = {
+        x: h.x,
+        y: h.y,
+        w: h.w || 14,
+        h: h.h || 12,
+      };
       if (world.inv <= 0 && aabb(world.player, box)) hurt();
     });
   }
@@ -540,6 +711,58 @@
   }
 
   /* ---------- Comic quiz ---------- */
+  const NPCS = [
+    {
+      id: "rattler",
+      name: "Rita the Rattler",
+      emoji: "🐍",
+      tag: "SNAKE SAYS",
+      openers: [
+        "Ssssay… answer me this!",
+        "Hold up, gator. Pop quiz time:",
+        "Rattle-rattle! Knowledge check:",
+        "You want past me? Prove it:",
+      ],
+    },
+    {
+      id: "raccoon",
+      name: "Rascal Raccoon",
+      emoji: "🦝",
+      tag: "RASCAL ASKS",
+      openers: [
+        "Yo! Mid-heist question:",
+        "Bandit brain teaser:",
+        "Don't swipe wrong on this one:",
+      ],
+    },
+    {
+      id: "hawk",
+      name: "Harley Hawk",
+      emoji: "🦅",
+      tag: "HAWK SCREECHES",
+      openers: [
+        "From the sky I ask:",
+        "Circle once… then answer:",
+        "Sharp eyes, sharper question:",
+      ],
+    },
+    {
+      id: "panther",
+      name: "Prowl the Panther",
+      emoji: "🐆",
+      tag: "PANTHER PURRS",
+      openers: [
+        "Quiet… then the quiz:",
+        "Shadow question incoming:",
+        "Earn your path, little gator:",
+      ],
+    },
+  ];
+
+  function pickNpc(seed) {
+    return NPCS[(seed + state.level) % NPCS.length];
+  }
+
   function openComicQuiz() {
     if (pausedForQuiz) return;
     pausedForQuiz = true;
@@ -555,12 +778,24 @@
     state.playSeed += 1;
     save();
 
+    const npc = pickNpc(state.playSeed);
+    const opener = npc.openers[state.playSeed % npc.openers.length];
+
     const overlay = $("#comic-overlay");
     const title = $("#comic-question");
     const opts = $("#comic-options");
     const fb = $("#comic-feedback");
     const cont = $("#comic-continue");
+    const tag = $("#comic-tag");
+    const npcName = $("#comic-npc-name");
+    const npcFace = $("#comic-npc-face");
+    const npcLine = $("#comic-npc-line");
+
     overlay.classList.add("show");
+    if (tag) tag.textContent = npc.tag;
+    if (npcName) npcName.textContent = npc.name;
+    if (npcFace) npcFace.textContent = npc.emoji;
+    if (npcLine) npcLine.textContent = opener;
     title.textContent = q.q;
     fb.className = "comic-feedback";
     fb.textContent = "";
@@ -580,14 +815,16 @@
           b.classList.add("correct");
           state.score += 35;
           fb.className = "comic-feedback show";
-          fb.textContent = "POW! Correct! +" + 35 + "  " + q.explain;
+          fb.textContent =
+            npc.emoji + " YESSS! +" + 35 + "  ·  " + q.explain;
         } else {
           b.classList.add("wrong");
           const right = opts.children[q.correct];
           if (right) right.classList.add("correct");
           state.score += 5;
           fb.className = "comic-feedback show";
-          fb.textContent = "Nice try! " + q.explain;
+          fb.textContent =
+            npc.emoji + " Close! " + q.explain + " (You still learned it.)";
         }
         updateHud();
         cont.style.display = "block";
@@ -671,9 +908,9 @@
     $("#level-title").textContent =
       "Level " + (idx + 1) + " · " + stageName(idx);
     $("#level-blurb").textContent =
-      "Guide your gator through Florida wetlands. Jump gaps, dodge trouble, grab snacks, and answer comic quiz pop-ups!";
+      "Dodge fire pits, closing caves, rattlers, hawks, panthers, and more. Grab snacks and beat the flag!";
     $("#play-hint").textContent =
-      "Move: arrows/WASD or on-screen pads · Jump: UP/W/SPACE/Z · Reach the green flag";
+      "Jump fire · dash through open caves · avoid predators · yellow ? = NPC meme quiz";
     show("play");
     world._last = 0;
     loopId = requestAnimationFrame(tick);

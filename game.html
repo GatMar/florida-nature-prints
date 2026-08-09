@@ -51,7 +51,8 @@
             <ul class="start-list">
               <li>Pixel gator on real Florida photo backgrounds from this site</li>
               <li>Jump gaps, dodge wildlife hazards, grab snacks</li>
-              <li>Quizzes appear mid-level as comic speech bubbles</li>
+              <li>Meme quiz pop-ups from NPCs (rattlers, hawks, and more)</li>
+              <li>Fire pits, closing caves, panthers, and other wild obstacles</li>
               <li>
                 Huge question pool (<span id="q-count">2500+</span>) so replays stay fresh
               </li>
@@ -114,19 +115,26 @@
             <div class="stage-wrap">
               <canvas id="game-canvas" width="320" height="180" aria-label="Gator Life game"></canvas>
               <div id="comic-overlay" class="comic-overlay" aria-modal="true" role="dialog">
-                <div class="comic-bubble">
-                  <span class="comic-tag">Quiz Pop!</span>
-                  <h3 id="comic-question">Question</h3>
-                  <div class="comic-options" id="comic-options"></div>
-                  <div class="comic-feedback" id="comic-feedback"></div>
-                  <button
-                    type="button"
-                    class="game-btn game-btn-primary comic-continue"
-                    id="comic-continue"
-                    style="display: none"
-                  >
-                    Back to run!
-                  </button>
+                <div class="meme-panel">
+                  <div class="meme-npc" aria-hidden="true">
+                    <div class="meme-npc-face" id="comic-npc-face">🐍</div>
+                    <div class="meme-npc-name" id="comic-npc-name">Rita the Rattler</div>
+                  </div>
+                  <div class="comic-bubble meme-bubble">
+                    <span class="comic-tag" id="comic-tag">SNAKE SAYS</span>
+                    <p class="meme-npc-line" id="comic-npc-line">Ssssay… answer me this!</p>
+                    <h3 id="comic-question">Question</h3>
+                    <div class="comic-options" id="comic-options"></div>
+                    <div class="comic-feedback" id="comic-feedback"></div>
+                    <button
+                      type="button"
+                      class="game-btn game-btn-primary comic-continue"
+                      id="comic-continue"
+                      style="display: none"
+                    >
+                      Back to the run!
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
