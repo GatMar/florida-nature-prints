@@ -506,36 +506,18 @@
   wirePaymentBtn("paypal-payment-btn", SITE_CONFIG.paypalPaymentLink, "Pay with PayPal");
   wirePaymentBtn("venmo-payment-btn", SITE_CONFIG.venmoPaymentLink, "Pay with Venmo");
 
+  // Public-facing payment / notify copy stays simple (TBA until setup is ready)
   const payNote = document.getElementById("payment-note-text");
-  if (payNote && SITE_CONFIG.paymentNote) {
-    payNote.textContent = SITE_CONFIG.paymentNote;
+  if (payNote) {
+    payNote.textContent = "TBA";
   }
-
-  // Notify status banner
+  const payNoteFoot = document.querySelector(".payment-note");
+  if (payNoteFoot) {
+    payNoteFoot.textContent = "TBA";
+  }
   const notifyStatus = document.getElementById("notify-status");
   if (notifyStatus) {
-    const sms = (SITE_CONFIG.smsAlertEmail || "").trim();
-    const parts = [];
-    parts.push(
-      "Email orders → <strong>" +
-        escapeHtml(SITE_CONFIG.yourEmail || "(set yourEmail)") +
-        "</strong>"
-    );
-    if (sms) {
-      parts.push(
-        "Text alerts → <strong>on</strong> (" + escapeHtml(sms) + ")"
-      );
-    } else {
-      parts.push(
-        "Text alerts → <strong>off</strong> — add <code>smsAlertEmail</code> in config.js to get a text"
-      );
-    }
-    notifyStatus.innerHTML = parts.join(" · ");
-  }
-
-  const smsNote = document.getElementById("sms-alert-note");
-  if (smsNote && (SITE_CONFIG.smsAlertEmail || "").trim()) {
-    smsNote.textContent = " and a text alert on my phone";
+    notifyStatus.textContent = "TBA";
   }
 
   // Build FormSubmit extras: SMS gateway + CC
