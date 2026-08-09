@@ -537,38 +537,27 @@
   }
 
   function drawPixelGator(p, scale, facing) {
-    const x = Math.floor(p.x - world.camera);
-    const y = Math.floor(p.y);
-    // scale ~1 draws native 1px art (small + readable)
+    const rows = world && world.idx < 5 ? GATOR_EGG : GATOR_SPRITE;
+    const sw = rows[0].length;
+    const sh = rows.length;
     const s = Math.max(1, Math.round(scale));
+    const x = Math.floor(p.x - world.camera);
+    const y = Math.floor(p.y + Math.max(0, p.h - sh * s));
     ctx.save();
-    if (s !== 1) {
-      // draw at 1x into temp path by scaling context carefully
-    }
     if (facing < 0) {
-      ctx.translate(x + p.w / 2, y + p.h / 2);
+      ctx.translate(x + (sw * s) / 2, y);
       ctx.scale(-s, s);
-      ctx.translate(-(p.w / (2 * s)), -(p.h / (2 * s)));
-      const rows = world.idx < 5 ? GATOR_EGG : GATOR_SPRITE;
-      for (let r = 0; r < rows.length; r++) {
-        for (let c = 0; c < rows[r].length; c++) {
-          const ch = rows[r][c];
-          if (!ch || ch === ".") continue;
-          ctx.fillStyle = PAL[ch] || "#2f6b38";
-          ctx.fillRect(c, r, 1, 1);
-        }
-      }
+      ctx.translate(-sw / 2, 0);
     } else {
       ctx.translate(x, y);
       ctx.scale(s, s);
-      const rows = world.idx < 5 ? GATOR_EGG : GATOR_SPRITE;
-      for (let r = 0; r < rows.length; r++) {
-        for (let c = 0; c < rows[r].length; c++) {
-          const ch = rows[r][c];
-          if (!ch || ch === ".") continue;
-          ctx.fillStyle = PAL[ch] || "#2f6b38";
-          ctx.fillRect(c, r, 1, 1);
-        }
+    }
+    for (let r = 0; r < sh; r++) {
+      for (let c = 0; c < sw; c++) {
+        const ch = rows[r][c];
+        if (!ch || ch === ".") continue;
+        ctx.fillStyle = PAL[ch] || "#2f6b38";
+        ctx.fillRect(c, r, 1, 1);
       }
     }
     ctx.restore();
