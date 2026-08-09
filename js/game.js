@@ -44,32 +44,77 @@
   }
 
   function scoreVoice(v, prefer) {
-    const n = (v.name || "") + " " + (v.lang || "");
+    const n = ((v.name || "") + " " + (v.lang || "")).toLowerCase();
+    const lang = (v.lang || "").toLowerCase();
     let s = 0;
-    if (/en[-_]?(us|gb|au|ie)/i.test(v.lang || "")) s += 3;
-    if (/en/i.test(v.lang || "")) s += 1;
-    // Prefer softer, more natural / youthful voices when available
-    if (/samantha|karen|moira|fiona|victoria|zira|susan|allison|ava|nicky|siri|soft|natural|premium|enhanced|neural/i.test(n))
-      s += 6;
-    if (/google|microsoft|apple/i.test(n)) s += 2;
+
+    // Strong preference: American English only
+    if (lang === "en-us" || lang.indexOf("en-us") === 0) s += 20;
+    else if (lang === "en_us") s += 20;
+    else if (/en[-_]?us/.test(lang)) s += 18;
+    else if (lang.indexOf("en") === 0) s += 2; // other English (weak)
+    else s -= 25; // non-English
+
+    // Penalize non-American accents / locales when labeled in the name
+    if (
+      /chinese|mandarin|cantonese|japanese|korean|taiwan|hong kong|india|hindi|tamil|vietnamese|thai|filipino|indonesian|malay|singapore|ja-jp|zh-|ko-kr|hi-in|en-in|en-gb|en-au|en-ie|en-za|british|australian|irish|scottish|indian|asian/i.test(
+        n
+      )
+    ) {
+      s -= 30;
+    }
+
+    // Prefer common natural US voices on Apple / Google / Microsoft
+    if (
+      /samantha|susan|allison|ava|zoe|nicky|siri|jenny|aria|guy|davis|jane|sara|nancy|natural|neural|premium|enhanced|google us|microsoft (aria|jenny|guy|davis)/i.test(
+        n
+      )
+    ) {
+      s += 10;
+    }
+
     if (prefer === "gator" || prefer === "owl") {
-      // 7–9 year old energy: soft / youthful voices when available
-      if (/child|kids|girl|junior|samantha|karen|moira|fiona|ava|susan|allison|nicky/i.test(n)) s += 8;
-      if (/female|woman/i.test(n)) s += 4;
-      if (/male|david|mark|daniel|fred|alex|bruce|tom|jorge|juan/i.test(n) && !/female/i.test(n)) s -= 3;
+      // Kid-like American voices when available
+      if (/samantha|karen|ava|susan|allison|nicky|zoe|girl|child|kids|junior/i.test(n)) s += 8;
+      if (/female|woman/i.test(n)) s += 3;
+      // Avoid deep male defaults for kid gator
+      if (/fred|daniel|alex|bruce|david|mark|tom|james|john/i.test(n) && !/female/i.test(n))
+        s -= 2;
     }
     if (prefer === "npc") {
-      if (/female|samantha|karen|zira|moira/i.test(n)) s += 3;
+      if (/samantha|susan|ava|jenny|aria|zira/i.test(n)) s += 4;
     }
-    // Penalize clearly robotic labels when alternatives exist
-    if (/robot|compact|eloquence/i.test(n)) s -= 1;
+
+    if (/robot|compact|eloquence|novelty/i.test(n)) s -= 4;
     return s;
   }
 
   function pickVoice(prefer) {
     if (!voiceSupported) return null;
-    const list = window.speechSynthesis.getVoices() || [];
+    let list = window.speechSynthesis.getVoices() || [];
     if (!list.length) return null;
+
+    // Prefer strictly American English voices first
+    const us = list.filter(function (v) {
+      const lang = (v.lang || "").toLowerCase();
+      return lang === "en-us" || lang.indexOf("en-us") === 0 || /en[-_]?us/.test(lang);
+    });
+    if (us.length) list = us;
+
+    // Drop clearly non-US / Asian-labeled voices even if lang is odd
+    list = list.filter(function (v) {
+      const n = ((v.name || "") + " " + (v.lang || "")).toLowerCase();
+      return !/chinese|mandarin|cantonese|japanese|korean|taiwan|ja-jp|zh-|ko-kr|hi-in|en-in|en-gb|en-au|british|indian|asian/i.test(
+        n
+      );
+    });
+    if (!list.length) {
+      list = (window.speechSynthesis.getVoices() || []).filter(function (v) {
+        return /en/i.test(v.lang || "");
+      });
+    }
+    if (!list.length) list = window.speechSynthesis.getVoices() || [];
+
     let best = list[0];
     let bestScore = -999;
     for (let i = 0; i < list.length; i++) {
@@ -97,28 +142,33 @@
       let said = String(text);
       if (kind === "gator" || kind === "owl") said = kidify(said);
       const u = new SpeechSynthesisUtterance(said);
+      // Force American English locale for all speech
       u.lang = "en-US";
       const prefer =
         kind === "npc" ? "npc" : kind === "owl" ? "owl" : "gator";
       const v = pickVoice(prefer);
-      if (v) u.voice = v;
+      if (v) {
+        u.voice = v;
+        // Keep utterance lang aligned to voice when it is en-US
+        if (v.lang && /en[-_]?us/i.test(v.lang)) u.lang = v.lang;
+        else u.lang = "en-US";
+      }
       if (kind === "gator") {
-        // ~7–9 year old excitement within Web Speech limits
-        u.rate = 1.18;
-        u.pitch = 1.72;
+        // ~7–9 year old excitement (American voice preferred)
+        u.rate = 1.16;
+        u.pitch = 1.65;
         u.volume = 1;
       } else if (kind === "owl") {
-        // Cheerful little sidekick, slightly different from gator
-        u.rate = 1.12;
-        u.pitch = 1.48;
+        u.rate = 1.1;
+        u.pitch = 1.42;
         u.volume = 1;
       } else if (kind === "npc") {
-        u.rate = 1.06;
-        u.pitch = 1.22;
+        u.rate = 1.04;
+        u.pitch = 1.12;
         u.volume = 1;
       } else {
-        u.rate = 1.08;
-        u.pitch = 1.15;
+        u.rate = 1.06;
+        u.pitch = 1.08;
         u.volume = 1;
       }
       window.speechSynthesis.speak(u);
@@ -248,12 +298,12 @@
   }
 
   function gatorScale(i) {
-    // Bigger, more visible upright gator
-    if (i < 10) return 2.2;
-    if (i < 20) return 2.4;
-    if (i < 30) return 2.6;
-    if (i < 40) return 2.8;
-    return 3.0;
+    // Double previous size - large upright gator
+    if (i < 10) return 4.4;
+    if (i < 20) return 4.8;
+    if (i < 30) return 5.2;
+    if (i < 40) return 5.6;
+    return 6.0;
   }
 
   function load() {
@@ -327,31 +377,72 @@
   function buildLevel(idx) {
     const platforms = [];
     const hazards = [];
+    const climbs = []; // ladders + snake-ropes
     const quizzes = [];
     const items = [];
     const explosions = [];
-    const len = 1600 + idx * 48;
-    const groundY = 500;
+    const len = 1800 + idx * 52;
+    // Labyrinth stories (floors), bottom to top
+    const floors = [500, 380, 260, 145];
+    const groundY = floors[0];
 
-    // ground segments with gaps
-    let x = 0;
-    while (x < len) {
-      const w = 120 + Math.floor(Math.random() * 90) + (idx < 5 ? 55 : 0);
-      platforms.push({ x: x, y: groundY, w: w, h: 64 });
-      const gap = 32 + Math.min(60, 14 + idx);
-      x += w + (idx > 3 && Math.random() < 0.35 ? gap : 12);
+    // --- Maze floors: segments + side walls ---
+    for (let f = 0; f < floors.length; f++) {
+      const fy = floors[f];
+      let x = f % 2 === 0 ? 0 : 80;
+      let room = 0;
+      while (x < len - 40) {
+        const w = 90 + Math.floor(Math.random() * 70) + (f === 0 ? 40 : 0);
+        platforms.push({ x: x, y: fy, w: Math.min(w, len - x), h: f === 0 ? 64 : 14 });
+        // Vertical wall stubs to feel maze-like
+        if (room % 2 === 1 && f < floors.length - 1) {
+          const wallH = floors[f] - floors[f + 1] - 8;
+          platforms.push({
+            x: x + w - 12,
+            y: floors[f + 1] + 8,
+            w: 14,
+            h: wallH,
+            wall: true,
+          });
+        }
+        const gap = 24 + (idx > 5 ? Math.min(40, 10 + idx) : 12);
+        x += w + (Math.random() < 0.4 ? gap : 18);
+        room++;
+      }
+      // Floor edge walls
+      platforms.push({ x: 0, y: fy - 90, w: 12, h: 90, wall: true });
+      platforms.push({ x: len - 16, y: fy - 90, w: 12, h: 90, wall: true });
     }
-    // floating pads (higher in the tall frame)
-    for (let i = 0; i < 6 + Math.floor(idx / 5); i++) {
-      platforms.push({
-        x: 140 + i * 170 + (idx % 7) * 12,
-        y: 320 - (i % 4) * 36,
-        w: 64 + (idx % 5) * 5,
-        h: 12,
+
+    // --- Ladders & snake-ropes between stories ---
+    const climbCount = 5 + Math.floor(idx / 4);
+    for (let i = 0; i < climbCount; i++) {
+      const from = i % (floors.length - 1);
+      const yBottom = floors[from];
+      const yTop = floors[from + 1];
+      const cx = 120 + i * Math.floor(len / (climbCount + 1)) + (idx % 5) * 9;
+      const type = i % 2 === 0 ? "ladder" : "snake";
+      climbs.push({
+        type: type,
+        x: cx,
+        y: yTop,
+        w: type === "ladder" ? 22 : 18,
+        h: yBottom - yTop,
+      });
+    }
+    // Extra snake ropes in the middle of long rooms
+    for (let i = 0; i < 3; i++) {
+      const from = Math.floor(Math.random() * (floors.length - 1));
+      climbs.push({
+        type: "snake",
+        x: 200 + Math.random() * (len - 400),
+        y: floors[from + 1],
+        w: 18,
+        h: floors[from] - floors[from + 1],
       });
     }
 
-    // Exciting hazards unlock with level (fire, caves, predators…)
+    // Hazards placed per floor (labyrinth dens)
     const roster = [
       "fire",
       "cave",
@@ -362,38 +453,38 @@
       "boar",
       "boat",
       "rival",
-      "snake",
       "bird",
     ];
-    const count = 5 + Math.floor(idx / 2);
+    const count = 6 + Math.floor(idx / 2);
     for (let i = 0; i < count; i++) {
       const unlock = Math.min(roster.length - 1, 2 + Math.floor(idx / 4) + (i % 3));
       const k = roster[Math.floor(Math.random() * (unlock + 1))];
-      const baseX = 200 + i * (100 - Math.min(40, idx * 0.45)) + Math.random() * 50;
+      const floor = floors[Math.min(floors.length - 1, i % floors.length)];
+      const baseX = 160 + i * (110 - Math.min(45, idx * 0.4)) + Math.random() * 40;
       if (k === "fire") {
         hazards.push({
           kind: "fire",
           x: baseX,
-          y: groundY - 2,
-          w: 28,
-          h: 28,
+          y: floor - 2,
+          w: 36,
+          h: 36,
           vx: 0,
-          baseY: groundY - 2,
+          baseY: floor - 2,
           phase: Math.random() * 10,
-          tall: 22 + Math.random() * 10,
+          tall: 28 + Math.random() * 12,
         });
       } else if (k === "cave") {
         hazards.push({
           kind: "cave",
           x: baseX,
-          y: groundY - 72,
-          w: 42,
-          h: 74,
+          y: floor - 90,
+          w: 52,
+          h: 92,
           open: true,
           phase: Math.random() * 6,
           period: 2.2 + Math.random() * 1.4,
           vx: 0,
-          baseY: groundY - 72,
+          baseY: floor - 90,
         });
       } else {
         const fly = k === "hawk" || k === "bird";
@@ -401,57 +492,63 @@
         hazards.push({
           kind: k,
           x: baseX,
-          y: fly ? groundY - 110 : groundY - 36,
-          w: big ? 36 : 28,
-          h: big ? 32 : 26,
+          y: fly ? floor - 140 : floor - 48,
+          w: big ? 48 : 40,
+          h: big ? 44 : 38,
           vx:
             fly
-              ? 1.35 + idx * 0.025
+              ? 1.45 + idx * 0.025
               : k === "boat"
-                ? 1.5
+                ? 1.55
                 : k === "panther"
-                  ? 0.95
-                  : 0.7,
-          baseY: fly ? groundY - 110 : groundY - 36,
+                  ? 1.05
+                  : 0.8,
+          baseY: fly ? floor - 140 : floor - 48,
           phase: Math.random() * 10,
         });
       }
     }
 
-    // mid-level quiz triggers (2-4)
+    // Quizzes on alternating floors
     const qn = 2 + (idx % 3);
     for (let i = 0; i < qn; i++) {
+      const fy = floors[Math.min(floors.length - 1, (i + 1) % floors.length)];
       quizzes.push({
-        x: 240 + ((i + 1) * len) / (qn + 2),
-        y: groundY - 70,
+        x: 260 + ((i + 1) * len) / (qn + 2),
+        y: fy - 80,
         hit: false,
       });
     }
 
-    // snacks
-    for (let i = 0; i < 8 + (idx % 5); i++) {
+    // Snacks scattered on upper stories
+    for (let i = 0; i < 10 + (idx % 5); i++) {
+      const fy = floors[i % floors.length];
       items.push({
-        x: 150 + i * 100,
-        y: groundY - 50 - (i % 3) * 28,
+        x: 140 + i * 110,
+        y: fy - 60 - (i % 2) * 20,
         taken: false,
       });
     }
 
+    // Flag on top floor near the end
+    const goalFloor = floors[floors.length - 1];
     const sc = gatorScale(idx);
-    // Upright sprite ~14 x 22 base
     const pw = 14 * sc;
     const ph = 22 * sc;
     return {
       idx: idx,
       len: len,
+      floors: floors,
       platforms: platforms,
+      climbs: climbs,
       hazards: hazards,
       quizzes: quizzes,
       items: items,
       explosions: explosions,
       asteroids: [],
       astroTimer: 1.2 + Math.random(),
-      goalX: len - 50,
+      goalX: len - 70,
+      goalY: goalFloor,
       camera: 0,
       time: 0,
       inv: 0,
@@ -467,6 +564,7 @@
         w: pw,
         h: ph,
         onGround: false,
+        onClimb: false,
         facing: 1,
       },
     };
@@ -517,12 +615,70 @@
     world.platforms.forEach(function (p) {
       const x = Math.floor(p.x - cam);
       if (x > W || x + p.w < 0) return;
+      if (p.wall) {
+        ctx.fillStyle = "rgba(45, 55, 40, 0.72)";
+        ctx.fillRect(x, p.y, p.w, p.h);
+        ctx.fillStyle = "rgba(70, 90, 55, 0.5)";
+        for (let yy = p.y; yy < p.y + p.h; yy += 10) {
+          ctx.fillRect(x + 2, yy, p.w - 4, 2);
+        }
+        return;
+      }
       // Semi-transparent ledges so your photo still shows through
-      ctx.fillStyle = "rgba(40, 55, 35, 0.55)";
+      ctx.fillStyle = "rgba(40, 55, 35, 0.6)";
       ctx.fillRect(x, p.y, p.w, p.h);
-      ctx.fillStyle = "rgba(90, 140, 70, 0.75)";
-      ctx.fillRect(x, p.y, p.w, 3);
+      ctx.fillStyle = "rgba(90, 140, 70, 0.8)";
+      ctx.fillRect(x, p.y, p.w, 4);
     });
+  }
+
+  function drawClimbs(cam) {
+    if (!world.climbs) return;
+    world.climbs.forEach(function (c) {
+      const x = Math.floor(c.x - cam);
+      if (x > W + 20 || x + c.w < -20) return;
+      if (c.type === "ladder") {
+        // Wooden ladder
+        ctx.fillStyle = "rgba(120, 80, 40, 0.9)";
+        ctx.fillRect(x, c.y, 5, c.h);
+        ctx.fillRect(x + c.w - 5, c.y, 5, c.h);
+        ctx.fillStyle = "rgba(160, 110, 55, 0.95)";
+        for (let yy = c.y + 8; yy < c.y + c.h - 4; yy += 14) {
+          ctx.fillRect(x, yy, c.w, 5);
+        }
+      } else {
+        // Snake rope (climbable vine-snake)
+        ctx.fillStyle = "#4a8a3a";
+        for (let yy = 0; yy < c.h; yy += 6) {
+          const wob = Math.sin(yy * 0.2 + (world.time || 0) * 3) * 3;
+          ctx.fillRect(x + 6 + wob, c.y + yy, 6, 7);
+        }
+        ctx.fillStyle = "#c4a040";
+        ctx.fillRect(x + 4, c.y, 12, 10);
+        ctx.fillStyle = "#111";
+        ctx.fillRect(x + 7, c.y + 3, 2, 2);
+        ctx.fillRect(x + 11, c.y + 3, 2, 2);
+        ctx.fillStyle = "#e8d080";
+        ctx.fillRect(x + 7, c.y + c.h - 8, 8, 5);
+      }
+    });
+  }
+
+  function climbAt(p) {
+    if (!world.climbs) return null;
+    for (let i = 0; i < world.climbs.length; i++) {
+      const c = world.climbs[i];
+      const pad = 6;
+      if (
+        p.x + p.w > c.x - pad &&
+        p.x < c.x + c.w + pad &&
+        p.y + p.h > c.y &&
+        p.y < c.y + c.h
+      ) {
+        return c;
+      }
+    }
+    return null;
   }
 
   // UPRIGHT miniature gator (taller than wide) with light/dark “3D” shading.
@@ -918,8 +1074,8 @@
 
     if (h.kind === "rival") {
       drawPixelGator(
-        { x: h.x, y: h.y, w: 14 * 2.4, h: 22 * 2.4 },
-        2.4,
+        { x: h.x, y: h.y, w: 14 * 4.8, h: 22 * 4.8 },
+        4.8,
         -1
       );
       return;
@@ -934,15 +1090,16 @@
     const cam = world.camera;
     drawBackground(cam, world.time, world.idx);
     drawPlatforms(cam);
+    drawClimbs(cam);
 
     // items
     world.items.forEach(function (it) {
       if (it.taken) return;
       const x = Math.floor(it.x - cam);
       ctx.fillStyle = "#e8c040";
-      ctx.fillRect(x, it.y, 5, 5);
+      ctx.fillRect(x, it.y, 10, 10);
       ctx.fillStyle = "#fff8c0";
-      ctx.fillRect(x + 1, it.y + 1, 2, 2);
+      ctx.fillRect(x + 2, it.y + 2, 4, 4);
     });
 
     // quiz markers
@@ -950,18 +1107,19 @@
       if (q.hit) return;
       const x = Math.floor(q.x - cam);
       ctx.fillStyle = "#ffe566";
-      ctx.fillRect(x, q.y, 10, 10);
+      ctx.fillRect(x, q.y, 18, 18);
       ctx.fillStyle = "#111";
-      ctx.font = "bold 9px monospace";
-      ctx.fillText("?", x + 2, q.y + 8);
+      ctx.font = "bold 14px monospace";
+      ctx.fillText("?", x + 4, q.y + 14);
     });
 
-    // goal flag
+    // goal flag (top story)
     const gx = Math.floor(world.goalX - cam);
+    const gy = (world.goalY || 145) - 80;
     ctx.fillStyle = "#f5f5f5";
-    ctx.fillRect(gx, 360, 4, 140);
+    ctx.fillRect(gx, gy, 5, 80);
     ctx.fillStyle = "#3cb371";
-    ctx.fillRect(gx + 4, 360, 18, 14);
+    ctx.fillRect(gx + 5, gy, 22, 16);
 
     world.hazards.forEach(function (h) {
       drawHazard(h, cam);
@@ -1205,7 +1363,13 @@
         }
       }
     }
-    if (world.player.x + world.player.w >= world.goalX) {
+    // Goal on upper story near the end
+    const gy = world.goalY || 145;
+    if (
+      world.player.x + world.player.w >= world.goalX &&
+      world.player.y + world.player.h >= gy - 10 &&
+      world.player.y < gy + 30
+    ) {
       world.won = true;
       finishLevel();
     }
@@ -1445,7 +1609,7 @@
     $("#level-blurb").textContent =
       "Dodge fire pits, closing caves, rattlers, hawks, panthers, and more. Grab snacks and beat the flag!";
     $("#play-hint").textContent =
-      "Jump fire · caves · predators · dodge falling asteroids · yellow ? = quiz";
+      "Labyrinth floors · climb ladders & snake-ropes (UP/DOWN) · asteroids · yellow ? = quiz";
     show("play");
     world._last = 0;
     lastGatorLineAt = 0;
