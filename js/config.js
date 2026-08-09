@@ -6,7 +6,8 @@
  *  After saving, refresh your browser to see the changes.
  */
 
-const SITE_CONFIG = {
+// Attached to window so every page script can read it reliably
+var SITE_CONFIG = window.SITE_CONFIG = {
   // ---- Your info ----
   businessName: "Florida Nature Prints",
   tagline: "Calm moments from the Sunshine State",

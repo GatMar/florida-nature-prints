@@ -34,7 +34,8 @@
 
   // ---- Helpers ----
   function photoUrl(file) {
-    return "images/prints/" + encodeURIComponent(file);
+    // Keep simple relative paths (encoding only breaks some hosts / cases)
+    return "images/prints/" + String(file || "").replace(/^\/+/, "");
   }
 
   function formspreeReady() {
@@ -175,118 +176,158 @@
     );
   }
 
-  // ---- Gallery: front covers + dropdown browse ----
-  const galleryFront = document.getElementById("gallery-front");
-  const galleryBrowse = document.getElementById("gallery-browse");
-  const galleryGrid = document.getElementById("gallery-grid");
-  const categoryChoiceGrid = document.getElementById("category-choice-grid");
+  // ---- Gallery: category covers + dropdown sections with photos ----
+  const galleryAccordion = document.getElementById("gallery-accordion");
   const gallerySelect = document.getElementById("gallery-select");
-  const galleryBack = document.getElementById("gallery-back");
 
-  if (galleryGrid && SITE_CONFIG.photos && SITE_CONFIG.categories) {
-    function showFront() {
-      if (galleryFront) galleryFront.hidden = false;
-      if (galleryBrowse) galleryBrowse.hidden = true;
-      // Clean URL when returning to front (keep path)
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState({}, "", "gallery.html");
-      }
-    }
-
-    function renderCategoryPhotos(catId) {
-      const list = photosInCategory(catId);
+  if (galleryAccordion && SITE_CONFIG.photos && SITE_CONFIG.categories) {
+    function updateGalleryCount() {
       const countEl = document.getElementById("gallery-count");
-      if (!list.length) {
-        galleryGrid.innerHTML =
-          '<p class="gallery-empty">No photos in this category yet.</p>';
-        if (countEl) countEl.textContent = "0 photos";
-        return;
-      }
-      galleryGrid.innerHTML = list
-        .map(function (photo) {
-          return photoCardHtml(photo, true);
-        })
-        .join("");
-      if (countEl) {
-        countEl.textContent =
-          list.length + (list.length === 1 ? " photo" : " photos");
-      }
+      if (!countEl) return;
+      const n = (SITE_CONFIG.photos || []).length;
+      countEl.textContent = n + " photos total";
     }
 
-    function openCategory(catId) {
-      const meta = categoryMeta(catId);
-      if (!meta) {
-        showFront();
-        return;
-      }
-      if (galleryFront) galleryFront.hidden = true;
-      if (galleryBrowse) galleryBrowse.hidden = false;
-      if (gallerySelect) gallerySelect.value = catId;
-      renderCategoryPhotos(catId);
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState(
-          {},
-          "",
-          "gallery.html?cat=" + encodeURIComponent(catId)
+    function openAccordionSection(catId, scroll) {
+      const sections = galleryAccordion.querySelectorAll(".gallery-section");
+      sections.forEach(function (sec) {
+        const on = sec.getAttribute("data-category") === catId;
+        sec.classList.toggle("is-open", on);
+        const btn = sec.querySelector(".gallery-section-toggle");
+        if (btn) btn.setAttribute("aria-expanded", on ? "true" : "false");
+      });
+      if (gallerySelect && catId) gallerySelect.value = catId;
+      if (scroll) {
+        const el = galleryAccordion.querySelector(
+          '.gallery-section[data-category="' + catId + '"]'
         );
+        if (el && el.scrollIntoView) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       }
-      // Scroll browse into view on mobile
-      if (galleryBrowse && galleryBrowse.scrollIntoView) {
-        galleryBrowse.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (window.history && window.history.replaceState && catId) {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set("cat", catId);
+          window.history.replaceState({}, "", url.pathname + url.search);
+        } catch (e) {}
       }
     }
 
-    // Populate category cover grid
-    if (categoryChoiceGrid) {
-      categoryChoiceGrid.innerHTML = SITE_CONFIG.categories
-        .map(function (cat) {
-          return categoryChoiceHtml(cat, { asLink: false });
-        })
-        .join("");
-      categoryChoiceGrid.addEventListener("click", function (e) {
-        const card = e.target.closest(".category-choice");
-        if (!card) return;
-        openCategory(card.getAttribute("data-category"));
-      });
-    }
+    // Build one dropdown section per category (cover + all photos)
+    galleryAccordion.innerHTML = SITE_CONFIG.categories
+      .map(function (cat, index) {
+        const list = photosInCategory(cat.id);
+        const cover =
+          cat.cover || (list[0] && list[0].file) || "";
+        const openClass = index === 0 ? " is-open" : "";
+        const expanded = index === 0 ? "true" : "false";
+        const photosHtml = list.length
+          ? list
+              .map(function (photo) {
+                return photoCardHtml(photo, true);
+              })
+              .join("")
+          : '<p class="gallery-empty">No photos in this category yet.</p>';
 
-    // Dropdown
+        return (
+          '<section class="gallery-section' +
+          openClass +
+          '" data-category="' +
+          escapeHtml(cat.id) +
+          '" id="cat-' +
+          escapeHtml(cat.id) +
+          '">' +
+          '<button type="button" class="gallery-section-toggle" aria-expanded="' +
+          expanded +
+          '">' +
+          '<div class="gallery-section-cover">' +
+          (cover
+            ? '<img src="' +
+              photoUrl(cover) +
+              '" alt="" loading="eager" />'
+            : "") +
+          "</div>" +
+          '<div class="gallery-section-text">' +
+          "<h2>" +
+          escapeHtml(cat.label) +
+          "</h2>" +
+          "<p>" +
+          escapeHtml(cat.blurb || "") +
+          "</p>" +
+          '<span class="category-choice-meta">' +
+          list.length +
+          (list.length === 1 ? " photo" : " photos") +
+          " · tap to open ▾</span>" +
+          "</div>" +
+          '<span class="gallery-section-chevron" aria-hidden="true">▾</span>' +
+          "</button>" +
+          '<div class="gallery-section-panel">' +
+          '<div class="photo-grid">' +
+          photosHtml +
+          "</div>" +
+          "</div>" +
+          "</section>"
+        );
+      })
+      .join("");
+
+    galleryAccordion.addEventListener("click", function (e) {
+      const btn = e.target.closest(".gallery-section-toggle");
+      if (!btn) return;
+      const sec = btn.closest(".gallery-section");
+      if (!sec) return;
+      const catId = sec.getAttribute("data-category");
+      const wasOpen = sec.classList.contains("is-open");
+      if (wasOpen) {
+        sec.classList.remove("is-open");
+        btn.setAttribute("aria-expanded", "false");
+      } else {
+        openAccordionSection(catId, false);
+      }
+    });
+
     if (gallerySelect) {
-      gallerySelect.innerHTML = SITE_CONFIG.categories
-        .map(function (cat) {
-          return (
-            '<option value="' +
-            escapeHtml(cat.id) +
-            '">' +
-            escapeHtml(cat.label) +
-            "</option>"
-          );
-        })
-        .join("");
+      gallerySelect.innerHTML =
+        '<option value="">All categories</option>' +
+        SITE_CONFIG.categories
+          .map(function (cat) {
+            return (
+              '<option value="' +
+              escapeHtml(cat.id) +
+              '">' +
+              escapeHtml(cat.label) +
+              " (" +
+              photosInCategory(cat.id).length +
+              ")</option>"
+            );
+          })
+          .join("");
       gallerySelect.addEventListener("change", function () {
-        openCategory(gallerySelect.value);
+        const v = gallerySelect.value;
+        if (!v) {
+          // Open all sections lightly: open first, scroll top
+          openAccordionSection(SITE_CONFIG.categories[0].id, true);
+          return;
+        }
+        openAccordionSection(v, true);
       });
     }
 
-    if (galleryBack) {
-      galleryBack.addEventListener("click", function () {
-        showFront();
-      });
-    }
+    updateGalleryCount();
 
     // Deep link: gallery.html?cat=gators
     const params = new URLSearchParams(window.location.search);
     const startCat = params.get("cat");
     if (startCat && categoryMeta(startCat)) {
-      openCategory(startCat);
-    } else {
-      showFront();
+      openAccordionSection(startCat, true);
     }
   }
 
   // ---- Home: one front picture per category ----
   const featuredGrid = document.getElementById("featured-grid");
   if (featuredGrid && SITE_CONFIG.categories && SITE_CONFIG.photos) {
+    featuredGrid.classList.add("category-choice-grid");
     featuredGrid.innerHTML = SITE_CONFIG.categories
       .map(function (cat) {
         return categoryChoiceHtml(cat, { asLink: true });

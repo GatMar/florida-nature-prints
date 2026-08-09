@@ -42,42 +42,27 @@
         <div class="container">
           <h1>Gallery</h1>
           <p>
-            Pick a category below, then browse that collection. Tap “Buy print”
-            on any image to order it in your preferred size.
+            Each collection has a cover photo — tap a category to open its
+            pictures. Use “Buy print” on any image to order a size.
           </p>
         </div>
       </div>
 
       <section class="section">
         <div class="container">
-          <!-- Front: one cover picture per category -->
-          <div id="gallery-front" class="gallery-front">
-            <div class="section-header gallery-front-header">
-              <h2>Choose a collection</h2>
-              <p>One picture for each category — open the dropdown to explore more.</p>
-            </div>
-            <div class="category-choice-grid" id="category-choice-grid">
-              <!-- Filled by main.js -->
-            </div>
+          <div class="gallery-browse-bar gallery-top-bar">
+            <label class="gallery-select-label">
+              <span>Jump to</span>
+              <select id="gallery-select" aria-label="Jump to photo category">
+                <!-- Filled by main.js -->
+              </select>
+            </label>
+            <p class="gallery-count" id="gallery-count" aria-live="polite"></p>
           </div>
 
-          <!-- Inside a category: dropdown + photo grid -->
-          <div id="gallery-browse" class="gallery-browse" hidden>
-            <div class="gallery-browse-bar">
-              <button type="button" class="btn btn-outline" id="gallery-back">
-                ← All categories
-              </button>
-              <label class="gallery-select-label">
-                <span>Category</span>
-                <select id="gallery-select" aria-label="Choose photo category">
-                  <!-- Filled by main.js -->
-                </select>
-              </label>
-              <p class="gallery-count" id="gallery-count" aria-live="polite"></p>
-            </div>
-            <div class="photo-grid" id="gallery-grid">
-              <!-- Filled by main.js -->
-            </div>
+          <!-- One cover + dropdown section per category (photos always available) -->
+          <div id="gallery-accordion" class="gallery-accordion">
+            <!-- Filled by main.js -->
           </div>
         </div>
       </section>
