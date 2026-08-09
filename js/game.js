@@ -30,9 +30,65 @@
   let world = null;
   let pausedForQuiz = false;
 
+  // Your site photos only - used as full game backgrounds (no drawn scenery)
+  const BG_FILES = [
+    "golden-gulf.jpeg",
+    "crimson-marsh.jpeg",
+    "footprints-at-sunset.jpeg",
+    "beach-horizon-glow.jpeg",
+    "evening-shore.jpeg",
+    "storm-lit-sunset.jpeg",
+    "marsh-at-dusk.jpeg",
+    "pink-cloud-reflections.jpeg",
+    "open-water-sunset.jpeg",
+    "sea-and-sky.jpeg",
+    "horizon-fire.jpeg",
+    "amber-waves.jpeg",
+    "clouded-gold.jpeg",
+    "last-light-on-the-beach.jpeg",
+    "storm-sunset.jpeg",
+    "orange-afterglow.jpeg",
+    "pink-bay-clouds.jpg",
+    "sky-on-fire.jpeg",
+    "sun-over-the-gulf.jpeg",
+    "heron-silhouette.jpeg",
+    "everglades-style", // placeholder skip
+  ].filter(function (f) {
+    return f.indexOf("everglades") === -1;
+  });
+
+  const bgImages = [];
+  let bgReady = false;
+
   const $ = function (s) {
     return document.querySelector(s);
   };
+
+  function loadBackgrounds(done) {
+    let left = BG_FILES.length;
+    if (!left) {
+      bgReady = true;
+      if (done) done();
+      return;
+    }
+    BG_FILES.forEach(function (file, i) {
+      const img = new Image();
+      img.onload = img.onerror = function () {
+        left -= 1;
+        if (img.naturalWidth) bgImages.push(img);
+        if (left <= 0) {
+          bgReady = true;
+          if (done) done();
+        }
+      };
+      img.src = "images/prints/" + file;
+    });
+  }
+
+  function bgForLevel(idx) {
+    if (!bgImages.length) return null;
+    return bgImages[idx % bgImages.length];
+  }
 
   function stageName(i) {
     if (i < 10) return "Nestling";
@@ -189,58 +245,46 @@
 
   /* ---------- Drawing (original pixel style) ---------- */
   function drawBackground(cam, t, idx) {
-    // Florida sky
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, "#7eb8d4");
-    g.addColorStop(0.45, "#b8d4c8");
-    g.addColorStop(0.55, "#5a9a6a");
-    g.addColorStop(1, "#3d7a4a");
-    ctx.fillStyle = g;
+    const img = bgForLevel(idx);
+    // Fallback solid only if photos failed to load
+    if (!img) {
+      ctx.fillStyle = "#3d6a55";
+      ctx.fillRect(0, 0, W, H);
+      return;
+    }
+
+    // Draw ONLY your photo as the full backdrop (cover + gentle parallax)
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+    const scale = Math.max(W / iw, H / ih) * 1.08;
+    const dw = iw * scale;
+    const dh = ih * scale;
+    // Parallax: photo drifts slower than gameplay camera
+    const maxShift = Math.max(0, dw - W);
+    const shift = maxShift ? ((cam * 0.15) % maxShift) : 0;
+    const dx = -shift;
+    const dy = (H - dh) * 0.45;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(img, dx, dy, dw, dh);
+    // Soft darken so pixel characters stay readable (not a second landscape)
+    ctx.fillStyle = "rgba(10, 25, 18, 0.28)";
     ctx.fillRect(0, 0, W, H);
-
-    // distant treeline (soft realistic green masses)
-    ctx.fillStyle = "rgba(30, 70, 45, 0.55)";
-    for (let i = 0; i < 12; i++) {
-      const tx = ((i * 70 - cam * 0.2) % (W + 80)) - 40;
-      ctx.beginPath();
-      ctx.ellipse(tx + 30, 88, 36, 28, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // water band
-    ctx.fillStyle = "rgba(50, 120, 150, 0.55)";
-    ctx.fillRect(0, 118, W, 40);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
-    for (let i = 0; i < 8; i++) {
-      const wx = ((i * 50 + t * 20 - cam * 0.5) % (W + 40)) - 20;
-      ctx.fillRect(wx, 125 + (i % 3) * 4, 24, 2);
-    }
-
-    // grass foreground pixels
-    ctx.fillStyle = "#4a9a58";
-    ctx.fillRect(0, 148, W, H - 148);
-    ctx.fillStyle = "#3d8048";
-    for (let i = 0; i < W; i += 4) {
-      const hx = Math.floor((i + cam) / 4) % 3;
-      ctx.fillRect(i, 146 - hx, 2, 4 + hx);
-    }
-
-    // sun
-    ctx.fillStyle = "rgba(255, 230, 150, 0.85)";
-    ctx.fillRect(W - 50, 18, 18, 18);
+    // Light bottom shade for platform readability only
+    ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+    ctx.fillRect(0, H - 40, W, 40);
+    ctx.imageSmoothingEnabled = false;
   }
 
   function drawPlatforms(cam) {
     world.platforms.forEach(function (p) {
       const x = Math.floor(p.x - cam);
       if (x > W || x + p.w < 0) return;
-      // muddy bank / grass top
-      ctx.fillStyle = "#5c4030";
+      // Semi-transparent ledges so your photo still shows through
+      ctx.fillStyle = "rgba(40, 55, 35, 0.55)";
       ctx.fillRect(x, p.y, p.w, p.h);
-      ctx.fillStyle = "#4f8f45";
-      ctx.fillRect(x, p.y, p.w, 4);
-      ctx.fillStyle = "#6aaa55";
-      for (let i = 0; i < p.w; i += 6) ctx.fillRect(x + i, p.y - 2, 3, 2);
+      ctx.fillStyle = "rgba(90, 140, 70, 0.75)";
+      ctx.fillRect(x, p.y, p.w, 3);
     });
   }
 
@@ -694,6 +738,10 @@
     canvas.width = W;
     canvas.height = H;
     ctx.imageSmoothingEnabled = false;
+
+    loadBackgrounds(function () {
+      // Photos ready - nothing else required; next draw uses them
+    });
 
     window.addEventListener("keydown", function (e) {
       keys[e.key.toLowerCase()] = true;
