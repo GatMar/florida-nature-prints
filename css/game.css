@@ -293,8 +293,13 @@
 }
 
 .meme-npc-face.has-photo {
-  background: #1a3324 url("../images/game/gator-sprite.png") center 20% / cover
-    no-repeat;
+  background-color: transparent;
+  background-image: url("../images/game/gator-sprite.png?v=4");
+  background-position: center bottom;
+  background-size: contain;
+  background-repeat: no-repeat;
+  border-color: #2f6b43;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
   font-size: 0;
 }
 
