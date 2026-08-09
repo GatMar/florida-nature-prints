@@ -154,6 +154,81 @@ const SITE_CONFIG = {
 
     // --- Birds ---
     {
+      file: "sandhill-crane-elegant.jpeg",
+      title: "Sandhill Crane Portrait",
+      desc: "Elegant close-up by blue water — a top fan favorite",
+    },
+    {
+      file: "sandhill-crane-pair.jpeg",
+      title: "Sandhill Crane Pair",
+      desc: "Trusting cranes along a Florida shore",
+    },
+    {
+      file: "sandhill-crane-walk.jpeg",
+      title: "Sandhill Crane Walk",
+      desc: "Tall, calm, and unbothered by company",
+    },
+    {
+      file: "gator-egret-breakfast.jpeg",
+      title: "Breakfast for Two",
+      desc: "Egret on the bank, gator in the shallows",
+    },
+    {
+      file: "snowy-egret-hunter.jpeg",
+      title: "Snowy Egret Hunter",
+      desc: "Yellow feet and black bill — Florida’s crab specialist",
+    },
+    {
+      file: "great-blue-command.jpeg",
+      title: "Great Blue in Command",
+      desc: "Tall heron ruling a quiet lake shore",
+    },
+    {
+      file: "heron-rising-sun.jpeg",
+      title: "Heron at Sunrise",
+      desc: "Great blue basking in early morning light",
+    },
+    {
+      file: "heron-morning-bask.jpeg",
+      title: "Morning Bask",
+      desc: "Another angle of a sunlit great blue",
+    },
+    {
+      file: "heron-close-portrait.jpeg",
+      title: "Heron Close Portrait",
+      desc: "A rare close approach while he watched the water",
+    },
+    {
+      file: "farewell-egret.jpeg",
+      title: "Farewell Egret",
+      desc: "A watchful great egret on the trail",
+    },
+    {
+      file: "focused-mister-egret.jpeg",
+      title: "Focused Mister Egret",
+      desc: "Deep in thought at the water’s edge",
+    },
+    {
+      file: "great-egret-morning.jpeg",
+      title: "Great Egret Morning",
+      desc: "Morning wisdom from a pure white hunter",
+    },
+    {
+      file: "anhinga-drying.jpeg",
+      title: "Anhinga Drying",
+      desc: "Wings open after a productive swim",
+    },
+    {
+      file: "wetland-neighbors.jpeg",
+      title: "Wetland Neighbors",
+      desc: "Anhinga, egret, and stork sharing the bank",
+    },
+    {
+      file: "heron-in-chilled-lake.jpeg",
+      title: "Heron in a Chilled Lake",
+      desc: "Brave wading on a windy Florida morning",
+    },
+    {
       file: "anhinga-on-the-branch.jpeg",
       title: "Anhinga on the Branch",
       desc: "A sunning anhinga perched by the water",
@@ -341,6 +416,61 @@ const SITE_CONFIG = {
 
     // --- Alligators ---
     {
+      file: "gator-mid-yawn.jpeg",
+      title: "Gator Mid-Yawn",
+      desc: "Caught mid-yawn on a grassy bank — high-traffic favorite",
+    },
+    {
+      file: "gator-bottoms-up.jpeg",
+      title: "Bottoms Up",
+      desc: "Head down, cooling off Florida-style",
+    },
+    {
+      file: "almost-walked-gator.jpeg",
+      title: "Almost Walked Into Him",
+      desc: "A quiet gator hidden in the grass line",
+    },
+    {
+      file: "adult-seven-foot-gator.jpeg",
+      title: "Seven-Foot Adult",
+      desc: "A definitive adult Florida alligator",
+    },
+    {
+      file: "gator-etiquette.jpeg",
+      title: "Bankside Gator",
+      desc: "Scales, grass, and deep blue water",
+    },
+    {
+      file: "gator-road-crossing.jpeg",
+      title: "Road Crossing",
+      desc: "Alligator crossing near a Florida school",
+    },
+    {
+      file: "more-gators-one.jpeg",
+      title: "More Gators I",
+      desc: "Because one gator is never enough",
+    },
+    {
+      file: "more-gators-two.jpeg",
+      title: "More Gators II",
+      desc: "Another angle from a favorite gator day",
+    },
+    {
+      file: "more-gators-three.jpeg",
+      title: "More Gators III",
+      desc: "Still more scaly neighbors",
+    },
+    {
+      file: "another-day-gator.jpeg",
+      title: "Another Day, Another Gator",
+      desc: "He might be following at this point",
+    },
+    {
+      file: "gator-on-patrol.jpeg",
+      title: "Gator on Patrol",
+      desc: "Friday without an alligator? Never",
+    },
+    {
       file: "gator-in-the-green.jpeg",
       title: "Gator in the Green",
       desc: "An alligator resting in algae-rich water",
@@ -379,6 +509,13 @@ const SITE_CONFIG = {
       file: "floating-gator.jpeg",
       title: "Floating Gator",
       desc: "Calm water and a quiet Florida gator",
+    },
+
+    // --- Other Florida wildlife ---
+    {
+      file: "baby-manatee.jpeg",
+      title: "Baby Manatee",
+      desc: "A gentle sea cow rising for air",
     },
   ],
 };
