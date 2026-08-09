@@ -58,25 +58,14 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     { id: "20x30", label: '20" × 30" print', price: 125 },
   ],
 
-  // ---- Specialty mugs (same gallery scenes) ----
+  // ---- Mugs (standard 12 oz blanks for Circuit / mug press printing) ----
+  // Printed with the same Florida gallery scenes using your mug printer.
   mugStyles: [
     {
-      id: "11oz-ceramic",
-      label: "11 oz ceramic mug",
-      price: 22,
-      desc: "Classic everyday mug · dishwasher-safe finish",
-    },
-    {
-      id: "15oz-ceramic",
-      label: "15 oz large ceramic mug",
-      price: 28,
-      desc: "Bigger cup for coffee or tea · wraparound scene",
-    },
-    {
-      id: "travel-tumbler",
-      label: "Travel tumbler",
-      price: 32,
-      desc: "Take the marsh with you · insulated",
+      id: "12oz-ceramic",
+      label: "12 oz ceramic mug",
+      price: 18,
+      desc: "Standard 12 oz blank · your chosen scene printed on a Circuit mug press",
     },
   ],
 

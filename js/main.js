@@ -422,7 +422,7 @@
       const mainLink = SITE_CONFIG.stripePaymentLink || "#";
       stripeBtn.href = isMug && mugLink ? mugLink : mainLink;
       stripeBtn.textContent = isMug
-        ? "Pay with Stripe (mug)"
+        ? "Pay with Stripe (photo mug)"
         : "Pay with Stripe (card)";
     }
   }
@@ -567,7 +567,7 @@
       _template: "table",
       _captcha: "false",
       form_type: "Order",
-      product_type: isMug ? "Specialty mug" : "Fine art print",
+      product_type: isMug ? "12 oz photo mug (Circuit press)" : "Fine art print",
       scene: form.print.value,
       print: form.print.value,
       size_or_style: sizeOrMug,
