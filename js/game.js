@@ -14,7 +14,28 @@
   const H = ROWS * TILE;
   const TOTAL_LEVELS = 50;
   // tile kinds
-  const T = { BLOCK: 1, RIVER: 2, FISH: 3, BIGFISH: 4, ROAD: 5, HILL: 6 };
+  const T = {
+    BLOCK: 1,
+    RIVER: 2,
+    FISH: 3,
+    BIGFISH: 4,
+    ROAD: 5,
+    HILL: 6,
+    LOG: 7, // movable bridge piece (walkable)
+    ROCK: 8, // movable blocker (not walkable)
+  };
+
+  // Match pair colors/symbols for ordered eating
+  const MATCH_STYLES = [
+    { id: 0, color: "#ff5c5c", label: "1", name: "Red" },
+    { id: 1, color: "#4ecdc4", label: "2", name: "Teal" },
+    { id: 2, color: "#ffe66d", label: "3", name: "Gold" },
+    { id: 3, color: "#a78bfa", label: "4", name: "Violet" },
+    { id: 4, color: "#fb923c", label: "5", name: "Orange" },
+    { id: 5, color: "#34d399", label: "6", name: "Mint" },
+    { id: 6, color: "#60a5fa", label: "7", name: "Blue" },
+    { id: 7, color: "#f472b6", label: "8", name: "Pink" },
+  ];
 
   const DIRS = {
     left: { x: -1, y: 0 },
@@ -300,13 +321,19 @@
       cell === T.FISH ||
       cell === T.BIGFISH ||
       cell === T.ROAD ||
-      cell === T.HILL
+      cell === T.HILL ||
+      cell === T.LOG
     );
   }
 
   function isBlocked(g, x, y) {
     if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
-    return g[y][x] === T.BLOCK;
+    const c = g[y][x];
+    return c === T.BLOCK || c === T.ROCK;
+  }
+
+  function isMovable(cell) {
+    return cell === T.LOG || cell === T.ROCK;
   }
 
   /* ---------- Swirly river labyrinth generation ---------- */
@@ -451,32 +478,87 @@
       }
     }
 
-    // Scatter fish on river tiles
-    let fishLeft = 0;
-    for (let y = 1; y < ROWS - 1; y++) {
-      for (let x = 1; x < COLS - 1; x++) {
-        if (g[y][x] !== T.RIVER) continue;
-        if (x === start.x && y === start.y) continue;
-        const r = seeded(idx, x * 31 + y * 17);
-        if (r > 0.38) {
-          g[y][x] = T.FISH;
-          fishLeft++;
-        } else if (r > 0.33) {
-          g[y][x] = T.BIGFISH;
-          fishLeft++;
-        }
-      }
-    }
-    // Guarantee some fish
-    if (fishLeft < 12) {
-      for (let y = 1; y < ROWS - 1 && fishLeft < 16; y++) {
-        for (let x = 1; x < COLS - 1 && fishLeft < 16; x++) {
-          if (g[y][x] === T.RIVER && !(x === start.x && y === start.y)) {
-            g[y][x] = T.FISH;
-            fishLeft++;
+    // Place movable puzzle pieces (logs + rocks)
+    const movableSpots = [];
+    for (let y = 2; y < ROWS - 2; y++) {
+      for (let x = 2; x < COLS - 2; x++) {
+        if (g[y][x] === T.BLOCK || g[y][x] === T.RIVER) {
+          if (Math.abs(x - start.x) + Math.abs(y - start.y) > 3) {
+            movableSpots.push({ x: x, y: y });
           }
         }
       }
+    }
+    const logCount = 2 + Math.min(3, Math.floor(idx / 8));
+    const rockCount = 2 + Math.min(3, Math.floor(idx / 10));
+    for (let i = 0; i < logCount && movableSpots.length; i++) {
+      const si = Math.floor(seeded(idx, 710 + i) * movableSpots.length);
+      const sp = movableSpots.splice(si, 1)[0];
+      g[sp.y][sp.x] = T.LOG;
+    }
+    for (let i = 0; i < rockCount && movableSpots.length; i++) {
+      const si = Math.floor(seeded(idx, 730 + i) * movableSpots.length);
+      const sp = movableSpots.splice(si, 1)[0];
+      // rocks prefer blocking a river choke
+      g[sp.y][sp.x] = T.ROCK;
+    }
+
+    // Match fish: pairs that must be eaten in order (first any of pair, then its match)
+    // Level 1 = exactly 10 fish (5 pairs). Later levels scale up.
+    const pairCount = idx === 0 ? 5 : 5 + Math.min(3, Math.floor(idx / 5));
+    const targetFish = pairCount * 2;
+    const fishMeta = [];
+    for (let y = 0; y < ROWS; y++) {
+      fishMeta[y] = [];
+      for (let x = 0; x < COLS; x++) fishMeta[y][x] = null;
+    }
+    const candidates = [];
+    for (let y = 1; y < ROWS - 1; y++) {
+      for (let x = 1; x < COLS - 1; x++) {
+        if (g[y][x] === T.RIVER && !(x === start.x && y === start.y)) {
+          candidates.push({ x: x, y: y });
+        }
+      }
+    }
+    // shuffle-ish with seed
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(seeded(idx, 800 + i) * (i + 1));
+      const tmp = candidates[i];
+      candidates[i] = candidates[j];
+      candidates[j] = tmp;
+    }
+    let fishLeft = 0;
+    for (let p = 0; p < pairCount; p++) {
+      const style = MATCH_STYLES[p % MATCH_STYLES.length];
+      for (let k = 0; k < 2; k++) {
+        if (!candidates.length) break;
+        const sp = candidates.shift();
+        const big = idx > 2 && p === pairCount - 1 && k === 1;
+        g[sp.y][sp.x] = big ? T.BIGFISH : T.FISH;
+        fishMeta[sp.y][sp.x] = {
+          pairId: p,
+          color: style.color,
+          label: style.label,
+          name: style.name,
+          big: big,
+        };
+        fishLeft++;
+      }
+    }
+    // If we couldn't place enough, fill remaining as free-for-all match pairs
+    while (fishLeft < targetFish && candidates.length) {
+      const p = Math.floor(fishLeft / 2) % MATCH_STYLES.length;
+      const style = MATCH_STYLES[p];
+      const sp = candidates.shift();
+      g[sp.y][sp.x] = T.FISH;
+      fishMeta[sp.y][sp.x] = {
+        pairId: p,
+        color: style.color,
+        label: style.label,
+        name: style.name,
+        big: false,
+      };
+      fishLeft++;
     }
 
     // Big gator obstacles
@@ -508,13 +590,20 @@
 
     return {
       grid: g,
+      fishMeta: fishMeta,
       fishLeft: fishLeft,
       fishEaten: 0,
       fishTotal: fishLeft,
+      pairCount: pairCount,
+      // Match order: after eating one of a pair, must eat its match next
+      matchNeeded: null, // pairId or null
+      matchFlash: 0, // wrong-match red flash
+      matchMsg: "",
+      matchMsgLife: 0,
+      // Tile edit: select a movable LOG/ROCK then tap destination
+      selectedTile: null, // {x,y}
       floatScores: [],
-      // Close-up “fish dies” side panel when hatchling eats
       eatCam: null,
-      // Every 10 fish: digestion education close-up
       digiCam: null,
       lastDigiAt: 0,
       player: {
@@ -535,7 +624,7 @@
       time: 0,
       won: false,
       flash: 0,
-      focus: 0, // brief screen focus pulse when eating
+      focus: 0,
       splat: 0,
       splatX: 0,
       splatY: 0,
@@ -781,18 +870,121 @@
             ctx.lineTo(gx + Math.sin(t + i) * 1.5, py + TILE * 0.28);
             ctx.stroke();
           }
+        } else if (cell === T.LOG) {
+          // Movable wooden log bridge
+          ctx.fillStyle = "rgba(20, 70, 85, 0.45)";
+          ctx.fillRect(px, py, TILE, TILE);
+          const wood = ctx.createLinearGradient(px, py, px + TILE, py + TILE);
+          wood.addColorStop(0, "#8b5a2b");
+          wood.addColorStop(0.5, "#c4a35a");
+          wood.addColorStop(1, "#6b3f1a");
+          ctx.fillStyle = wood;
+          ctx.beginPath();
+          ctx.roundRect
+            ? ctx.roundRect(px + 3, py + 7, TILE - 6, TILE - 14, 4)
+            : ctx.rect(px + 3, py + 7, TILE - 6, TILE - 14);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(40, 25, 10, 0.5)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(px + 6, py + TILE / 2);
+          ctx.lineTo(px + TILE - 6, py + TILE / 2);
+          ctx.stroke();
+          // movable hint
+          ctx.fillStyle = "rgba(255, 240, 180, 0.9)";
+          ctx.font = "bold 8px system-ui,sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("LOG", px + TILE / 2, py + 6);
+        } else if (cell === T.ROCK) {
+          // Movable rock blocker
+          const rock = ctx.createRadialGradient(
+            px + 8,
+            py + 8,
+            2,
+            px + TILE / 2,
+            py + TILE / 2,
+            TILE * 0.55
+          );
+          rock.addColorStop(0, "#9aa0a6");
+          rock.addColorStop(0.6, "#5c636a");
+          rock.addColorStop(1, "#2f3438");
+          ctx.fillStyle = rock;
+          ctx.beginPath();
+          ctx.ellipse(
+            px + TILE / 2,
+            py + TILE / 2 + 1,
+            TILE * 0.4,
+            TILE * 0.34,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.fillStyle = "rgba(255, 200, 180, 0.85)";
+          ctx.font = "bold 8px system-ui,sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("ROCK", px + TILE / 2, py + 7);
+        }
+
+        // Selection highlight for movable tiles
+        if (
+          world.selectedTile &&
+          world.selectedTile.x === x &&
+          world.selectedTile.y === y
+        ) {
+          ctx.strokeStyle = "rgba(255, 230, 80, 0.95)";
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(px + 1.5, py + 1.5, TILE - 3, TILE - 3);
+          // pulse
+          ctx.strokeStyle =
+            "rgba(255, 255, 120, " + (0.4 + Math.sin(t * 8) * 0.35) + ")";
+          ctx.strokeRect(px - 1, py - 1, TILE + 2, TILE + 2);
         }
       }
     }
 
-    // Fish in water
+    // Fish in water (with match badges)
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         const cell = g[y][x];
         if (cell !== T.FISH && cell !== T.BIGFISH) continue;
         const cx = x * TILE + TILE / 2;
         const cy = y * TILE + TILE / 2 + Math.sin(t * 3.5 + x) * 1.8;
+        const meta = world.fishMeta[y][x];
+        const needed =
+          world.matchNeeded !== null &&
+          meta &&
+          meta.pairId === world.matchNeeded;
+        const wrongDim =
+          world.matchNeeded !== null &&
+          meta &&
+          meta.pairId !== world.matchNeeded;
+        ctx.save();
+        if (wrongDim) ctx.globalAlpha = 0.45;
+        if (needed) {
+          ctx.shadowColor = meta.color;
+          ctx.shadowBlur = 12;
+        }
         drawFishRealistic(cx, cy, cell === T.BIGFISH, t + x, 1, false);
+        ctx.shadowBlur = 0;
+        // Match badge ring + number
+        if (meta) {
+          ctx.strokeStyle = meta.color;
+          ctx.lineWidth = needed ? 2.5 : 1.6;
+          ctx.beginPath();
+          ctx.arc(cx, cy, needed ? 11 : 9, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(0,0,0,0.55)";
+          ctx.beginPath();
+          ctx.arc(cx + 7, cy - 7, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = meta.color;
+          ctx.font = "bold 9px system-ui,sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(meta.label, cx + 7, cy - 7);
+        }
+        ctx.restore();
       }
     }
 
@@ -843,18 +1035,45 @@
     ctx.fillStyle = "#e8f5ec";
     ctx.font = "bold 11px system-ui,sans-serif";
     ctx.textAlign = "left";
+    let matchHud = "";
+    if (world.matchNeeded !== null) {
+      const st = MATCH_STYLES[world.matchNeeded % MATCH_STYLES.length];
+      matchHud = " · NEXT: " + st.name + " #" + st.label;
+    } else {
+      matchHud = " · Pick any match fish";
+    }
     ctx.fillText(
       "Lv " +
         (world.idx + 1) +
-        " · " +
-        stageName(world.idx) +
         " · Fish " +
         world.fishLeft +
         " · Eaten " +
-        (world.fishEaten || 0),
+        (world.fishEaten || 0) +
+        matchHud,
       8,
       12
     );
+
+    // Match order message
+    if (world.matchMsgLife > 0 && world.matchMsg) {
+      ctx.fillStyle =
+        world.matchFlash > 0
+          ? "rgba(180,30,30,0.88)"
+          : "rgba(20, 60, 40, 0.88)";
+      ctx.fillRect(W / 2 - 110, 22, 220, 22);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 11px system-ui,sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(world.matchMsg, W / 2, 37);
+    }
+
+    // Tile edit hint
+    if (world.selectedTile) {
+      ctx.fillStyle = "rgba(255, 230, 100, 0.92)";
+      ctx.font = "bold 10px system-ui,sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Tap adjacent tile to move piece", W / 2, H - 6);
+    }
 
     // Splat + OUCH overlay
     if (world.splat > 0) {
@@ -892,6 +1111,11 @@
 
     if (world.flash > 0) {
       ctx.fillStyle = "rgba(255, 250, 200," + Math.min(0.45, world.flash) + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
+    if (world.matchFlash > 0) {
+      ctx.fillStyle =
+        "rgba(180, 20, 30, " + Math.min(0.35, world.matchFlash) + ")";
       ctx.fillRect(0, 0, W, H);
     }
   }
@@ -1693,45 +1917,184 @@
   function collectFish() {
     const p = world.player;
     const cell = world.grid[p.y][p.x];
-    if (cell === T.FISH || cell === T.BIGFISH) {
-      const big = cell === T.BIGFISH;
-      const pts = big ? 40 : 15;
-      world.grid[p.y][p.x] = T.RIVER;
-      world.fishLeft--;
-      world.fishEaten = (world.fishEaten || 0) + 1;
-      state.score += pts;
-      p.growPulse = 1;
-      p.bite = 1;
-      world.focus = 0.95;
-      world.flash = big ? 0.4 : 0.28;
-      // Side close-up: jaws break fish in half (every level including 1)
-      world.eatCam = {
-        life: 1.25,
-        max: 1.25,
-        big: big,
-        pts: pts,
-      };
-      // Every 10 fish → digestion lesson (throat → stomach → waste)
-      const eaten = world.fishEaten;
-      if (eaten > 0 && eaten % 10 === 0 && eaten !== world.lastDigiAt) {
-        world.lastDigiAt = eaten;
-        const cycle = (eaten / 10 - 1) % 3; // 0,1,2
-        world.digiCam = {
-          life: 3.4,
-          max: 3.4,
-          stage: cycle + 1, // 1 throat, 2 stomach, 3 waste
-          milestone: eaten,
-        };
-        // Brief soft pause feel via longer focus
-        world.focus = 1.2;
-        haptic([15, 30, 15, 30, 20]);
+    if (cell !== T.FISH && cell !== T.BIGFISH) return;
+
+    const meta = world.fishMeta[p.y][p.x];
+    // Match-order rule: after opening a pair, only its match can be eaten next
+    if (world.matchNeeded !== null) {
+      if (!meta || meta.pairId !== world.matchNeeded) {
+        world.matchFlash = 0.55;
+        world.matchMsg = "Wrong fish! Eat the matching #" +
+          (MATCH_STYLES[world.matchNeeded % MATCH_STYLES.length].label) +
+          " next";
+        world.matchMsgLife = 1.6;
+        haptic([30, 20, 30]);
+        // nudge player off so they don't spam
+        p.px -= DIRS[p.dir].x * 6;
+        p.py -= DIRS[p.dir].y * 6;
+        return;
       }
-      popScore(p.px, p.py, pts);
-      sfxEat(pts);
-      haptic(big ? [12, 25, 12] : [10, 15]);
-      updateHud();
-      if (world.fishLeft <= 0) winLevel();
     }
+
+    const big = cell === T.BIGFISH || (meta && meta.big);
+    const pts = big ? 40 : 15;
+    const pairId = meta ? meta.pairId : 0;
+
+    world.grid[p.y][p.x] = T.RIVER;
+    world.fishMeta[p.y][p.x] = null;
+    world.fishLeft--;
+    world.fishEaten = (world.fishEaten || 0) + 1;
+    state.score += pts;
+
+    // Pair state machine
+    if (world.matchNeeded === null) {
+      world.matchNeeded = pairId;
+      world.matchMsg =
+        "Match next: " +
+        (meta ? meta.name : "pair") +
+        " #" +
+        (meta ? meta.label : "?");
+      world.matchMsgLife = 1.8;
+    } else if (world.matchNeeded === pairId) {
+      world.matchNeeded = null;
+      world.matchMsg = "Pair complete!";
+      world.matchMsgLife = 1.2;
+      state.score += 20; // pair bonus
+      popScore(p.px, p.py - 12, 20);
+    }
+
+    p.growPulse = 1;
+    p.bite = 1;
+    world.focus = 0.95;
+    world.flash = big ? 0.4 : 0.28;
+    world.eatCam = {
+      life: 1.25,
+      max: 1.25,
+      big: big,
+      pts: pts,
+    };
+    const eaten = world.fishEaten;
+    if (eaten > 0 && eaten % 10 === 0 && eaten !== world.lastDigiAt) {
+      world.lastDigiAt = eaten;
+      const cycle = (eaten / 10 - 1) % 3;
+      world.digiCam = {
+        life: 3.4,
+        max: 3.4,
+        stage: cycle + 1,
+        milestone: eaten,
+      };
+      world.focus = 1.2;
+      haptic([15, 30, 15, 30, 20]);
+    }
+    popScore(p.px, p.py, pts);
+    sfxEat(pts);
+    haptic(big ? [12, 25, 12] : [10, 15]);
+    updateHud();
+    if (world.fishLeft <= 0) winLevel();
+  }
+
+  /** Tap interaction for movable tiles (log/rock) */
+  function handleTileTap(tx, ty) {
+    if (!world || tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return false;
+    const cell = world.grid[ty][tx];
+    const sel = world.selectedTile;
+
+    // Select a movable piece
+    if (!sel) {
+      if (isMovable(cell)) {
+        world.selectedTile = { x: tx, y: ty };
+        world.matchMsg =
+          cell === T.LOG
+            ? "Log selected — tap adjacent tile to place bridge"
+            : "Rock selected — tap adjacent river/path to block";
+        world.matchMsgLife = 2;
+        haptic(8);
+        return true;
+      }
+      return false;
+    }
+
+    // Deselect if same tile
+    if (sel.x === tx && sel.y === ty) {
+      world.selectedTile = null;
+      world.matchMsg = "Cancelled";
+      world.matchMsgLife = 0.8;
+      return true;
+    }
+
+    // Must be adjacent
+    const dist = Math.abs(sel.x - tx) + Math.abs(sel.y - ty);
+    if (dist !== 1) {
+      // allow reselect another movable
+      if (isMovable(cell)) {
+        world.selectedTile = { x: tx, y: ty };
+        haptic(8);
+        return true;
+      }
+      world.matchMsg = "Only move to an adjacent tile";
+      world.matchMsgLife = 1.2;
+      haptic(20);
+      return true;
+    }
+
+    const from = world.grid[sel.y][sel.x];
+    const to = world.grid[ty][tx];
+    // Don't move onto player or fish
+    if (world.player.x === tx && world.player.y === ty) {
+      world.matchMsg = "Can't place on the hatchling";
+      world.matchMsgLife = 1.2;
+      return true;
+    }
+    if (to === T.FISH || to === T.BIGFISH) {
+      world.matchMsg = "Can't cover a fish";
+      world.matchMsgLife = 1.2;
+      return true;
+    }
+
+    // Rules by piece type
+    if (from === T.LOG) {
+      // Log can swap with BLOCK (make bridge) or RIVER/ROAD/HILL
+      if (
+        to !== T.BLOCK &&
+        to !== T.RIVER &&
+        to !== T.ROAD &&
+        to !== T.HILL
+      ) {
+        world.matchMsg = "Log needs land or water next to it";
+        world.matchMsgLife = 1.3;
+        return true;
+      }
+      // Swap: destination becomes LOG, source becomes RIVER (open water)
+      world.grid[ty][tx] = T.LOG;
+      world.grid[sel.y][sel.x] = T.RIVER;
+    } else if (from === T.ROCK) {
+      // Rock can swap with RIVER/ROAD/LOG to block paths or free a cell
+      if (to !== T.RIVER && to !== T.ROAD && to !== T.LOG && to !== T.HILL) {
+        world.matchMsg = "Rock moves onto path/river/log";
+        world.matchMsgLife = 1.3;
+        return true;
+      }
+      world.grid[ty][tx] = T.ROCK;
+      world.grid[sel.y][sel.x] =
+        to === T.LOG ? T.RIVER : to === T.HILL ? T.RIVER : T.RIVER;
+    } else {
+      world.selectedTile = null;
+      return false;
+    }
+
+    world.selectedTile = null;
+    world.matchMsg = "Tile moved!";
+    world.matchMsgLife = 1;
+    state.score += 5;
+    popScore(
+      (tx + 0.5) * TILE,
+      (ty + 0.5) * TILE,
+      5
+    );
+    playTone(400, 0.06, "triangle", 0.08, 0);
+    haptic(10);
+    updateHud();
+    return true;
   }
 
   function collideBigs() {
@@ -1840,6 +2203,8 @@
     if (p.growPulse > 0) p.growPulse = Math.max(0, p.growPulse - dt * 2.2);
     if (p.bite > 0) p.bite = Math.max(0, p.bite - dt * 2.8);
     if (world.focus > 0) world.focus = Math.max(0, world.focus - dt * 1.6);
+    if (world.matchFlash > 0) world.matchFlash = Math.max(0, world.matchFlash - dt);
+    if (world.matchMsgLife > 0) world.matchMsgLife = Math.max(0, world.matchMsgLife - dt);
     if (world.eatCam) {
       world.eatCam.life -= dt;
       if (world.eatCam.life <= 0) world.eatCam = null;
@@ -1847,6 +2212,10 @@
     if (world.digiCam) {
       world.digiCam.life -= dt;
       if (world.digiCam.life <= 0) world.digiCam = null;
+    }
+    // Wrong-match red wash
+    if (world.matchFlash > 0) {
+      // drawn in drawWorld via message; optional full flash:
     }
     // Float +pts upward
     if (world.floatScores && world.floatScores.length) {
@@ -1934,7 +2303,7 @@
     const hint = $("#play-hint");
     if (hint) {
       hint.textContent =
-        "Eat fish to grow · Score floats above you · Dodge BIG gators!";
+        "Match fish pairs in order · Tap LOG/ROCK to move tiles · Dodge BIG gators";
     }
     show("play");
     world._last = 0;
@@ -2109,11 +2478,31 @@
     }
   }
 
+  function canvasTileFromEvent(e) {
+    if (!canvas || !world) return null;
+    const rect = canvas.getBoundingClientRect();
+    const clientX =
+      e.changedTouches && e.changedTouches[0]
+        ? e.changedTouches[0].clientX
+        : e.clientX;
+    const clientY =
+      e.changedTouches && e.changedTouches[0]
+        ? e.changedTouches[0].clientY
+        : e.clientY;
+    const sx = ((clientX - rect.left) / rect.width) * W;
+    const sy = ((clientY - rect.top) / rect.height) * H;
+    const tx = Math.floor(sx / TILE);
+    const ty = Math.floor(sy / TILE);
+    if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return null;
+    return { x: tx, y: ty, sx: sx, sy: sy };
+  }
+
   function bindSwipe() {
     const stage = $("#stage-wrap") || canvas;
     if (!stage) return;
     let start = null;
     let lastDir = null;
+    let moved = false;
     const pt = function (e) {
       if (e.touches && e.touches[0])
         return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -2121,8 +2510,11 @@
     };
     const onStart = function (e) {
       if (pausedForQuiz) return;
+      if (e.target && e.target.closest && e.target.closest(".comic-overlay.show"))
+        return;
       start = pt(e);
       lastDir = null;
+      moved = false;
       if (e.cancelable) e.preventDefault();
     };
     const onMove = function (e) {
@@ -2132,6 +2524,7 @@
       const dx = p.x - start.x;
       const dy = p.y - start.y;
       if (Math.abs(dx) < 16 && Math.abs(dy) < 16) return;
+      moved = true;
       const dir =
         Math.abs(dx) > Math.abs(dy)
           ? dx > 0
@@ -2147,8 +2540,14 @@
         start = p;
       }
     };
-    const onEnd = function () {
+    const onEnd = function (e) {
+      // Short tap → tile interact (move logs/rocks)
+      if (start && !moved && world) {
+        const tile = canvasTileFromEvent(e);
+        if (tile) handleTileTap(tile.x, tile.y);
+      }
       start = null;
+      moved = false;
     };
     stage.addEventListener("pointerdown", onStart, { passive: false });
     stage.addEventListener("pointermove", onMove, { passive: false });
