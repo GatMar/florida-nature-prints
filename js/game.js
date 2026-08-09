@@ -767,7 +767,216 @@
       splatY: 0,
       ouch: 0,
       idx: idx,
+      // Storm weather (rain + full-screen lightning)
+      weather: createWeather(idx),
     };
+  }
+
+  function createWeather(idx) {
+    const drops = [];
+    const n = 90 + (idx % 40);
+    for (let i = 0; i < n; i++) {
+      drops.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        len: 8 + Math.random() * 14,
+        spd: 280 + Math.random() * 220,
+        thick: 0.8 + Math.random() * 1.2,
+        alpha: 0.25 + Math.random() * 0.4,
+      });
+    }
+    return {
+      drops: drops,
+      nextStrike: 2.5 + Math.random() * 4,
+      bolt: null, // { life, max, segs: [{x,y}...] }
+      flash: 0, // full-screen brightness 0..1
+      afterglow: 0,
+    };
+  }
+
+  function sfxThunder() {
+    const ctxA = ensureAudio();
+    if (!ctxA) {
+      playTone(55, 0.25, "sine", 0.15, 0);
+      return;
+    }
+    const t0 = ctxA.currentTime;
+    // Rumble
+    playTone(45, 0.35, "sine", 0.2, 0);
+    playTone(70, 0.2, "triangle", 0.12, 0.02);
+    const n = Math.floor(ctxA.sampleRate * 0.55);
+    const buf = ctxA.createBuffer(1, n, ctxA.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 1.1);
+    }
+    const src = ctxA.createBufferSource();
+    src.buffer = buf;
+    const low = ctxA.createBiquadFilter();
+    low.type = "lowpass";
+    low.frequency.setValueAtTime(800, t0);
+    low.frequency.exponentialRampToValueAtTime(80, t0 + 0.45);
+    const g = ctxA.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.55, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.12, t0 + 0.12);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
+    src.connect(low);
+    low.connect(g);
+    g.connect(ctxA.destination);
+    src.start(t0);
+    src.stop(t0 + 0.56);
+  }
+
+  function spawnLightning() {
+    if (!world || !world.weather) return;
+    const w = world.weather;
+    // Jagged bolt from top of screen
+    const segs = [];
+    let x = 40 + Math.random() * (W - 80);
+    let y = 0;
+    segs.push({ x: x, y: y });
+    while (y < H * (0.55 + Math.random() * 0.4)) {
+      x += (Math.random() - 0.5) * 48;
+      y += 18 + Math.random() * 28;
+      x = Math.max(8, Math.min(W - 8, x));
+      segs.push({ x: x, y: y });
+      // occasional branch
+      if (Math.random() < 0.28) {
+        const bx = x + (Math.random() - 0.5) * 60;
+        const by = y + 20 + Math.random() * 30;
+        segs.push({ x: bx, y: by, branch: true });
+        segs.push({ x: x, y: y, resume: true });
+      }
+    }
+    w.bolt = { life: 0.28, max: 0.28, segs: segs, flicker: 0 };
+    // Bright full-screen flash sequence
+    w.flash = 1;
+    w.afterglow = 0.55;
+    // Second flicker shortly
+    w.flickerIn = 0.06;
+    w.nextStrike = 3.5 + Math.random() * 6 + (world.idx % 3);
+    sfxThunder();
+    haptic([12, 40, 20, 60]);
+  }
+
+  function updateWeather(dt) {
+    const w = world.weather;
+    if (!w) return;
+    // Rain
+    w.drops.forEach(function (d) {
+      d.y += d.spd * dt;
+      d.x += 35 * dt; // wind slant
+      if (d.y > H + 10) {
+        d.y = -10 - Math.random() * 40;
+        d.x = Math.random() * W - 20;
+      }
+      if (d.x > W + 20) d.x -= W + 40;
+    });
+    // Lightning timer
+    w.nextStrike -= dt;
+    if (w.nextStrike <= 0) spawnLightning();
+    // Flash decay + double flicker
+    if (w.flickerIn > 0) {
+      w.flickerIn -= dt;
+      if (w.flickerIn <= 0) {
+        w.flash = Math.max(w.flash, 0.85);
+        if (w.bolt) w.bolt.life = Math.max(w.bolt.life, 0.12);
+      }
+    }
+    if (w.flash > 0) w.flash = Math.max(0, w.flash - dt * 3.2);
+    if (w.afterglow > 0) w.afterglow = Math.max(0, w.afterglow - dt * 0.9);
+    if (w.bolt) {
+      w.bolt.life -= dt;
+      w.bolt.flicker += dt * 40;
+      if (w.bolt.life <= 0) w.bolt = null;
+    }
+  }
+
+  function drawWeather() {
+    const w = world.weather;
+    if (!w) return;
+    const t = world.time || 0;
+
+    // Dark storm wash so rain reads
+    ctx.fillStyle = "rgba(10, 18, 28, 0.12)";
+    ctx.fillRect(0, 0, W, H);
+
+    // Rain streaks
+    ctx.lineCap = "round";
+    w.drops.forEach(function (d) {
+      ctx.strokeStyle = "rgba(190, 220, 255, " + d.alpha + ")";
+      ctx.lineWidth = d.thick;
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x + 4, d.y + d.len);
+      ctx.stroke();
+    });
+
+    // Lightning bolt
+    if (w.bolt && w.bolt.segs.length > 1) {
+      const a = Math.min(1, w.bolt.life / w.bolt.max + 0.35);
+      const segs = w.bolt.segs;
+      // Glow pass
+      ctx.save();
+      ctx.strokeStyle = "rgba(180, 210, 255, " + 0.35 * a + ")";
+      ctx.lineWidth = 10;
+      ctx.shadowColor = "rgba(200, 230, 255, 0.9)";
+      ctx.shadowBlur = 24;
+      ctx.beginPath();
+      ctx.moveTo(segs[0].x, segs[0].y);
+      for (let i = 1; i < segs.length; i++) {
+        if (segs[i].resume) {
+          ctx.moveTo(segs[i].x, segs[i].y);
+        } else {
+          ctx.lineTo(segs[i].x, segs[i].y);
+        }
+      }
+      ctx.stroke();
+      // Core
+      ctx.strokeStyle = "rgba(255, 255, 255, " + a + ")";
+      ctx.lineWidth = 2.5;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(segs[0].x, segs[0].y);
+      for (let i = 1; i < segs.length; i++) {
+        if (segs[i].resume) ctx.moveTo(segs[i].x, segs[i].y);
+        else ctx.lineTo(segs[i].x, segs[i].y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Full-screen bright lightning flash
+    if (w.flash > 0.02) {
+      const f = w.flash;
+      // White-blue screen flash
+      ctx.fillStyle = "rgba(230, 245, 255, " + Math.min(0.92, f * 0.85) + ")";
+      ctx.fillRect(0, 0, W, H);
+      // Extra center hot spot
+      const g = ctx.createRadialGradient(
+        W * 0.5,
+        H * 0.15,
+        10,
+        W * 0.5,
+        H * 0.4,
+        H * 0.9
+      );
+      g.addColorStop(0, "rgba(255, 255, 255, " + f + ")");
+      g.addColorStop(0.35, "rgba(200, 230, 255, " + f * 0.55 + ")");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    } else if (w.afterglow > 0.02) {
+      // Soft residual sky glow
+      ctx.fillStyle =
+        "rgba(160, 190, 230, " + Math.min(0.22, w.afterglow * 0.35) + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Subtle wet sheen on bottom
+    ctx.fillStyle = "rgba(120, 160, 200, 0.04)";
+    ctx.fillRect(0, H - 30, W, 30);
   }
 
   function floodWalk(g, sx, sy) {
@@ -1347,6 +1556,9 @@
         "rgba(180, 20, 30, " + Math.min(0.35, world.matchFlash) + ")";
       ctx.fillRect(0, 0, W, H);
     }
+
+    // Rain + lightning on top of the whole playfield
+    drawWeather();
   }
 
   /** Realistic silver/gold fish (world size or close-up scale) */
@@ -2431,6 +2643,7 @@
     if (world.flash > 0) world.flash -= dt;
     if (world.splat > 0) world.splat -= dt;
     if (world.ouch > 0) world.ouch -= dt;
+    updateWeather(dt);
 
     const p = world.player;
     if (p.growPulse > 0) p.growPulse = Math.max(0, p.growPulse - dt * 2.2);
