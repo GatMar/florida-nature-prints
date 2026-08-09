@@ -14,26 +14,70 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   yourName: "Florida Nature Prints", // public name on About/Contact (not a personal name)
   yourEmail: "hello@floridanatureprints.com",
 
-  // ---- Contact & order forms ----
-  // Forms email this address using FormSubmit (no extra account needed).
-  // The FIRST time someone submits a form, check hello@… and click FormSubmit’s
-  // confirmation link. After that, messages arrive automatically.
-  // (Optional) You can still use Formspree instead by putting a form ID below.
+  // Optional: your cell for display on the site (leave blank to hide)
+  yourPhone: "",
+
+  // ---- Contact & order forms (email) ----
+  // Orders/contact go to yourEmail via FormSubmit (no extra account needed).
+  // FIRST time: check hello@… inbox and click FormSubmit’s confirmation link.
+  // After that, messages arrive automatically.
+  // Optional Formspree form ID (overrides FormSubmit if set):
   formspreeFormId: "",
 
-  // ---- Payment (Stripe Payment Link) ----
-  // 1. In Stripe, create a Payment Link for your prints
-  // 2. Paste the full URL below
-  // To switch to another payment method later, just change this URL
-  // or replace the payment button in shop.html
-  stripePaymentLink: "https://buy.stripe.com/test_REPLACE_WITH_YOUR_LINK",
+  // ---- Text / SMS alerts when someone orders ----
+  // Easiest free option: carrier email-to-text (you get a short text on your phone).
+  // Put your number + carrier gateway email below, e.g.:
+  //   "5551234567@vtext.com"     Verizon
+  //   "5551234567@tmomail.net"   T-Mobile
+  //   "5551234567@txt.att.net"   AT&T
+  //   "5551234567@messaging.sprintpcs.com"  Sprint (legacy)
+  // Leave blank ("") to only get email (no text).
+  smsAlertEmail: "",
 
-  // ---- Print sizes & prices (shown in the shop) ----
+  // Also CC any extra email (assistant, spouse, Gmail, etc.) — blank = none
+  orderCcEmail: "",
+
+  // ---- Payment options ----
+  // Create Payment Links in Stripe Dashboard → Payment links
+  // Use one general “Florida Nature Prints order” product, or separate links.
+  stripePaymentLink: "https://buy.stripe.com/test_REPLACE_WITH_YOUR_LINK",
+  // Optional second Stripe link just for mugs (if empty, uses stripePaymentLink)
+  stripeMugPaymentLink: "",
+  // Optional alternate payments (leave "" to hide that button)
+  paypalPaymentLink: "", // e.g. https://paypal.me/YourName
+  venmoPaymentLink: "", // e.g. https://venmo.com/u/YourName  or  venmo://paycharge?txn=pay&recipients=YourName
+  // Shown under payment buttons
+  paymentNote:
+    "After you submit the order form, pay with one of the secure options. I’ll match your payment to your order email.",
+
+  // ---- Print sizes & prices ----
   printSizes: [
-    { id: "8x10", label: '8" × 10"', price: 35 },
-    { id: "11x14", label: '11" × 14"', price: 55 },
-    { id: "16x20", label: '16" × 20"', price: 85 },
-    { id: "20x30", label: '20" × 30"', price: 125 },
+    { id: "8x10", label: '8" × 10" print', price: 35 },
+    { id: "11x14", label: '11" × 14" print', price: 55 },
+    { id: "16x20", label: '16" × 20" print', price: 85 },
+    { id: "20x30", label: '20" × 30" print', price: 125 },
+  ],
+
+  // ---- Specialty mugs (same gallery scenes) ----
+  mugStyles: [
+    {
+      id: "11oz-ceramic",
+      label: "11 oz ceramic mug",
+      price: 22,
+      desc: "Classic everyday mug · dishwasher-safe finish",
+    },
+    {
+      id: "15oz-ceramic",
+      label: "15 oz large ceramic mug",
+      price: 28,
+      desc: "Bigger cup for coffee or tea · wraparound scene",
+    },
+    {
+      id: "travel-tumbler",
+      label: "Travel tumbler",
+      price: 32,
+      desc: "Take the marsh with you · insulated",
+    },
   ],
 
   /**

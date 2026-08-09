@@ -109,7 +109,7 @@
         ? '<div class="photo-actions">' +
           '<a class="btn btn-primary" href="shop.html?print=' +
           encodeURIComponent(photo.title) +
-          '">Buy print</a>' +
+          '">Buy print / mug</a>' +
           "</div>"
         : "") +
       "</div>" +
@@ -335,14 +335,16 @@
       .join("");
   }
 
-  // ---- Shop: sizes, print dropdown, Stripe link ----
-  const sizeList = document.getElementById("size-list");
-  if (sizeList && SITE_CONFIG.printSizes) {
-    sizeList.innerHTML = SITE_CONFIG.printSizes
+  // ---- Shop: prints, mugs, payments, notifications ----
+  function fillSizeList(elId, items) {
+    const el = document.getElementById(elId);
+    if (!el || !items || !items.length) return;
+    el.innerHTML = items
       .map(function (s) {
         return (
-          "<li><span class=\"size-label\">" +
+          '<li><span class="size-label">' +
           escapeHtml(s.label) +
+          (s.desc ? '<span class="size-desc">' + escapeHtml(s.desc) + "</span>" : "") +
           '</span><span class="size-price">$' +
           s.price +
           "</span></li>"
@@ -351,31 +353,93 @@
       .join("");
   }
 
-  const sizeSelect = document.getElementById("order-size");
-  if (sizeSelect && SITE_CONFIG.printSizes) {
-    sizeSelect.innerHTML =
-      '<option value="">Choose a size…</option>' +
-      SITE_CONFIG.printSizes
+  fillSizeList("size-list", SITE_CONFIG.printSizes);
+  fillSizeList("mug-size-list", SITE_CONFIG.mugStyles);
+
+  function optionsFromItems(items, emptyLabel) {
+    return (
+      '<option value="">' +
+      escapeHtml(emptyLabel) +
+      "</option>" +
+      (items || [])
         .map(function (s) {
           return (
             '<option value="' +
             escapeHtml(s.label) +
-            '  - $' +
+            " - $" +
             s.price +
             '">' +
             escapeHtml(s.label) +
-            "  - $" +
+            " — $" +
             s.price +
             "</option>"
           );
         })
-        .join("");
+        .join("")
+    );
+  }
+
+  const sizeSelect = document.getElementById("order-size");
+  if (sizeSelect) {
+    sizeSelect.innerHTML = optionsFromItems(
+      SITE_CONFIG.printSizes,
+      "Choose a size…"
+    );
+  }
+
+  const mugSelect = document.getElementById("order-mug");
+  if (mugSelect) {
+    mugSelect.innerHTML = optionsFromItems(
+      SITE_CONFIG.mugStyles,
+      "Choose a mug style…"
+    );
+  }
+
+  const productSelect = document.getElementById("order-product");
+  const sizeGroup = document.getElementById("order-size-group");
+  const mugGroup = document.getElementById("order-mug-group");
+
+  function syncProductType() {
+    const isMug = productSelect && productSelect.value === "mug";
+    if (sizeGroup) sizeGroup.hidden = !!isMug;
+    if (mugGroup) mugGroup.hidden = !isMug;
+    if (sizeSelect) {
+      sizeSelect.required = !isMug;
+      if (isMug) sizeSelect.value = "";
+    }
+    if (mugSelect) {
+      mugSelect.required = !!isMug;
+      if (!isMug) mugSelect.value = "";
+    }
+    // Swap Stripe button if mug-specific link exists
+    const stripeBtn = document.getElementById("stripe-payment-btn");
+    if (stripeBtn) {
+      const mugLink =
+        SITE_CONFIG.stripeMugPaymentLink &&
+        SITE_CONFIG.stripeMugPaymentLink.indexOf("REPLACE") === -1
+          ? SITE_CONFIG.stripeMugPaymentLink
+          : "";
+      const mainLink = SITE_CONFIG.stripePaymentLink || "#";
+      stripeBtn.href = isMug && mugLink ? mugLink : mainLink;
+      stripeBtn.textContent = isMug
+        ? "Pay with Stripe (mug)"
+        : "Pay with Stripe (card)";
+    }
+  }
+
+  if (productSelect) {
+    productSelect.addEventListener("change", syncProductType);
+    // URL ?product=mug
+    const paramsEarly = new URLSearchParams(window.location.search);
+    if (paramsEarly.get("product") === "mug") {
+      productSelect.value = "mug";
+    }
+    syncProductType();
   }
 
   const printSelect = document.getElementById("order-print");
   if (printSelect && SITE_CONFIG.photos) {
-    // Group shop prints by category in the dropdown
-    let opts = '<option value="">Choose a print…</option>';
+    let opts = '<option value="">Choose a scene…</option>';
     if (SITE_CONFIG.categories && SITE_CONFIG.categories.length) {
       SITE_CONFIG.categories.forEach(function (cat) {
         const group = photosInCategory(cat.id);
@@ -412,28 +476,103 @@
     }
     printSelect.innerHTML = opts;
 
-    // Pre-select from URL ?print=Title
     const params = new URLSearchParams(window.location.search);
     const preselect = params.get("print");
-    if (preselect) {
-      printSelect.value = preselect;
+    if (preselect) printSelect.value = preselect;
+  }
+
+  // Payment buttons from config
+  function wirePaymentBtn(id, url, label) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const ok =
+      url &&
+      String(url).trim() &&
+      url.indexOf("REPLACE") === -1 &&
+      url !== "#";
+    if (ok) {
+      btn.href = url;
+      btn.hidden = false;
+      if (label) btn.textContent = label;
+    } else {
+      btn.hidden = id !== "stripe-payment-btn";
+      if (id === "stripe-payment-btn") {
+        btn.href = SITE_CONFIG.stripePaymentLink || "#";
+      }
     }
   }
 
-  const stripeBtn = document.getElementById("stripe-payment-btn");
-  if (stripeBtn) {
-    stripeBtn.href = SITE_CONFIG.stripePaymentLink;
+  wirePaymentBtn("stripe-payment-btn", SITE_CONFIG.stripePaymentLink);
+  wirePaymentBtn("paypal-payment-btn", SITE_CONFIG.paypalPaymentLink, "Pay with PayPal");
+  wirePaymentBtn("venmo-payment-btn", SITE_CONFIG.venmoPaymentLink, "Pay with Venmo");
+
+  const payNote = document.getElementById("payment-note-text");
+  if (payNote && SITE_CONFIG.paymentNote) {
+    payNote.textContent = SITE_CONFIG.paymentNote;
+  }
+
+  // Notify status banner
+  const notifyStatus = document.getElementById("notify-status");
+  if (notifyStatus) {
+    const sms = (SITE_CONFIG.smsAlertEmail || "").trim();
+    const parts = [];
+    parts.push(
+      "Email orders → <strong>" +
+        escapeHtml(SITE_CONFIG.yourEmail || "(set yourEmail)") +
+        "</strong>"
+    );
+    if (sms) {
+      parts.push(
+        "Text alerts → <strong>on</strong> (" + escapeHtml(sms) + ")"
+      );
+    } else {
+      parts.push(
+        "Text alerts → <strong>off</strong> — add <code>smsAlertEmail</code> in config.js to get a text"
+      );
+    }
+    notifyStatus.innerHTML = parts.join(" · ");
+  }
+
+  const smsNote = document.getElementById("sms-alert-note");
+  if (smsNote && (SITE_CONFIG.smsAlertEmail || "").trim()) {
+    smsNote.textContent = " and a text alert on my phone";
+  }
+
+  // Build FormSubmit extras: SMS gateway + CC
+  function orderNotifyFields() {
+    const extra = {};
+    const ccs = [];
+    const sms = (SITE_CONFIG.smsAlertEmail || "").trim();
+    const cc = (SITE_CONFIG.orderCcEmail || "").trim();
+    if (sms) ccs.push(sms);
+    if (cc) ccs.push(cc);
+    if (ccs.length) extra._cc = ccs.join(",");
+    // Short SMS-friendly subject
+    return extra;
   }
 
   // ---- Order form ----
   setupForm("order-form", "order-message", function (form) {
-    return {
-      _subject: "New print order  - " + SITE_CONFIG.businessName,
+    const product =
+      (form.product_type && form.product_type.value) || "print";
+    const isMug = product === "mug";
+    const sizeOrMug = isMug
+      ? (form.mug_style && form.mug_style.value) || ""
+      : (form.size && form.size.value) || "";
+    const payload = {
+      _subject:
+        (isMug ? "☕ NEW MUG ORDER" : "🖼️ NEW PRINT ORDER") +
+        " — " +
+        SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
       form_type: "Order",
+      product_type: isMug ? "Specialty mug" : "Fine art print",
+      scene: form.print.value,
       print: form.print.value,
-      size: form.size.value,
+      size_or_style: sizeOrMug,
+      size: isMug ? "(mug)" : form.size.value,
+      mug_style: isMug ? form.mug_style.value : "(print)",
       name: form.name.value,
       email: form.email.value,
       _replyto: form.email.value,
@@ -443,13 +582,29 @@
       state: form.state.value,
       zip: form.zip.value,
       notes: form.notes.value || "(none)",
+      // Plain-text block for SMS gateways (short)
+      sms_summary:
+        (isMug ? "MUG" : "PRINT") +
+        ": " +
+        form.print.value +
+        " | " +
+        sizeOrMug +
+        " | " +
+        form.name.value +
+        " | " +
+        (form.phone.value || "no phone"),
     };
+    const notify = orderNotifyFields();
+    Object.keys(notify).forEach(function (k) {
+      payload[k] = notify[k];
+    });
+    return payload;
   });
 
   // ---- Contact form ----
   setupForm("contact-form", "contact-message", function (form) {
-    return {
-      _subject: "Website contact  - " + SITE_CONFIG.businessName,
+    const payload = {
+      _subject: "Website contact — " + SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
       form_type: "Contact",
@@ -458,6 +613,11 @@
       _replyto: form.email.value,
       message: form.message.value,
     };
+    const notify = orderNotifyFields();
+    Object.keys(notify).forEach(function (k) {
+      payload[k] = notify[k];
+    });
+    return payload;
   });
 
   function setupForm(formId, messageId, buildPayload) {
@@ -513,10 +673,22 @@
 
         if (res.ok && data.success !== "false" && !data.error) {
           form.reset();
+          if (typeof syncProductType === "function") syncProductType();
           if (msg) {
             msg.className = "form-message success";
             msg.textContent =
-              "Thank you! Your message was sent. I'll get back to you soon.";
+              formId === "order-form"
+                ? "Thank you! Your order details were sent. Next: use a payment button so I can match your payment."
+                : "Thank you! Your message was sent. I'll get back to you soon.";
+          }
+          // Scroll payment into view after order
+          if (formId === "order-form") {
+            const pay = document.getElementById("payment-box");
+            if (pay && pay.scrollIntoView) {
+              setTimeout(function () {
+                pay.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 200);
+            }
           }
         } else {
           throw new Error(

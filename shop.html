@@ -1,260 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
- <head>
- <meta charset="UTF-8" />
- <meta name="viewport" content="width=device-width, initial-scale=1" />
- <title>Shop / Buy Prints - Florida Nature Prints</title>
- <meta
- name="description"
- content="Order Florida nature photography prints in multiple sizes. Simple form and secure payment."
- />
- <link rel="stylesheet" href="css/styles.css" />
- </head>
- <body>
- <header class="site-header">
- <div class="container nav-inner">
- <a href="index.html" class="logo" data-business-name
- >Florida <span>Nature</span> Prints</a
- >
- <button
- class="nav-toggle"
- type="button"
- aria-label="Open menu"
- aria-expanded="false"
- >
- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
- <path d="M4 6h16M4 12h16M4 18h16" />
- </svg>
- </button>
- <ul class="nav-links">
- <li><a href="index.html">Home</a></li>
- <li><a href="gallery.html">Gallery</a></li>
- <li><a href="shop.html">Shop</a></li>
- <li><a href="game.html">Gator Life</a></li>
- <li><a href="about.html">About</a></li>
- <li><a href="contact.html">Contact</a></li>
- </ul>
- </div>
- </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shop — Prints &amp; Mugs | Florida Nature Prints</title>
+    <meta
+      name="description"
+      content="Order Florida nature photo prints and specialty mugs. Secure payment options. Order alerts by email and text."
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-inner">
+        <a href="index.html" class="logo" data-business-name
+          >Florida <span>Nature</span> Prints</a
+        >
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="shop.html" class="active">Shop</a></li>
+          <li><a href="game.html">Gator Life</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
 
- <main>
- <div class="page-hero">
- <div class="container">
- <h1>Shop / Buy prints</h1>
- <p>
- Choose a print and size, fill in your shipping details, then pay with
- the secure button below.
- </p>
- </div>
- </div>
+    <main>
+      <div class="page-hero">
+        <div class="container">
+          <h1>Shop — prints &amp; specialty mugs</h1>
+          <p>
+            Choose a Florida scene for a fine art print or a specialty mug, send
+            your order details, then pay securely. You’ll get confirmation by
+            email — and I’ll get an alert too.
+          </p>
+        </div>
+      </div>
 
- <section class="section">
- <div class="container shop-layout">
- <div class="shop-info">
- <h2>How ordering works</h2>
- <p>
- 1) Pick your print and size in the form.<br />
- 2) Enter your name, email, and shipping address.<br />
- 3) Submit the form so I receive your order details by email.<br />
- 4) Click the payment button to pay securely.
- </p>
+      <section class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <h2>What you can order</h2>
+            <p>Same photos from the gallery — on your wall or in your hands.</p>
+          </div>
+          <div class="product-type-cards">
+            <article class="product-type-card">
+              <div class="product-type-icon" aria-hidden="true">🖼️</div>
+              <h3>Fine art prints</h3>
+              <p>
+                Unframed photo prints in multiple sizes. Soft coastal light,
+                wetlands, birds, and gators.
+              </p>
+              <ul class="size-list" id="size-list">
+                <!-- Filled by main.js -->
+              </ul>
+            </article>
+            <article class="product-type-card is-featured">
+              <div class="product-type-badge">New</div>
+              <div class="product-type-icon" aria-hidden="true">☕</div>
+              <h3>Specialty mugs</h3>
+              <p>
+                Your favorite Florida scene on a mug or travel tumbler — a
+                everyday gift that feels like the marsh.
+              </p>
+              <ul class="size-list" id="mug-size-list">
+                <!-- Filled by main.js -->
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
 
- <h2 style="font-size: 1.25rem; margin-top: 1.5rem">Print sizes</h2>
- <ul class="size-list" id="size-list">
- <!-- Filled by main.js -->
- </ul>
- <p style="font-size: 0.9rem; color: var(--text-soft)">
- Prices are for unframed fine art prints. Shipping is calculated
- after your order (or included - update this text in
- <code>shop.html</code> if you prefer).
- </p>
+      <section class="section">
+        <div class="container shop-layout">
+          <div class="shop-info">
+            <h2>How ordering works</h2>
+            <ol class="order-steps">
+              <li>
+                <strong>Pick product type</strong> — print or specialty mug.
+              </li>
+              <li>
+                <strong>Choose a scene</strong> from the gallery photos, then
+                size / mug style.
+              </li>
+              <li>
+                <strong>Enter shipping details</strong> and submit the form so I
+                get your order by <strong>email</strong>
+                <span id="sms-alert-note"></span>.
+              </li>
+              <li>
+                <strong>Pay securely</strong> with Stripe (and optional PayPal /
+                Venmo if listed).
+              </li>
+            </ol>
 
- <div class="payment-box">
- <h3>Pay with Stripe</h3>
- <p>
- After you submit the order form, use this secure payment link.
- (You can replace the link anytime in <code>js/config.js</code>.)
- </p>
- <a
- id="stripe-payment-btn"
- class="btn btn-payment"
- href="https://buy.stripe.com/test_REPLACE_WITH_YOUR_LINK"
- target="_blank"
- rel="noopener noreferrer"
- >
- Pay securely with Stripe
- </a>
- <p class="payment-note">
- Tip: later you can swap this for PayPal, Venmo, or another link -
- just change <code>stripePaymentLink</code> in
- <code>js/config.js</code>.
- </p>
- </div>
- </div>
+            <div class="notify-box">
+              <h3>How you’ll hear from me — and how I get notified</h3>
+              <ul>
+                <li>
+                  <strong>Your email:</strong> orders go to
+                  <span data-your-email>hello@floridanatureprints.com</span>
+                  (FormSubmit). Confirm once in that inbox the first time.
+                </li>
+                <li>
+                  <strong>Text / phone alert:</strong> optional SMS via your
+                  carrier’s free email-to-text address in
+                  <code>js/config.js</code> → <code>smsAlertEmail</code>
+                  (e.g. <code>5551234567@vtext.com</code> for Verizon).
+                </li>
+                <li>
+                  <strong>Stripe:</strong> turn on payment emails/push in your
+                  Stripe Dashboard → Settings → Notifications (and the Stripe
+                  app on your phone).
+                </li>
+              </ul>
+              <p class="notify-box-tip" id="notify-status">
+                <!-- Filled by main.js based on config -->
+              </p>
+            </div>
 
- <div class="form-card">
- <h2>Order form</h2>
- <p class="form-intro">
- I’ll receive an email with everything below so I can prepare and
- ship your print.
- </p>
+            <div class="payment-box" id="payment-box">
+              <h3>Payment options</h3>
+              <p id="payment-note-text">
+                After you submit the order form, use a secure option below.
+              </p>
+              <div class="payment-buttons" id="payment-buttons">
+                <a
+                  id="stripe-payment-btn"
+                  class="btn btn-payment"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Pay with Stripe (card)
+                </a>
+                <a
+                  id="paypal-payment-btn"
+                  class="btn btn-payment btn-payment-alt"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  hidden
+                >
+                  Pay with PayPal
+                </a>
+                <a
+                  id="venmo-payment-btn"
+                  class="btn btn-payment btn-payment-alt"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  hidden
+                >
+                  Pay with Venmo
+                </a>
+              </div>
+              <p class="payment-note">
+                Put your real Stripe Payment Link in
+                <code>js/config.js</code> → <code>stripePaymentLink</code>.
+                Optional: <code>paypalPaymentLink</code>,
+                <code>venmoPaymentLink</code>,
+                <code>stripeMugPaymentLink</code>.
+              </p>
+            </div>
+          </div>
 
- <div id="order-message" class="form-message" role="status"></div>
+          <div class="form-card">
+            <h2>Order form</h2>
+            <p class="form-intro">
+              I’ll receive this by email (and text if SMS is set up) so I can
+              prepare and ship your print or mug.
+            </p>
 
- <form id="order-form" novalidate>
- <div class="setup-notice" style="display: none">
- Order email is not configured yet.
- </div>
+            <div id="order-message" class="form-message" role="status"></div>
 
- <div class="form-group">
- <label for="order-print">Which print?</label>
- <select id="order-print" name="print" required>
- <option value="">Choose a print…</option>
- </select>
- </div>
+            <form id="order-form" novalidate>
+              <div class="setup-notice" style="display: none">
+                Order email is not configured yet.
+              </div>
 
- <div class="form-group">
- <label for="order-size">Print size</label>
- <select id="order-size" name="size" required>
- <option value="">Choose a size…</option>
- </select>
- </div>
+              <div class="form-group">
+                <label for="order-product">Product type</label>
+                <select id="order-product" name="product_type" required>
+                  <option value="print">Fine art print</option>
+                  <option value="mug">Specialty mug</option>
+                </select>
+              </div>
 
- <div class="form-group">
- <label for="order-name">Full name</label>
- <input
- id="order-name"
- name="name"
- type="text"
- autocomplete="name"
- required
- placeholder="Jane Smith"
- />
- </div>
+              <div class="form-group">
+                <label for="order-print">Which scene / photo?</label>
+                <select id="order-print" name="print" required>
+                  <option value="">Choose a scene…</option>
+                </select>
+              </div>
 
- <div class="form-group">
- <label for="order-email">Email</label>
- <input
- id="order-email"
- name="email"
- type="email"
- autocomplete="email"
- required
- placeholder="you@email.com"
- />
- </div>
+              <div class="form-group" id="order-size-group">
+                <label for="order-size">Print size</label>
+                <select id="order-size" name="size">
+                  <option value="">Choose a size…</option>
+                </select>
+              </div>
 
- <div class="form-group">
- <label for="order-phone"
- >Phone <span class="hint">(optional)</span></label
- >
- <input
- id="order-phone"
- name="phone"
- type="tel"
- autocomplete="tel"
- placeholder="(555) 123-4567"
- />
- </div>
+              <div class="form-group" id="order-mug-group" hidden>
+                <label for="order-mug">Mug / tumbler style</label>
+                <select id="order-mug" name="mug_style">
+                  <option value="">Choose a mug style…</option>
+                </select>
+              </div>
 
- <div class="form-group">
- <label for="order-address">Shipping street address</label>
- <input
- id="order-address"
- name="address"
- type="text"
- autocomplete="street-address"
- required
- placeholder="123 Palm Ave"
- />
- </div>
+              <div class="form-group">
+                <label for="order-name">Full name</label>
+                <input
+                  id="order-name"
+                  name="name"
+                  type="text"
+                  autocomplete="name"
+                  required
+                  placeholder="Jane Smith"
+                />
+              </div>
 
- <div class="form-row">
- <div class="form-group">
- <label for="order-city">City</label>
- <input
- id="order-city"
- name="city"
- type="text"
- autocomplete="address-level2"
- required
- placeholder="Tampa"
- />
- </div>
- <div class="form-group">
- <label for="order-state">State</label>
- <input
- id="order-state"
- name="state"
- type="text"
- autocomplete="address-level1"
- required
- placeholder="FL"
- />
- </div>
- </div>
+              <div class="form-group">
+                <label for="order-email">Email</label>
+                <input
+                  id="order-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                  placeholder="you@email.com"
+                />
+              </div>
 
- <div class="form-group">
- <label for="order-zip">ZIP code</label>
- <input
- id="order-zip"
- name="zip"
- type="text"
- autocomplete="postal-code"
- required
- placeholder="33601"
- />
- </div>
+              <div class="form-group">
+                <label for="order-phone"
+                  >Phone <span class="hint">(recommended)</span></label
+                >
+                <input
+                  id="order-phone"
+                  name="phone"
+                  type="tel"
+                  autocomplete="tel"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
 
- <div class="form-group">
- <label for="order-notes"
- >Notes <span class="hint">(optional)</span></label
- >
- <textarea
- id="order-notes"
- name="notes"
- placeholder="Gift message, framing questions, etc."
- ></textarea>
- </div>
+              <div class="form-group">
+                <label for="order-address">Shipping street address</label>
+                <input
+                  id="order-address"
+                  name="address"
+                  type="text"
+                  autocomplete="street-address"
+                  required
+                  placeholder="123 Palm Ave"
+                />
+              </div>
 
- <button class="btn btn-primary btn-block" type="submit">
- Submit order details
- </button>
- </form>
- </div>
- </div>
- </section>
- </main>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="order-city">City</label>
+                  <input
+                    id="order-city"
+                    name="city"
+                    type="text"
+                    autocomplete="address-level2"
+                    required
+                    placeholder="Tampa"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="order-state">State</label>
+                  <input
+                    id="order-state"
+                    name="state"
+                    type="text"
+                    autocomplete="address-level1"
+                    required
+                    placeholder="FL"
+                  />
+                </div>
+              </div>
 
- <footer class="site-footer">
- <div class="container">
- <div class="footer-inner">
- <div>
- <div class="footer-brand" data-business-name>
- Florida <span>Nature</span> Prints
- </div>
- <p data-tagline>Calm moments from the Sunshine State</p>
- </div>
- <ul class="footer-links">
- <li><a href="gallery.html">Gallery</a></li>
- <li><a href="shop.html">Shop</a></li>
- <li><a href="game.html">Gator Life</a></li>
- <li><a href="about.html">About</a></li>
- <li><a href="contact.html">Contact</a></li>
- </ul>
- </div>
- <div class="footer-bottom">
- &copy; <span id="year"></span>
- <span data-business-name>Florida Nature Prints</span>. All rights
- reserved.
- </div>
- </div>
- </footer>
+              <div class="form-group">
+                <label for="order-zip">ZIP code</label>
+                <input
+                  id="order-zip"
+                  name="zip"
+                  type="text"
+                  autocomplete="postal-code"
+                  required
+                  placeholder="33601"
+                />
+              </div>
 
- <script>
- document.getElementById("year").textContent = new Date().getFullYear();
- </script>
- <script src="js/config.js"></script>
- <script src="js/main.js"></script>
- </body>
+              <div class="form-group">
+                <label for="order-notes"
+                  >Notes <span class="hint">(optional)</span></label
+                >
+                <textarea
+                  id="order-notes"
+                  name="notes"
+                  placeholder="Gift message, left/right handed mug, etc."
+                ></textarea>
+              </div>
+
+              <button class="btn btn-primary btn-block" type="submit">
+                Submit order details
+              </button>
+              <p class="form-after-submit">
+                Next: use a payment button so I can match your payment to this
+                order.
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-brand" data-business-name>
+              Florida <span>Nature</span> Prints
+            </div>
+            <p data-tagline>Calm moments from the Sunshine State</p>
+          </div>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="game.html">Gator Life</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-bottom">
+          &copy; <span id="year"></span>
+          <span data-business-name>Florida Nature Prints</span>. All rights
+          reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+  </body>
 </html>
