@@ -217,12 +217,14 @@
   display: block;
   width: 100%;
   height: auto;
-  max-height: min(62vh, 520px);
+  max-height: min(78vh, 720px);
+  aspect-ratio: 360 / 560;
   object-fit: contain;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   touch-action: none;
   background: #1a3020;
+  margin: 0 auto;
 }
 
 .play-hint {

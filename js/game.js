@@ -7,10 +7,10 @@
   "use strict";
 
   const STORAGE = "gatorLifeProgress_v2";
-  // Higher internal resolution = smaller, clearer pixel art when scaled up
-  const W = 480;
-  const H = 270;
-  const GRAV = 0.42;
+  // Portrait playfield: taller than wide so the action reads vertically
+  const W = 360;
+  const H = 560;
+  const GRAV = 0.48;
   const TOTAL_LEVELS = 50;
 
   const state = {
@@ -248,12 +248,12 @@
   }
 
   function gatorScale(i) {
-    // Small miniature gator; grows only slightly with stage
-    if (i < 10) return 0.85;
-    if (i < 20) return 0.95;
-    if (i < 30) return 1;
-    if (i < 40) return 1.08;
-    return 1.15;
+    // Bigger, more visible upright gator
+    if (i < 10) return 2.2;
+    if (i < 20) return 2.4;
+    if (i < 30) return 2.6;
+    if (i < 40) return 2.8;
+    return 3.0;
   }
 
   function load() {
@@ -329,24 +329,25 @@
     const hazards = [];
     const quizzes = [];
     const items = [];
-    const len = 1400 + idx * 40;
-    const groundY = 228;
+    const explosions = [];
+    const len = 1600 + idx * 48;
+    const groundY = 500;
 
     // ground segments with gaps
     let x = 0;
     while (x < len) {
-      const w = 110 + Math.floor(Math.random() * 80) + (idx < 5 ? 50 : 0);
-      platforms.push({ x: x, y: groundY, w: w, h: 44 });
-      const gap = 28 + Math.min(55, 12 + idx);
-      x += w + (idx > 3 && Math.random() < 0.35 ? gap : 10);
+      const w = 120 + Math.floor(Math.random() * 90) + (idx < 5 ? 55 : 0);
+      platforms.push({ x: x, y: groundY, w: w, h: 64 });
+      const gap = 32 + Math.min(60, 14 + idx);
+      x += w + (idx > 3 && Math.random() < 0.35 ? gap : 12);
     }
-    // floating pads
-    for (let i = 0; i < 5 + Math.floor(idx / 5); i++) {
+    // floating pads (higher in the tall frame)
+    for (let i = 0; i < 6 + Math.floor(idx / 5); i++) {
       platforms.push({
-        x: 160 + i * 180 + (idx % 7) * 11,
-        y: 150 - (i % 3) * 24,
-        w: 56 + (idx % 5) * 4,
-        h: 10,
+        x: 140 + i * 170 + (idx % 7) * 12,
+        y: 320 - (i % 4) * 36,
+        w: 64 + (idx % 5) * 5,
+        h: 12,
       });
     }
 
@@ -374,43 +375,44 @@
           kind: "fire",
           x: baseX,
           y: groundY - 2,
-          w: 18,
-          h: 16,
+          w: 28,
+          h: 28,
           vx: 0,
           baseY: groundY - 2,
           phase: Math.random() * 10,
-          tall: 12 + Math.random() * 6,
+          tall: 22 + Math.random() * 10,
         });
       } else if (k === "cave") {
         hazards.push({
           kind: "cave",
           x: baseX,
-          y: groundY - 42,
-          w: 26,
-          h: 44,
+          y: groundY - 72,
+          w: 42,
+          h: 74,
           open: true,
           phase: Math.random() * 6,
           period: 2.2 + Math.random() * 1.4,
           vx: 0,
-          baseY: groundY - 42,
+          baseY: groundY - 72,
         });
       } else {
         const fly = k === "hawk" || k === "bird";
+        const big = k === "panther" || k === "boar" || k === "rival";
         hazards.push({
           kind: k,
           x: baseX,
-          y: fly ? groundY - 70 : groundY - 16,
-          w: k === "panther" || k === "boar" || k === "rival" ? 18 : 14,
-          h: k === "panther" || k === "boar" ? 12 : 10,
+          y: fly ? groundY - 110 : groundY - 36,
+          w: big ? 36 : 28,
+          h: big ? 32 : 26,
           vx:
             fly
-              ? 1.05 + idx * 0.02
+              ? 1.35 + idx * 0.025
               : k === "boat"
-                ? 1.2
+                ? 1.5
                 : k === "panther"
-                  ? 0.75
-                  : 0.55,
-          baseY: fly ? groundY - 70 : groundY - 16,
+                  ? 0.95
+                  : 0.7,
+          baseY: fly ? groundY - 110 : groundY - 36,
           phase: Math.random() * 10,
         });
       }
@@ -420,8 +422,8 @@
     const qn = 2 + (idx % 3);
     for (let i = 0; i < qn; i++) {
       quizzes.push({
-        x: 220 + ((i + 1) * len) / (qn + 2),
-        y: groundY - 48,
+        x: 240 + ((i + 1) * len) / (qn + 2),
+        y: groundY - 70,
         hit: false,
       });
     }
@@ -429,13 +431,16 @@
     // snacks
     for (let i = 0; i < 8 + (idx % 5); i++) {
       items.push({
-        x: 140 + i * 90,
-        y: groundY - 36 - (i % 3) * 22,
+        x: 150 + i * 100,
+        y: groundY - 50 - (i % 3) * 28,
         taken: false,
       });
     }
 
     const sc = gatorScale(idx);
+    // Upright sprite ~14 x 22 base
+    const pw = 14 * sc;
+    const ph = 22 * sc;
     return {
       idx: idx,
       len: len,
@@ -443,6 +448,9 @@
       hazards: hazards,
       quizzes: quizzes,
       items: items,
+      explosions: explosions,
+      asteroids: [],
+      astroTimer: 1.2 + Math.random(),
       goalX: len - 50,
       camera: 0,
       time: 0,
@@ -453,12 +461,11 @@
       owlCheer: null,
       player: {
         x: 48,
-        y: 160,
+        y: groundY - ph - 4,
         vx: 0,
         vy: 0,
-        // Compact hitbox matching tiny gator sprite (~20x12)
-        w: 20 * sc,
-        h: 12 * sc,
+        w: pw,
+        h: ph,
         onGround: false,
         facing: 1,
       },
@@ -518,37 +525,56 @@
     });
   }
 
-  // Tiny pseudo-3D alligator sprite (rows of 1px colors). Facing right.
-  // . empty  D dark  M mid  L light  B belly  Y stripe/eye  K black  N nostril
+  // UPRIGHT miniature gator (taller than wide) with light/dark “3D” shading.
+  // Facing right. Columns ~14, rows ~22.
+  // . empty  D dark  M mid  L light  B belly  Y stripe/eye  K black  N snout tip
   const GATOR_SPRITE = [
-    "......LLL.........",
-    "....LLMMMML.......",
-    "...LMMYYYYMML.....",
-    "..LMMMDDDMYMLL....",
-    ".LMMMMDDDDMYYLK...",
-    "LMMBBBMMMDDMMNLK..",
-    "LMBBBBBMMMDMMMLK..",
-    ".DMBBBBMMMDMMDD...",
-    "..DMM.MM..MM.DD...",
-    "...DD.DD..DD.D....",
+    "....LLLMML....",
+    "...LMMMMMML...",
+    "..LMMYYYYMML..",
+    "..LMMYKKYMML..",
+    ".LMMMYYYYMMML.",
+    ".LMMMMMMMMMML.",
+    "LMMMBBBBMMMNL.",
+    "LMMBBBBBBMMNL.",
+    "LMMBBBBBBMMDD.",
+    ".LMMBBBBMMMDD.",
+    ".LMMMMMMMMMDD.",
+    "..LMMMMMMMDD..",
+    "..LMMDDMMMDD..",
+    "...LMDD.MDD...",
+    "...LMDD.MDD...",
+    "...DM.D.D.D...",
+    "...DM.D.D.D...",
+    "....D...D.....",
+    "....D...D.....",
+    "...DD...DD....",
+    "...DD...DD....",
+    "..............",
   ];
   const GATOR_EGG = [
-    "..LLLL..",
-    ".LMMMML.",
-    "LMMYYMML",
-    "LMDDDMML",
-    "LMDDDMML",
-    ".LMMMML.",
-    "..LDDL..",
-  ];
+    "...LLLLL...",
+    "..LMMMMML..",
+    ".LMMYYY MML.",
+    ".LMMYKKYMML.",
+    "LMMMYYYYMMML",
+    "LMMBBBBBMMML",
+    "LMMBBBBBMMML",
+    ".LMMBBBMMML.",
+    "..LMMMMMML..",
+    "...LDDDDL...",
+    "....LDDL....",
+  ].map(function (r) {
+    return r.replace(" ", "M");
+  });
   const PAL = {
-    D: "#1e4a28",
-    M: "#2f6b38",
-    L: "#4a9a55",
-    B: "#6aaa58",
-    Y: "#e8d060",
-    K: "#101810",
-    N: "#0a0a0a",
+    D: "#163820",
+    M: "#2a6b36",
+    L: "#55b060",
+    B: "#7ec86a",
+    Y: "#f0d24a",
+    K: "#0c100c",
+    N: "#1a3a22",
   };
 
   function drawSprite(rows, ox, oy, facing, pivotW) {
@@ -577,9 +603,10 @@
     const rows = world && world.idx < 5 ? GATOR_EGG : GATOR_SPRITE;
     const sw = rows[0].length;
     const sh = rows.length;
-    const s = Math.max(1, Math.round(scale));
+    const s = Math.max(2, Math.round(scale));
     const x = Math.floor(p.x - world.camera);
     const y = Math.floor(p.y + Math.max(0, p.h - sh * s));
+    // Soft outline so gator pops on bright photos
     ctx.save();
     if (facing < 0) {
       ctx.translate(x + (sw * s) / 2, y);
@@ -593,11 +620,181 @@
       for (let c = 0; c < sw; c++) {
         const ch = rows[r][c];
         if (!ch || ch === ".") continue;
+        // 1px dark outline neighbors
+        ctx.fillStyle = "rgba(0,0,0,0.55)";
+        ctx.fillRect(c - 0.15, r - 0.15, 1.3, 1.3);
+      }
+    }
+    for (let r = 0; r < sh; r++) {
+      for (let c = 0; c < sw; c++) {
+        const ch = rows[r][c];
+        if (!ch || ch === ".") continue;
         ctx.fillStyle = PAL[ch] || "#2f6b38";
         ctx.fillRect(c, r, 1, 1);
       }
     }
+    // young stripes overlay
+    if (world && world.idx >= 5 && world.idx < 20) {
+      ctx.fillStyle = "#f0d24a";
+      ctx.fillRect(4, 8, 1, 6);
+      ctx.fillRect(7, 9, 1, 5);
+      ctx.fillRect(10, 8, 1, 6);
+    }
     ctx.restore();
+  }
+
+  function spawnAsteroid() {
+    if (!world) return;
+    const cam = world.camera;
+    world.asteroids.push({
+      x: cam + 30 + Math.random() * (W - 60),
+      y: -20 - Math.random() * 40,
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: 2.2 + Math.random() * 2.4 + world.idx * 0.03,
+      r: 10 + Math.random() * 10,
+      rot: Math.random() * Math.PI,
+      spin: (Math.random() - 0.5) * 0.2,
+      alive: true,
+    });
+  }
+
+  function boom(x, y, power) {
+    power = power || 1;
+    if (!world) return;
+    const n = 14 + Math.floor(power * 10);
+    for (let i = 0; i < n; i++) {
+      const ang = (Math.PI * 2 * i) / n + Math.random() * 0.4;
+      const sp = 1.5 + Math.random() * 4 * power;
+      world.explosions.push({
+        x: x,
+        y: y,
+        vx: Math.cos(ang) * sp,
+        vy: Math.sin(ang) * sp - 1,
+        life: 0.45 + Math.random() * 0.45,
+        max: 0.9,
+        size: 3 + Math.random() * 6 * power,
+        color: i % 3 === 0 ? "#fff2a0" : i % 3 === 1 ? "#ff7a20" : "#ff3030",
+      });
+    }
+    // Flash ring
+    world.explosions.push({
+      x: x,
+      y: y,
+      vx: 0,
+      vy: 0,
+      life: 0.28,
+      max: 0.28,
+      size: 28 * power,
+      color: "rgba(255,200,80,0.5)",
+      ring: true,
+    });
+    // Damage if player near blast
+    if (world.player) {
+      const dx = world.player.x + world.player.w / 2 - x;
+      const dy = world.player.y + world.player.h / 2 - y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 38 * power + world.player.w) {
+        hurt();
+        gatorSay("Whoa, asteroid!", false);
+      }
+    }
+  }
+
+  function updateSkyDanger(dt) {
+    if (!world || world.won) return;
+    world.astroTimer -= dt;
+    // More frequent drops on later levels
+    const interval = Math.max(0.85, 2.4 - world.idx * 0.03);
+    if (world.astroTimer <= 0) {
+      spawnAsteroid();
+      if (world.idx > 8 && Math.random() < 0.35) spawnAsteroid();
+      world.astroTimer = interval * (0.7 + Math.random() * 0.7);
+    }
+
+    world.asteroids = world.asteroids.filter(function (a) {
+      if (!a.alive) return false;
+      a.x += a.vx;
+      a.y += a.vy;
+      a.vy += 0.04;
+      a.rot += a.spin;
+      // Hit player
+      const pr = {
+        x: world.player.x,
+        y: world.player.y,
+        w: world.player.w,
+        h: world.player.h,
+      };
+      const box = {
+        x: a.x - a.r * 0.7,
+        y: a.y - a.r * 0.7,
+        w: a.r * 1.4,
+        h: a.r * 1.4,
+      };
+      if (aabb(pr, box)) {
+        boom(a.x, a.y, 1.15);
+        a.alive = false;
+        return false;
+      }
+      // Hit ground / platforms
+      if (a.y > 500 || solidAt(a.x - 4, a.y - 4, 8, 8)) {
+        boom(a.x, a.y, 1.25);
+        a.alive = false;
+        return false;
+      }
+      if (a.y > H + 80) return false;
+      return true;
+    });
+
+    world.explosions = world.explosions.filter(function (e) {
+      e.life -= dt;
+      e.x += e.vx;
+      e.y += e.vy;
+      e.vy += 0.08;
+      return e.life > 0;
+    });
+  }
+
+  function drawAsteroidsAndBooms(cam) {
+    // Falling asteroids
+    world.asteroids.forEach(function (a) {
+      const x = a.x - cam;
+      const y = a.y;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(a.rot);
+      // rock body
+      ctx.fillStyle = "#5a4030";
+      ctx.fillRect(-a.r * 0.7, -a.r * 0.55, a.r * 1.4, a.r * 1.1);
+      ctx.fillStyle = "#3a2818";
+      ctx.fillRect(-a.r * 0.4, -a.r * 0.3, a.r * 0.5, a.r * 0.45);
+      ctx.fillStyle = "#8a7060";
+      ctx.fillRect(-a.r * 0.15, -a.r * 0.5, a.r * 0.35, a.r * 0.3);
+      // fiery trail
+      ctx.fillStyle = "rgba(255,120,20,0.75)";
+      ctx.fillRect(-3, -a.r - 10, 6, 12);
+      ctx.fillStyle = "rgba(255,220,80,0.85)";
+      ctx.fillRect(-2, -a.r - 16, 4, 8);
+      ctx.restore();
+    });
+
+    // Explosions
+    world.explosions.forEach(function (e) {
+      const x = e.x - cam;
+      const alpha = Math.max(0, e.life / (e.max || 0.6));
+      ctx.globalAlpha = alpha;
+      if (e.ring) {
+        ctx.strokeStyle = e.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, e.y, e.size * (1.2 - alpha), 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = e.color;
+        const s = e.size * (0.5 + alpha);
+        ctx.fillRect(x - s / 2, e.y - s / 2, s, s);
+      }
+      ctx.globalAlpha = 1;
+    });
   }
 
   function drawHazard(h, cam) {
@@ -607,15 +804,15 @@
     const flick = Math.sin((world ? world.time : 0) * 14 + h.phase) * 0.5 + 0.5;
 
     if (h.kind === "fire") {
-      const tall = (h.tall || 12) + flick * 4;
+      const tall = (h.tall || 20) + flick * 8;
       ctx.fillStyle = "#2a1810";
-      ctx.fillRect(x + 1, y + 8, h.w - 2, 4);
+      ctx.fillRect(x + 1, y + 14, h.w - 2, 6);
       ctx.fillStyle = "#ff5500";
-      ctx.fillRect(x + 3, y + 8 - tall, h.w - 6, tall);
+      ctx.fillRect(x + 3, y + 14 - tall, h.w - 6, tall);
       ctx.fillStyle = "#ffcc33";
-      ctx.fillRect(x + 5, y + 10 - tall * 0.65, Math.max(2, h.w - 10), tall * 0.45);
+      ctx.fillRect(x + 6, y + 16 - tall * 0.65, Math.max(3, h.w - 12), tall * 0.5);
       ctx.fillStyle = "#fff6a0";
-      ctx.fillRect(x + Math.floor(h.w / 2), y + 6 - tall, 2, 4);
+      ctx.fillRect(x + Math.floor(h.w / 2) - 1, y + 10 - tall, 4, 8);
       return;
     }
 
@@ -639,88 +836,97 @@
     }
 
     if (h.kind === "rattler") {
+      // Upright coiled rattler silhouette (taller, more visible)
       ctx.fillStyle = "#b89540";
-      ctx.fillRect(x, y + 5, 14, 3);
+      ctx.fillRect(x + 6, y + 4, 10, 18);
       ctx.fillStyle = "#8a6a20";
-      ctx.fillRect(x + 2, y + 4, 2, 2);
-      ctx.fillRect(x + 6, y + 4, 2, 2);
-      ctx.fillRect(x + 10, y + 4, 2, 2);
+      ctx.fillRect(x + 8, y + 6, 3, 3);
+      ctx.fillRect(x + 8, y + 11, 3, 3);
       ctx.fillStyle = "#d4b060";
-      ctx.fillRect(x + 12, y + 2, 5, 5);
+      ctx.fillRect(x + 4, y, 14, 10);
       ctx.fillStyle = "#111";
-      ctx.fillRect(x + 14, y + 3, 1, 1);
+      ctx.fillRect(x + 8, y + 3, 2, 2);
+      ctx.fillRect(x + 13, y + 3, 2, 2);
       ctx.fillStyle = "#e8d080";
-      ctx.fillRect(x - 2, y + 5, 3, 2);
+      ctx.fillRect(x + 8, y + 20, 6, 4);
       return;
     }
 
     if (h.kind === "hawk" || h.kind === "bird") {
       ctx.fillStyle = h.kind === "hawk" ? "#5a4030" : "#333";
-      ctx.fillRect(x, y + 2, 10, 4);
-      ctx.fillRect(x + 8, y, 5, 3);
+      ctx.fillRect(x + 4, y + 6, 16, 8);
+      ctx.fillRect(x + 14, y + 2, 10, 6);
       ctx.fillStyle = "#222";
-      ctx.fillRect(x + 1, y + 3, 2, 1);
+      ctx.fillRect(x + 6, y + 8, 3, 2);
       ctx.fillStyle = "#6a5030";
-      ctx.fillRect(x - 3, y + 2, 4, 2);
-      ctx.fillRect(x + 7, y + 2, 4, 2);
+      ctx.fillRect(x - 4, y + 6, 10, 5);
+      ctx.fillRect(x + 14, y + 6, 10, 5);
       return;
     }
 
     if (h.kind === "panther") {
+      // More upright stalking pose
       ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(x, y + 2, 16, 7);
-      ctx.fillRect(x + 13, y, 6, 6);
+      ctx.fillRect(x + 6, y + 4, 14, 22);
+      ctx.fillRect(x + 4, y, 16, 12);
       ctx.fillStyle = "#e0b040";
-      ctx.fillRect(x + 16, y + 2, 1, 1);
+      ctx.fillRect(x + 8, y + 4, 2, 2);
+      ctx.fillRect(x + 14, y + 4, 2, 2);
       ctx.fillStyle = "#0a0a0a";
-      ctx.fillRect(x + 3, y + 8, 2, 3);
-      ctx.fillRect(x + 10, y + 8, 2, 3);
+      ctx.fillRect(x + 8, y + 24, 4, 6);
+      ctx.fillRect(x + 14, y + 24, 4, 6);
       return;
     }
 
     if (h.kind === "boar") {
       ctx.fillStyle = "#5a4030";
-      ctx.fillRect(x, y + 2, 14, 8);
+      ctx.fillRect(x + 4, y + 6, 18, 16);
+      ctx.fillRect(x + 8, y, 12, 10);
       ctx.fillStyle = "#f0e8d8";
-      ctx.fillRect(x + 12, y + 5, 4, 2);
+      ctx.fillRect(x + 18, y + 10, 6, 3);
       ctx.fillStyle = "#2a2010";
-      ctx.fillRect(x + 2, y + 9, 2, 2);
-      ctx.fillRect(x + 8, y + 9, 2, 2);
+      ctx.fillRect(x + 8, y + 20, 4, 5);
+      ctx.fillRect(x + 16, y + 20, 4, 5);
       return;
     }
 
     if (h.kind === "boat") {
       ctx.fillStyle = "#7a4518";
-      ctx.fillRect(x, y + 4, 16, 6);
+      ctx.fillRect(x, y + 10, 28, 10);
       ctx.fillStyle = "#c8c8c8";
-      ctx.fillRect(x + 6, y - 2, 2, 6);
+      ctx.fillRect(x + 10, y, 4, 12);
       ctx.fillStyle = "#fff";
-      ctx.fillRect(x + 8, y - 1, 5, 3);
+      ctx.fillRect(x + 14, y + 2, 10, 6);
       return;
     }
 
     if (h.kind === "raccoon") {
       ctx.fillStyle = "#6b5b4b";
-      ctx.fillRect(x, y + 2, 10, 6);
+      ctx.fillRect(x + 4, y + 4, 14, 16);
+      ctx.fillRect(x + 6, y, 10, 8);
       ctx.fillStyle = "#111";
-      ctx.fillRect(x + 2, y + 3, 6, 2);
+      ctx.fillRect(x + 8, y + 3, 8, 3);
       return;
     }
 
     if (h.kind === "snake") {
       ctx.fillStyle = "#3d6a32";
-      ctx.fillRect(x, y + 5, 12, 2);
-      ctx.fillRect(x + 10, y + 2, 3, 4);
+      ctx.fillRect(x + 8, y + 4, 8, 18);
+      ctx.fillRect(x + 4, y, 14, 8);
       return;
     }
 
     if (h.kind === "rival") {
-      drawPixelGator({ x: h.x, y: h.y, w: 18, h: 12 }, 1, -1);
+      drawPixelGator(
+        { x: h.x, y: h.y, w: 14 * 2.4, h: 22 * 2.4 },
+        2.4,
+        -1
+      );
       return;
     }
 
     ctx.fillStyle = "#5c4030";
-    ctx.fillRect(x, y + 2, 10, 5);
+    ctx.fillRect(x, y + 2, 16, 10);
   }
 
   function drawWorld() {
@@ -753,13 +959,15 @@
     // goal flag
     const gx = Math.floor(world.goalX - cam);
     ctx.fillStyle = "#f5f5f5";
-    ctx.fillRect(gx, 160, 3, 68);
+    ctx.fillRect(gx, 360, 4, 140);
     ctx.fillStyle = "#3cb371";
-    ctx.fillRect(gx + 3, 160, 12, 9);
+    ctx.fillRect(gx + 4, 360, 18, 14);
 
     world.hazards.forEach(function (h) {
       drawHazard(h, cam);
     });
+
+    drawAsteroidsAndBooms(cam);
 
     drawPixelGator(p, gatorScale(world.idx), p.facing);
 
@@ -828,18 +1036,18 @@
 
   function updatePlayer(dt) {
     const p = world.player;
-    const sp = 2.1 + Math.min(1.1, world.idx * 0.02);
+    const sp = 2.6 + Math.min(1.3, world.idx * 0.025);
     let move = 0;
     if (keys["arrowleft"] || keys["a"]) move -= 1;
     if (keys["arrowright"] || keys["d"]) move += 1;
     p.vx = move * sp;
     if (move) p.facing = move > 0 ? 1 : -1;
     if ((keys["arrowup"] || keys["w"] || keys[" "] || keys["z"]) && p.onGround) {
-      p.vy = -6.8 - Math.min(1.0, world.idx * 0.025);
+      p.vy = -8.2 - Math.min(1.2, world.idx * 0.03);
       p.onGround = false;
     }
     p.vy += GRAV;
-    if (p.vy > 9) p.vy = 9;
+    if (p.vy > 11) p.vy = 11;
 
     // Jump callout (edge-trigger-ish)
     if (
@@ -872,15 +1080,15 @@
       p.vy = 0;
     }
 
-    if (p.y > H + 20) {
+    if (p.y > H + 40) {
       hurt();
-      p.x = 40;
-      p.y = 80;
+      p.x = 48;
+      p.y = 400;
       p.vy = 0;
       world.camera = 0;
     }
 
-    world.camera = Math.max(0, Math.min(world.len - W, p.x - 120));
+    world.camera = Math.max(0, Math.min(world.len - W, p.x - 100));
   }
 
   function hurt() {
@@ -1204,6 +1412,7 @@
 
     updatePlayer(dt);
     updateHazards(dt);
+    updateSkyDanger(dt);
     updateItems();
     updateQuizzes();
     if (!world.won) updateGoal();
@@ -1236,7 +1445,7 @@
     $("#level-blurb").textContent =
       "Dodge fire pits, closing caves, rattlers, hawks, panthers, and more. Grab snacks and beat the flag!";
     $("#play-hint").textContent =
-      "Jump fire · dash through open caves · avoid predators · yellow ? = NPC meme quiz";
+      "Jump fire · caves · predators · dodge falling asteroids · yellow ? = quiz";
     show("play");
     world._last = 0;
     lastGatorLineAt = 0;
