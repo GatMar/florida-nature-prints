@@ -40,10 +40,58 @@
   let gatorImg = null;
   let gatorImgReady = false;
   let touchStart = null;
+  const bgImages = [];
+  let bgReady = false;
+
+  // Same gallery photos used on the site (maze plays over these)
+  const BG_FILES = [
+    "golden-gulf.jpeg",
+    "crimson-marsh.jpeg",
+    "marsh-at-dusk.jpeg",
+    "pink-cloud-reflections.jpeg",
+    "open-water-sunset.jpeg",
+    "sea-and-sky.jpeg",
+    "horizon-fire.jpeg",
+    "amber-waves.jpeg",
+    "clouded-gold.jpeg",
+    "storm-lit-sunset.jpeg",
+    "evening-shore.jpeg",
+    "beach-horizon-glow.jpeg",
+    "footprints-at-sunset.jpeg",
+    "orange-afterglow.jpeg",
+    "pink-bay-clouds.jpg",
+    "sky-on-fire.jpeg",
+    "sun-over-the-gulf.jpeg",
+    "heron-silhouette.jpeg",
+    "gator-in-the-green.jpeg",
+    "great-blue-heron.jpeg",
+  ];
 
   const $ = function (s) {
     return document.querySelector(s);
   };
+
+  function loadBackgrounds() {
+    let left = BG_FILES.length;
+    if (!left) {
+      bgReady = true;
+      return;
+    }
+    BG_FILES.forEach(function (file) {
+      const img = new Image();
+      img.onload = img.onerror = function () {
+        if (img.naturalWidth) bgImages.push(img);
+        left -= 1;
+        if (left <= 0) bgReady = true;
+      };
+      img.src = "images/prints/" + file;
+    });
+  }
+
+  function bgForLevel(idx) {
+    if (!bgImages.length) return null;
+    return bgImages[idx % bgImages.length];
+  }
 
   /* ---------- Haptics ---------- */
   function haptic(pattern) {
@@ -109,143 +157,227 @@
     return "Adult";
   }
 
-  /* ---------- Maze generation (Pac-Man style grid) ---------- */
-  // 0 path, 1 wall, 2 pellet, 3 power, 4 player, 5 enemy gate
+  /* ---------- Classic Pac-Man style maze templates ---------- */
+  // # wall  . path  (pellets filled later)  15 wide × 19 tall
+  // Designed as TOP-DOWN corridors (not platform terraces)
+  const MAZE_TEMPLATES = [
+    [
+      "###############",
+      "#.............#",
+      "#.###.#.###.#.#",
+      "#o#...#...#...#",
+      "#.#.#####.#.###",
+      "#.#.......#...#",
+      "#.#####.#.###.#",
+      "#.....#.#.....#",
+      "###.#.#.#.#####",
+      "....#.#.#.....#",
+      "###.#.###.#####",
+      "#.....#.......#",
+      "#.###.#.#####.#",
+      "#o#...#.....#.#",
+      "#.#.#######.#.#",
+      "#.#.........#.#",
+      "#.#####.###.#.#",
+      "#............o#",
+      "###############",
+    ],
+    [
+      "###############",
+      "#......#......#",
+      "#.####.#.####.#",
+      "#o...........o#",
+      "###.#.#####.###",
+      "#...#...#.....#",
+      "#.#####.#.###.#",
+      "#.#.....#...#.#",
+      "#.#.###.###.#.#",
+      "....#.....#....",
+      "#.#.###.###.#.#",
+      "#.#...#.....#.#",
+      "#.###.#.#####.#",
+      "#.....#...#...#",
+      "###.#####.#.###",
+      "#o...........o#",
+      "#.####.#.####.#",
+      "#......#......#",
+      "###############",
+    ],
+    [
+      "###############",
+      "#.............#",
+      "#.##.#####.##.#",
+      "#o#.........#o#",
+      "#.#.##.#.##.#.#",
+      "#...#..#..#...#",
+      "###.#.###.#.###",
+      "#...#.....#...#",
+      "#.#.#######.#.#",
+      "....#.....#....",
+      "#.#.#######.#.#",
+      "#...#.....#...#",
+      "###.#.###.#.###",
+      "#...#..#..#...#",
+      "#.#.##.#.##.#.#",
+      "#o#.........#o#",
+      "#.##.#####.##.#",
+      "#.............#",
+      "###############",
+    ],
+  ];
+
   function seeded(idx, n) {
     const x = Math.sin(idx * 12.9898 + n * 78.233) * 43758.5453;
     return x - Math.floor(x);
   }
 
-  function emptyGrid() {
+  function templateToGrid(rows) {
     const g = [];
     for (let y = 0; y < ROWS; y++) {
       g[y] = [];
-      for (let x = 0; x < COLS; x++) g[y][x] = 1;
+      const line = rows[y] || "###############";
+      for (let x = 0; x < COLS; x++) {
+        const ch = line[x] || "#";
+        if (ch === "#") g[y][x] = 1;
+        else if (ch === "o") g[y][x] = 3;
+        else g[y][x] = 0; // path, pellets added next
+      }
     }
     return g;
   }
 
-  function carve(g, x, y) {
-    if (x > 0 && x < COLS - 1 && y > 0 && y < ROWS - 1) g[y][x] = 0;
+  function mirrorH(rows) {
+    return rows.map(function (line) {
+      return line.split("").reverse().join("");
+    });
   }
 
   function buildMaze(idx) {
-    const g = emptyGrid();
-    // Outer wall stays solid; carve a classic-ish corridor maze
-    for (let y = 1; y < ROWS - 1; y++) {
-      for (let x = 1; x < COLS - 1; x++) {
-        // Base open checker + long halls
-        if (y % 2 === 1 || x % 2 === 1) carve(g, x, y);
+    const base = MAZE_TEMPLATES[idx % MAZE_TEMPLATES.length];
+    let rows = base.slice();
+    if (Math.floor(idx / MAZE_TEMPLATES.length) % 2 === 1) {
+      rows = mirrorH(rows);
+    }
+    // Light per-level tweak: flip a few interior wall/path cells (keep border)
+    const g = templateToGrid(rows);
+    for (let i = 0; i < 6 + (idx % 5); i++) {
+      const x = 2 + Math.floor(seeded(idx, i) * (COLS - 4));
+      const y = 2 + Math.floor(seeded(idx, i + 40) * (ROWS - 4));
+      // Don't touch center house band or tunnels
+      if (y === Math.floor(ROWS / 2)) continue;
+      if (y >= 8 && y <= 10 && x >= 5 && x <= 9) continue;
+      if (g[y][x] === 1 && seeded(idx, i + 70) > 0.55) g[y][x] = 0;
+      else if (g[y][x] === 0 && seeded(idx, i + 90) > 0.72) {
+        // only place wall if neighbors keep connectivity-ish
+        let openN = 0;
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+          const nx = x + d[0];
+          const ny = y + d[1];
+          if (nx > 0 && ny > 0 && nx < COLS - 1 && ny < ROWS - 1 && g[ny][nx] !== 1)
+            openN++;
+        });
+        if (openN >= 3) g[y][x] = 1;
       }
     }
 
-    // Add wall blocks for maze feel (deterministic by level)
-    for (let i = 0; i < 28 + (idx % 12); i++) {
-      const x = 1 + Math.floor(seeded(idx, i) * (COLS - 2));
-      const y = 1 + Math.floor(seeded(idx, i + 50) * (ROWS - 2));
-      // Keep center-ish open for enemy house
-      if (Math.abs(x - 7) <= 2 && Math.abs(y - 9) <= 2) continue;
-      if (y % 2 === 0 && x % 2 === 0) g[y][x] = 1;
-      // Small wall runs
-      if (seeded(idx, i + 90) > 0.55) {
-        const len = 2 + Math.floor(seeded(idx, i + 3) * 3);
-        const horiz = seeded(idx, i + 7) > 0.5;
-        for (let k = 0; k < len; k++) {
-          const wx = horiz ? Math.min(COLS - 2, x + k) : x;
-          const wy = horiz ? y : Math.min(ROWS - 2, y + k);
-          if (Math.abs(wx - 7) <= 1 && Math.abs(wy - 9) <= 1) continue;
-          g[wy][wx] = 1;
-        }
-      }
+    // Ghost house (open center box) — classic Pac layout
+    for (let y = 8; y <= 10; y++) {
+      for (let x = 5; x <= 9; x++) g[y][x] = 0;
     }
+    // House walls ring
+    for (let x = 5; x <= 9; x++) {
+      if (x !== 7) g[7][x] = 1;
+      g[11][x] = 1;
+    }
+    g[8][5] = 1;
+    g[9][5] = 1;
+    g[10][5] = 1;
+    g[8][9] = 1;
+    g[9][9] = 1;
+    g[10][9] = 1;
+    g[7][7] = 0; // door
 
-    // Ensure border walls
-    for (let x = 0; x < COLS; x++) {
-      g[0][x] = 1;
-      g[ROWS - 1][x] = 1;
-    }
-    for (let y = 0; y < ROWS; y++) {
-      g[y][0] = 1;
-      g[y][COLS - 1] = 1;
-    }
-
-    // Side tunnels (Pac-Man wrap feel — open mid-sides)
+    // Side tunnels always open
     const midY = Math.floor(ROWS / 2);
     g[midY][0] = 0;
     g[midY][COLS - 1] = 0;
     g[midY][1] = 0;
     g[midY][COLS - 2] = 0;
 
-    // Enemy house in center
-    for (let y = 8; y <= 10; y++) {
-      for (let x = 5; x <= 9; x++) g[y][x] = 0;
-    }
-    g[7][7] = 0; // door
+    // Player start bottom center-ish
+    const start = { x: 7, y: ROWS - 2 };
+    // Ensure path at start
+    g[start.y][start.x] = 0;
+    g[start.y][start.x - 1] = 0;
+    g[start.y][start.x + 1] = 0;
+    g[start.y - 1][start.x] = 0;
 
-    // Force a clear start corridor bottom-left-ish
-    for (let x = 1; x <= 4; x++) g[ROWS - 3][x] = 0;
-    for (let y = ROWS - 4; y <= ROWS - 2; y++) g[y][2] = 0;
-
-    // Flood-fill from start; open any unreachable paths by punching walls
-    const start = { x: 2, y: ROWS - 3 };
+    // Connectivity fix
     const reach = flood(g, start.x, start.y);
     for (let y = 1; y < ROWS - 1; y++) {
       for (let x = 1; x < COLS - 1; x++) {
-        if (g[y][x] !== 0) continue;
+        if (g[y][x] === 1) continue;
         if (reach[y][x]) continue;
-        // carve a path toward start
         let cx = x;
         let cy = y;
-        while (!reach[cy][cx] && (cx !== start.x || cy !== start.y)) {
+        let guard = 0;
+        while (!reach[cy][cx] && guard++ < 40) {
           if (cx > start.x) cx--;
           else if (cx < start.x) cx++;
           else if (cy > start.y) cy--;
           else if (cy < start.y) cy++;
           g[cy][cx] = 0;
-          // re-flood occasionally is expensive — mark local open
           reach[cy][cx] = true;
         }
       }
     }
 
-    // Place pellets on all open tiles except house and tunnels edges
+    // Pellets on paths (not in ghost house)
     let pellets = 0;
-    for (let y = 1; y < ROWS - 1; y++) {
-      for (let x = 1; x < COLS - 1; x++) {
-        if (g[y][x] !== 0) continue;
-        if (y >= 8 && y <= 10 && x >= 5 && x <= 9) continue;
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        if (g[y][x] === 1) continue;
+        if (y >= 8 && y <= 10 && x >= 5 && x <= 9) {
+          g[y][x] = 0;
+          continue;
+        }
+        if (g[y][x] === 3) {
+          pellets++;
+          continue;
+        }
+        // skip pure tunnel portals
+        if (y === midY && (x === 0 || x === COLS - 1)) {
+          g[y][x] = 0;
+          continue;
+        }
         g[y][x] = 2;
         pellets++;
       }
     }
-
-    // Power pellets in corners of open space
-    const powers = [
-      { x: 1, y: 1 },
-      { x: COLS - 2, y: 1 },
-      { x: 1, y: ROWS - 2 },
-      { x: COLS - 2, y: ROWS - 2 },
+    // Guarantee 4 power pellets if missing
+    const powerSpots = [
+      [1, 1],
+      [COLS - 2, 1],
+      [1, ROWS - 2],
+      [COLS - 2, ROWS - 2],
     ];
-    powers.forEach(function (p) {
-      // find nearest open
-      let best = null;
-      let bestD = 999;
-      for (let y = 1; y < ROWS - 1; y++) {
-        for (let x = 1; x < COLS - 1; x++) {
-          if (g[y][x] !== 2) continue;
-          const d = Math.abs(x - p.x) + Math.abs(y - p.y);
-          if (d < bestD) {
-            bestD = d;
-            best = { x: x, y: y };
-          }
+    powerSpots.forEach(function (s) {
+      let x = s[0];
+      let y = s[1];
+      if (g[y][x] === 1) {
+        // nudge inward
+        x = x < COLS / 2 ? x + 1 : x - 1;
+        y = y < ROWS / 2 ? y + 1 : y - 1;
+      }
+      if (g[y][x] !== 1) {
+        if (g[y][x] !== 3) {
+          g[y][x] = 3;
+          pellets++;
         }
       }
-      if (best) g[best.y][best.x] = 3;
     });
 
-    // Player start
-    g[start.y][start.x] = 0; // path under player
-    // recount pellets
+    // recount
     pellets = 0;
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
@@ -253,26 +385,27 @@
       }
     }
 
-    // Enemies
     const enemyCount = Math.min(6, 2 + Math.floor(idx / 5));
     const enemies = [];
     const kinds = ["🐦", "🐍", "🦝", "🚤", "🦅", "🐗"];
     const colors = ["#ff6b8a", "#7dcea0", "#f0c040", "#6eb5ff", "#c77dff", "#ff9f43"];
     for (let i = 0; i < enemyCount; i++) {
+      const hx = 6 + (i % 3);
+      const hy = 9;
       enemies.push({
-        x: 5 + (i % 5),
-        y: 9,
-        px: (5 + (i % 5) + 0.5) * TILE,
-        py: (9 + 0.5) * TILE,
+        x: hx,
+        y: hy,
+        px: (hx + 0.5) * TILE,
+        py: (hy + 0.5) * TILE,
         dir: DIR_KEYS[i % 4],
         kind: kinds[i % kinds.length],
         color: colors[i % colors.length],
         speed: 1.35 + Math.min(1.1, idx * 0.03) + i * 0.05,
         scatter: i % 2 === 0,
-        homeX: 5 + (i % 5),
-        homeY: 9,
+        homeX: hx,
+        homeY: hy,
         eaten: false,
-        release: 1.2 + i * 1.1,
+        release: 1.0 + i * 1.0,
       });
     }
 
@@ -284,9 +417,9 @@
         y: start.y,
         px: (start.x + 0.5) * TILE,
         py: (start.y + 0.5) * TILE,
-        dir: "right",
-        nextDir: "right",
-        speed: 2.15,
+        dir: "left",
+        nextDir: "left",
+        speed: 2.2,
         mouth: 0,
       },
       enemies: enemies,
@@ -341,67 +474,134 @@
     return { x: (tx + 0.5) * TILE, y: (ty + 0.5) * TILE };
   }
 
-  /* ---------- Drawing ---------- */
+  /* ---------- Drawing (Pac-Man look over gallery photo) ---------- */
+  function wallAt(g, x, y) {
+    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
+    return g[y][x] === 1;
+  }
+
+  function drawPhotoBackground() {
+    const img = bgForLevel(world.idx);
+    if (img) {
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      const scale = Math.max(W / iw, H / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = (W - dw) / 2;
+      const dy = (H - dh) / 2;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(img, dx, dy, dw, dh);
+    } else {
+      ctx.fillStyle = "#0a1a12";
+      ctx.fillRect(0, 0, W, H);
+    }
+    // Darken so neon maze + dots read clearly
+    ctx.fillStyle = "rgba(4, 12, 18, 0.52)";
+    ctx.fillRect(0, 0, W, H);
+  }
+
   function drawMaze() {
     const g = world.grid;
     const t = world.time;
-    // Swamp background
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, "#0a2218");
-    bg.addColorStop(0.5, "#0d2e1f");
-    bg.addColorStop(1, "#081810");
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
 
-    // Soft mist
-    ctx.fillStyle = "rgba(120, 180, 140, 0.04)";
-    ctx.fillRect(0, 40 + Math.sin(t * 0.8) * 6, W, 50);
+    drawPhotoBackground();
+
+    // Soft path tint only (not solid platforms)
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        if (g[y][x] === 1) continue;
+        ctx.fillStyle = "rgba(0, 20, 40, 0.22)";
+        ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+      }
+    }
+
+    // Classic Pac-Man style wall outlines (rounded corridors)
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    const wallColor = world.power > 0 ? "#9ec9ff" : "#3ec6ff";
+    const wallOuter = world.power > 0 ? "#cfe6ff" : "#7de0ff";
 
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
-        const cell = g[y][x];
+        if (g[y][x] !== 1) continue;
         const px = x * TILE;
         const py = y * TILE;
-        if (cell === 1) {
-          // Cypress / mud wall tile
-          ctx.fillStyle = "#1a4a32";
-          ctx.fillRect(px + 1, py + 1, TILE - 2, TILE - 2);
-          ctx.strokeStyle = "#3cb371";
-          ctx.lineWidth = 2;
-          ctx.strokeRect(px + 2.5, py + 2.5, TILE - 5, TILE - 5);
-          // moss glow
-          ctx.fillStyle = "rgba(80, 180, 100, 0.15)";
-          ctx.fillRect(px + 4, py + 4, TILE - 8, 4);
-        } else {
-          // water path
-          ctx.fillStyle = "rgba(20, 55, 42, 0.55)";
-          ctx.fillRect(px, py, TILE, TILE);
-          if (cell === 2) {
-            // snack pellet
-            ctx.fillStyle = "#f0d878";
-            ctx.beginPath();
-            ctx.arc(px + TILE / 2, py + TILE / 2, 2.6, 0, Math.PI * 2);
-            ctx.fill();
-          } else if (cell === 3) {
-            // power lily
-            const pulse = 5 + Math.sin(t * 6 + x) * 1.5;
-            ctx.fillStyle = "#7dcea0";
-            ctx.beginPath();
-            ctx.arc(px + TILE / 2, py + TILE / 2, pulse, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#fff8c0";
-            ctx.beginPath();
-            ctx.arc(px + TILE / 2, py + TILE / 2, 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
+        const m = 3.5;
+        // Fill very subtle so photo still shows through walls
+        ctx.fillStyle = "rgba(10, 40, 70, 0.35)";
+        ctx.beginPath();
+        ctx.roundRect
+          ? ctx.roundRect(px + m, py + m, TILE - m * 2, TILE - m * 2, 5)
+          : ctx.rect(px + m, py + m, TILE - m * 2, TILE - m * 2);
+        ctx.fill();
+
+        // Draw edges only where wall meets path (classic maze lines)
+        ctx.strokeStyle = wallOuter;
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        // top
+        if (!wallAt(g, x, y - 1)) {
+          ctx.moveTo(px + m, py + m);
+          ctx.lineTo(px + TILE - m, py + m);
+        }
+        // bottom
+        if (!wallAt(g, x, y + 1)) {
+          ctx.moveTo(px + m, py + TILE - m);
+          ctx.lineTo(px + TILE - m, py + TILE - m);
+        }
+        // left
+        if (!wallAt(g, x - 1, y)) {
+          ctx.moveTo(px + m, py + m);
+          ctx.lineTo(px + m, py + TILE - m);
+        }
+        // right
+        if (!wallAt(g, x + 1, y)) {
+          ctx.moveTo(px + TILE - m, py + m);
+          ctx.lineTo(px + TILE - m, py + TILE - m);
+        }
+        ctx.stroke();
+
+        // Inner neon edge
+        ctx.strokeStyle = wallColor;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+    }
+
+    // Pellets + power dots
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const cell = g[y][x];
+        const cx = x * TILE + TILE / 2;
+        const cy = y * TILE + TILE / 2;
+        if (cell === 2) {
+          ctx.fillStyle = "#ffe566";
+          ctx.shadowColor = "rgba(255, 230, 100, 0.7)";
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 2.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        } else if (cell === 3) {
+          const pulse = 5.5 + Math.sin(t * 7 + x + y) * 1.4;
+          ctx.fillStyle = "#fff8dc";
+          ctx.shadowColor = "rgba(255, 255, 180, 0.9)";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(cx, cy, pulse, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
         }
       }
     }
 
-    // Enemy house outline
-    ctx.strokeStyle = "rgba(180, 100, 200, 0.45)";
+    // Ghost house — pink door like classic Pac-Man
+    ctx.strokeStyle = "rgba(255, 160, 200, 0.85)";
     ctx.lineWidth = 2;
-    ctx.strokeRect(5 * TILE + 2, 8 * TILE + 2, 5 * TILE - 4, 3 * TILE - 4);
+    ctx.strokeRect(5 * TILE + 4, 7 * TILE + 4, 5 * TILE - 8, 4 * TILE - 8);
+    ctx.fillStyle = "rgba(255, 120, 180, 0.9)";
+    ctx.fillRect(7 * TILE + 2, 7 * TILE + 2, TILE - 4, 4);
   }
 
   function drawPlayer() {
@@ -409,7 +609,6 @@
     const powered = world.power > 0;
     ctx.save();
     ctx.translate(p.px, p.py);
-    // Face move direction
     const ang =
       p.dir === "right"
         ? 0
@@ -420,36 +619,41 @@
             : -Math.PI / 2;
     ctx.rotate(ang);
 
-    if (gatorImgReady && gatorImg) {
-      const s = TILE * 1.15;
-      ctx.imageSmoothingEnabled = true;
-      if (world.inv > 0 && Math.floor(world.time * 12) % 2 === 0) {
-        ctx.globalAlpha = 0.4;
-      }
-      ctx.drawImage(gatorImg, -s / 2, -s / 2, s, s);
-      ctx.globalAlpha = 1;
-    } else {
-      // Fallback chomp gator circle
-      const mouth = 0.25 + Math.sin(p.mouth) * 0.2;
-      ctx.fillStyle = powered ? "#b8f0c8" : "#3cb371";
-      ctx.beginPath();
-      ctx.arc(0, 0, TILE * 0.42, mouth, Math.PI * 2 - mouth);
-      ctx.lineTo(0, 0);
-      ctx.fill();
-      ctx.fillStyle = "#111";
-      ctx.beginPath();
-      ctx.arc(TILE * 0.1, -TILE * 0.14, 2.2, 0, Math.PI * 2);
-      ctx.fill();
+    if (world.inv > 0 && Math.floor(world.time * 12) % 2 === 0) {
+      ctx.globalAlpha = 0.35;
     }
 
-    // Power aura
+    // Pac-Man style chomp body (reads top-down, not climbing)
+    const mouth = 0.28 + Math.abs(Math.sin(p.mouth)) * 0.32;
+    ctx.fillStyle = powered ? "#b8ff6a" : "#3ddc84";
+    ctx.beginPath();
+    ctx.arc(0, 0, TILE * 0.4, mouth, Math.PI * 2 - mouth, false);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
+    ctx.fill();
+    // Eye
+    ctx.fillStyle = "#0a2010";
+    ctx.beginPath();
+    ctx.arc(TILE * 0.06, -TILE * 0.16, 2.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tiny gator face cue inside the chomp circle
+    if (gatorImgReady && gatorImg) {
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      const s = TILE * 0.55;
+      ctx.drawImage(gatorImg, -s * 0.35, -s * 0.45, s * 0.7, s * 0.7);
+      ctx.restore();
+    }
+
     if (powered) {
-      ctx.strokeStyle = "rgba(255, 240, 120, 0.7)";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255, 255, 120, 0.85)";
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.arc(0, 0, TILE * 0.55 + Math.sin(world.time * 10) * 2, 0, Math.PI * 2);
+      ctx.arc(0, 0, TILE * 0.52 + Math.sin(world.time * 12) * 2, 0, Math.PI * 2);
       ctx.stroke();
     }
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
@@ -860,7 +1064,7 @@
     const blurb = $("#level-blurb");
     if (blurb) blurb.style.display = "none";
     $("#play-hint").textContent =
-      "Eat all snacks · Big lily = power · Avoid critters (or chomp them when powered!)";
+      "Top-down maze · Eat all dots · Big dots = power · Swipe or D-pad";
     show("play");
     world._last = 0;
     loopId = requestAnimationFrame(tick);
@@ -1071,7 +1275,20 @@
     canvas.width = W;
     canvas.height = H;
     ctx.imageSmoothingEnabled = true;
+    // Polyfill roundRect if missing
+    if (!ctx.roundRect) {
+      ctx.roundRect = function (x, y, w, h, r) {
+        r = Math.min(r, w / 2, h / 2);
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+      };
+    }
 
+    loadBackgrounds();
     loadGator();
 
     window.addEventListener("keydown", function (e) {
