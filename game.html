@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>Gator Grow - Florida Nature Prints</title>
+    <meta
+      name="description"
+      content="Gator Grow: a fun kid-friendly game about the life of an American alligator in Florida, from egg to adult."
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/game.css" />
+  </head>
+  <body class="game-page">
+    <header class="site-header">
+      <div class="container nav-inner">
+        <a href="index.html" class="logo" data-business-name
+          >Florida <span>Nature</span> Prints</a
+        >
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="shop.html">Shop</a></li>
+          <li><a href="game.html" class="active">Gator Grow</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <div class="game-wrap">
+        <div class="game-card">
+          <!-- START -->
+          <section id="screen-start" class="game-screen active">
+            <div class="start-hero" aria-hidden="true">🥚 → 🐊 → 🐊</div>
+            <h1>Gator Grow</h1>
+            <p class="subtitle">
+              Grow up as a Florida alligator - from egg to full adult!
+            </p>
+            <ul class="start-list">
+              <li>Short levels for each stage of life</li>
+              <li>Real dangers &amp; adventures (kept friendly)</li>
+              <li>Quiz bonuses with true gator facts</li>
+              <li>Progress saves on this device</li>
+            </ul>
+            <div class="btn-row">
+              <button type="button" class="game-btn game-btn-primary" id="btn-start">
+                Play
+              </button>
+              <button type="button" class="game-btn game-btn-secondary" id="btn-how">
+                How to play
+              </button>
+            </div>
+            <div id="how-box" style="display: none; margin-top: 1rem" class="fact-card">
+              <p>
+                <strong>Move:</strong> drag with your finger or mouse, or use arrow
+                keys / WASD.<br />
+                <strong>Goal:</strong> finish each mini-challenge, then answer fun
+                quiz questions.<br />
+                <strong>Tips:</strong> correct answers give points and temporary
+                powers. Wrong answers still teach you - no scary game over!
+              </p>
+            </div>
+            <p class="controls-note">
+              Total score saved here:
+              <strong id="global-score">0</strong>
+            </p>
+          </section>
+
+          <!-- LEVEL SELECT -->
+          <section id="screen-levels" class="game-screen">
+            <h1>Choose a stage</h1>
+            <p class="subtitle">Unlock the next stage by finishing the one before.</p>
+            <div class="level-grid" id="level-grid"></div>
+            <div class="btn-row">
+              <button type="button" class="game-btn game-btn-secondary" id="btn-levels-back">
+                Back
+              </button>
+              <button type="button" class="game-btn game-btn-secondary" id="btn-reset">
+                Reset progress
+              </button>
+            </div>
+          </section>
+
+          <!-- PLAY -->
+          <section id="screen-play" class="game-screen">
+            <div class="game-hud">
+              <span id="play-hud-hearts">❤️❤️❤️</span>
+              <span>Score: <span id="play-hud-score">0</span></span>
+              <span id="play-hud-powers"></span>
+            </div>
+            <div class="level-intro">
+              <h2 id="level-title">Level</h2>
+              <p id="level-blurb"></p>
+            </div>
+            <div id="play-area" class="play-area" role="application" aria-label="Game play area"></div>
+            <div class="goal-bar" aria-hidden="true">
+              <div class="goal-bar-fill" id="goal-fill"></div>
+            </div>
+            <div class="goal-label" id="goal-label">Goal</div>
+            <p class="play-hint" id="play-hint"></p>
+          </section>
+
+          <!-- QUIZ -->
+          <section id="screen-quiz" class="game-screen">
+            <div class="game-hud">
+              <span id="quiz-hud-hearts">❤️❤️❤️</span>
+              <span>Score: <span id="quiz-hud-score">0</span></span>
+            </div>
+            <div class="quiz-box">
+              <div class="quiz-progress" id="quiz-progress">Question 1</div>
+              <h3 id="quiz-question">Question</h3>
+              <div class="quiz-options" id="quiz-options"></div>
+              <div class="quiz-feedback" id="quiz-feedback"></div>
+              <div class="btn-row" id="quiz-next-wrap" style="display: none">
+                <button type="button" class="game-btn game-btn-primary" id="btn-quiz-next">
+                  Next
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- FACT -->
+          <section id="screen-fact" class="game-screen">
+            <div class="complete-emoji" id="fact-emoji">🐊🎉</div>
+            <h1 id="fact-title">Level complete!</h1>
+            <p class="score-pop" id="fact-score">Score</p>
+            <div class="fact-card">
+              <div class="label">Gator Fact</div>
+              <p id="fact-text">Fact goes here</p>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="game-btn game-btn-primary" id="btn-fact-next">
+                Continue
+              </button>
+              <button type="button" class="game-btn game-btn-secondary" id="btn-fact-levels">
+                Level select
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-brand" data-business-name>
+              Florida <span>Nature</span> Prints
+            </div>
+            <p data-tagline>Calm moments from the Sunshine State</p>
+          </div>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="game.html">Gator Grow</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-bottom">
+          &copy; <span id="year"></span>
+          <span data-business-name>Florida Nature Prints</span>. Educational game
+          for fun learning about American alligators.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/game.js"></script>
+  </body>
+</html>
