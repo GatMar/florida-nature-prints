@@ -6,11 +6,14 @@
 (function () {
   "use strict";
 
-  const STORAGE = "gatorLifeProgress_v2";
+  const STORAGE = "gatorLifeProgress_v3";
   // Portrait playfield: taller than wide so the action reads vertically
   const W = 360;
   const H = 560;
-  const GRAV = 0.48;
+  // Soft gravity + easy jumps (kid-friendly)
+  const GRAV = 0.38;
+  const JUMP = -9.2;
+  const MOVE_SPEED = 3.2;
   const TOTAL_LEVELS = 50;
 
   const state = {
@@ -303,15 +306,13 @@
     return bgImages[idx % bgImages.length];
   }
 
-  /** Display size for gator by stage - baby smaller, adult much bigger */
+  /** Display size for gator by stage - grows a little, stays easy to control */
   function gatorDrawSize(idx) {
-    // Portrait figurine aspect ~2:3 (clear photo gator, not pixel mesh)
-    if (idx < 5) return { w: 72, h: 108 }; // newborn
-    if (idx < 10) return { w: 88, h: 132 }; // baby
-    if (idx < 20) return { w: 108, h: 162 }; // hatchling
-    if (idx < 30) return { w: 128, h: 192 }; // juvenile
-    if (idx < 40) return { w: 148, h: 222 }; // sub-adult
-    return { w: 168, h: 252 }; // adult
+    // Keep sizes modest so movement feels simple on a phone screen
+    if (idx < 10) return { w: 56, h: 84 }; // baby
+    if (idx < 25) return { w: 64, h: 96 }; // young
+    if (idx < 40) return { w: 72, h: 108 }; // teen
+    return { w: 80, h: 120 }; // adult
   }
 
   /** Older gators: slightly darker/greener adult look (same figurine) */
@@ -407,209 +408,99 @@
     if (g) g.textContent = String(state.totalScore);
   }
 
-  /* ---------- Level geometry ---------- */
+  /* ---------- Level geometry (simple, easy path) ---------- */
   function buildLevel(idx) {
     const platforms = [];
     const hazards = [];
-    const climbs = []; // ladders + snake-ropes
     const quizzes = [];
     const items = [];
-    const explosions = [];
-    const len = 1800 + idx * 52;
-    // Labyrinth stories (floors), bottom to top
-    const floors = [500, 380, 260, 145];
-    const groundY = floors[0];
+    // Short levels - walk right, jump a few times, reach flag
+    const len = 780 + Math.min(320, idx * 8);
+    const groundY = 470;
 
-    // --- Maze floors: segments + side walls ---
-    for (let f = 0; f < floors.length; f++) {
-      const fy = floors[f];
-      let x = f % 2 === 0 ? 0 : 80;
-      let room = 0;
-      while (x < len - 40) {
-        const w = 90 + Math.floor(Math.random() * 70) + (f === 0 ? 40 : 0);
-        platforms.push({ x: x, y: fy, w: Math.min(w, len - x), h: f === 0 ? 64 : 14 });
-        // Vertical wall stubs to feel maze-like
-        if (room % 2 === 1 && f < floors.length - 1) {
-          const wallH = floors[f] - floors[f + 1] - 8;
-          platforms.push({
-            x: x + w - 12,
-            y: floors[f + 1] + 8,
-            w: 14,
-            h: wallH,
-            wall: true,
-          });
-        }
-        const gap = 24 + (idx > 5 ? Math.min(40, 10 + idx) : 12);
-        x += w + (Math.random() < 0.4 ? gap : 18);
-        room++;
-      }
-      // Floor edge walls
-      platforms.push({ x: 0, y: fy - 90, w: 12, h: 90, wall: true });
-      platforms.push({ x: len - 16, y: fy - 90, w: 12, h: 90, wall: true });
+    // Continuous safe ground
+    platforms.push({ x: 0, y: groundY, w: len, h: 100 });
+
+    // A few easy step-up platforms (wide, low, no maze)
+    const padCount = 2 + (idx % 3);
+    for (let i = 0; i < padCount; i++) {
+      const px = 180 + i * Math.floor((len - 280) / Math.max(1, padCount));
+      const py = groundY - 70 - (i % 2) * 28;
+      platforms.push({ x: px, y: py, w: 110 + (i % 2) * 20, h: 16 });
+      // snack on pad
+      items.push({ x: px + 40, y: py - 28, taken: false });
     }
 
-    // --- Ladders & snake-ropes between stories ---
-    const climbCount = 5 + Math.floor(idx / 4);
-    for (let i = 0; i < climbCount; i++) {
-      const from = i % (floors.length - 1);
-      const yBottom = floors[from];
-      const yTop = floors[from + 1];
-      const cx = 120 + i * Math.floor(len / (climbCount + 1)) + (idx % 5) * 9;
-      const type = i % 2 === 0 ? "ladder" : "snake";
-      climbs.push({
-        type: type,
-        x: cx,
-        y: yTop,
-        w: type === "ladder" ? 40 : 36,
-        h: yBottom - yTop,
-      });
-    }
-    // Extra snake ropes in the middle of long rooms
-    for (let i = 0; i < 4; i++) {
-      const from = Math.floor(Math.random() * (floors.length - 1));
-      climbs.push({
-        type: "snake",
-        x: 200 + Math.random() * (len - 400),
-        y: floors[from + 1],
-        w: 48,
-        h: floors[from] - floors[from + 1],
-      });
-    }
-
-    // Staircase steps between floors (actual climbable stairs)
-    for (let f = 0; f < floors.length - 1; f++) {
-      const y1 = floors[f];
-      const y0 = floors[f + 1];
-      const stairX = 90 + f * 220 + (idx % 3) * 40;
-      const steps = 6;
-      const rise = (y1 - y0) / steps;
-      const run = 28;
-      for (let s = 0; s < steps; s++) {
-        platforms.push({
-          x: stairX + s * run,
-          y: y1 - (s + 1) * rise,
-          w: run + 8,
-          h: 12,
-          stair: true,
-        });
-      }
-      // Full climb volume covering the stair run (easy grab)
-      climbs.push({
-        type: "stairs",
-        x: stairX - 10,
-        y: y0,
-        w: steps * run + 30,
-        h: y1 - y0,
-      });
-    }
-
-    // Hazards placed per floor (labyrinth dens)
-    const roster = [
-      "fire",
-      "cave",
-      "rattler",
-      "hawk",
-      "raccoon",
-      "panther",
-      "boar",
-      "boat",
-      "rival",
-      "bird",
-    ];
-    const count = 6 + Math.floor(idx / 2);
-    for (let i = 0; i < count; i++) {
-      const unlock = Math.min(roster.length - 1, 2 + Math.floor(idx / 4) + (i % 3));
-      const k = roster[Math.floor(Math.random() * (unlock + 1))];
-      const floor = floors[Math.min(floors.length - 1, i % floors.length)];
-      const baseX = 160 + i * (110 - Math.min(45, idx * 0.4)) + Math.random() * 40;
-      if (k === "fire") {
-        hazards.push({
-          kind: "fire",
-          x: baseX,
-          y: floor - 2,
-          w: 44,
-          h: 40,
-          vx: 0,
-          baseY: floor - 2,
-          phase: Math.random() * 10,
-          tall: 32 + Math.random() * 10,
-        });
-      } else if (k === "cave") {
-        hazards.push({
-          kind: "cave",
-          x: baseX,
-          y: floor - 90,
-          w: 52,
-          h: 92,
-          open: true,
-          phase: Math.random() * 6,
-          period: 2.2 + Math.random() * 1.4,
-          vx: 0,
-          baseY: floor - 90,
-        });
-      } else {
-        const fly = k === "hawk" || k === "bird";
-        const big = k === "panther" || k === "boar" || k === "rival";
-        hazards.push({
-          kind: k,
-          x: baseX,
-          y: fly ? floor - 140 : floor - 48,
-          w: big ? 48 : 40,
-          h: big ? 44 : 38,
-          vx:
-            fly
-              ? 1.45 + idx * 0.025
-              : k === "boat"
-                ? 1.55
-                : k === "panther"
-                  ? 1.05
-                  : 0.8,
-          baseY: fly ? floor - 140 : floor - 48,
-          phase: Math.random() * 10,
-        });
-      }
-    }
-
-    // Quizzes on alternating floors
-    const qn = 2 + (idx % 3);
-    for (let i = 0; i < qn; i++) {
-      const fy = floors[Math.min(floors.length - 1, (i + 1) % floors.length)];
-      quizzes.push({
-        x: 260 + ((i + 1) * len) / (qn + 2),
-        y: fy - 80,
-        hit: false,
-      });
-    }
-
-    // Snacks scattered on upper stories
-    for (let i = 0; i < 10 + (idx % 5); i++) {
-      const fy = floors[i % floors.length];
+    // Ground snacks (generous, easy to touch)
+    for (let i = 0; i < 5; i++) {
       items.push({
-        x: 140 + i * 110,
-        y: fy - 60 - (i % 2) * 20,
+        x: 120 + i * Math.floor((len - 200) / 5),
+        y: groundY - 36,
         taken: false,
       });
     }
 
-    // Flag on top floor near the end
-    const goalFloor = floors[floors.length - 1];
+    // Hazards: only ground bonfires to hop over + one slow critter max
+    // Level 1 = almost free walk; difficulty ramps gently
+    const fireCount = idx === 0 ? 0 : idx < 5 ? 1 : idx < 15 ? 2 : 3;
+    for (let i = 0; i < fireCount; i++) {
+      const fx = 220 + i * Math.floor((len - 320) / Math.max(1, fireCount)) + 40;
+      hazards.push({
+        kind: "fire",
+        x: fx,
+        y: groundY - 2,
+        w: 36,
+        h: 34,
+        vx: 0,
+        baseY: groundY - 2,
+        phase: i,
+        tall: 28,
+      });
+    }
+
+    // One slow walker on later levels (easy to jump over)
+    if (idx >= 3) {
+      const kinds = ["rattler", "raccoon", "bird"];
+      const k = kinds[idx % kinds.length];
+      const fly = k === "bird";
+      hazards.push({
+        kind: k,
+        x: len * 0.45,
+        y: fly ? groundY - 120 : groundY - 40,
+        w: 34,
+        h: 32,
+        vx: 0.45 + Math.min(0.35, idx * 0.01),
+        baseY: fly ? groundY - 120 : groundY - 40,
+        phase: 0,
+      });
+    }
+
+    // One optional quiz block mid-level (touch to open - no pressure)
+    if (idx >= 1) {
+      quizzes.push({
+        x: Math.floor(len * 0.55),
+        y: groundY - 90,
+        hit: false,
+      });
+    }
+
     const sz = gatorDrawSize(idx);
     const pw = sz.w;
     const ph = sz.h;
     return {
       idx: idx,
       len: len,
-      floors: floors,
+      floors: [groundY],
       platforms: platforms,
-      climbs: climbs,
+      climbs: [],
       hazards: hazards,
       quizzes: quizzes,
       items: items,
-      explosions: explosions,
+      explosions: [],
       asteroids: [],
-      astroTimer: 1.2 + Math.random(),
-      goalX: len - 70,
-      goalY: goalFloor,
+      astroTimer: 9999,
+      goalX: len - 90,
+      goalY: groundY,
       camera: 0,
       time: 0,
       inv: 0,
@@ -617,14 +508,15 @@
       steps: 0,
       nextStepAt: 3,
       owlCheer: null,
+      climbHint: false,
       player: {
-        x: 48,
-        y: groundY - ph - 4,
+        x: 40,
+        y: groundY - ph - 2,
         vx: 0,
         vy: 0,
         w: pw,
         h: ph,
-        onGround: false,
+        onGround: true,
         onClimb: false,
         facing: 1,
       },
@@ -1150,75 +1042,80 @@
     const cam = world.camera;
     drawBackground(cam, world.time, world.idx);
     drawPlatforms(cam);
-    drawClimbs(cam);
+    // Climbs removed from easy mode (no maze floors)
 
-    // items
+    // snacks - big golden bites
     world.items.forEach(function (it) {
       if (it.taken) return;
       const x = Math.floor(it.x - cam);
-      ctx.fillStyle = "#e8c040";
-      ctx.fillRect(x, it.y, 10, 10);
+      const bob = Math.sin((world.time || 0) * 4 + it.x * 0.05) * 3;
+      ctx.fillStyle = "#f0c040";
+      ctx.beginPath();
+      ctx.arc(x + 8, it.y + 8 + bob, 10, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = "#fff8c0";
-      ctx.fillRect(x + 2, it.y + 2, 4, 4);
+      ctx.beginPath();
+      ctx.arc(x + 5, it.y + 5 + bob, 3, 0, Math.PI * 2);
+      ctx.fill();
     });
 
-    // quiz markers
+    // quiz markers - big yellow ?
     world.quizzes.forEach(function (q) {
       if (q.hit) return;
       const x = Math.floor(q.x - cam);
+      const bob = Math.sin((world.time || 0) * 3) * 4;
       ctx.fillStyle = "#ffe566";
-      ctx.fillRect(x, q.y, 18, 18);
-      ctx.fillStyle = "#111";
-      ctx.font = "bold 14px monospace";
-      ctx.fillText("?", x + 4, q.y + 14);
+      ctx.fillRect(x - 4, q.y + bob, 28, 28);
+      ctx.strokeStyle = "#2f6b43";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x - 4, q.y + bob, 28, 28);
+      ctx.fillStyle = "#143d22";
+      ctx.font = "bold 20px system-ui,sans-serif";
+      ctx.fillText("?", x + 4, q.y + 21 + bob);
     });
 
-    // goal flag (top story)
+    // goal flag - big and obvious at the end of the path
     const gx = Math.floor(world.goalX - cam);
-    const gy = (world.goalY || 145) - 80;
+    const gy = (world.goalY || 470) - 90;
     ctx.fillStyle = "#f5f5f5";
-    ctx.fillRect(gx, gy, 5, 80);
+    ctx.fillRect(gx, gy, 6, 90);
     ctx.fillStyle = "#3cb371";
-    ctx.fillRect(gx + 5, gy, 22, 16);
+    ctx.beginPath();
+    ctx.moveTo(gx + 6, gy);
+    ctx.lineTo(gx + 42, gy + 14);
+    ctx.lineTo(gx + 6, gy + 28);
+    ctx.closePath();
+    ctx.fill();
+    // "GO" marker above flag
+    ctx.fillStyle = "rgba(255, 245, 160, 0.95)";
+    ctx.font = "bold 14px system-ui,sans-serif";
+    ctx.fillText("FLAG →", gx - 8, gy - 8);
 
     world.hazards.forEach(function (h) {
       drawHazard(h, cam);
     });
 
-    drawAsteroidsAndBooms(cam);
-
     drawPixelGator(p, gatorScale(world.idx), p.facing);
-
-    // Small owl buddy (voice only for cheers - no text bubble during play)
     drawOwlCompanion(p);
 
-    // HUD strip on canvas
+    // Simple top HUD
     ctx.fillStyle = "rgba(10,30,18,0.55)";
-    ctx.fillRect(0, 0, W, 16);
+    ctx.fillRect(0, 0, W, 18);
     ctx.fillStyle = "#e8f5ec";
-    ctx.font = "11px monospace";
+    ctx.font = "bold 12px system-ui,sans-serif";
     ctx.fillText(
-      "LV " +
-        (world.idx + 1) +
-        "  " +
-        stageName(world.idx) +
-        "  SCORE " +
-        state.score +
-        "  STEPS " +
-        (world.steps || 0),
-      6,
-      12
+      "Level " + (world.idx + 1) + "  ·  Score " + state.score,
+      8,
+      13
     );
 
-    // Climb helper text
-    if (world.climbHint) {
-      ctx.fillStyle = "rgba(255, 245, 180, 0.92)";
-      ctx.fillRect(W / 2 - 110, H - 36, 220, 24);
-      ctx.strokeStyle = "#2f6b43";
-      ctx.strokeRect(W / 2 - 110, H - 36, 220, 24);
+    // Always-on easy direction tip
+    if (p.x < world.len * 0.35) {
+      ctx.fillStyle = "rgba(255, 245, 180, 0.9)";
+      ctx.fillRect(W / 2 - 100, H - 34, 200, 26);
       ctx.fillStyle = "#143d22";
-      ctx.font = "bold 12px system-ui,sans-serif";
-      ctx.fillText("Hold UP / W to climb!", W / 2 - 70, H - 20);
+      ctx.font = "bold 13px system-ui,sans-serif";
+      ctx.fillText("Go right → to the flag!", W / 2 - 78, H - 16);
     }
   }
 
@@ -1246,69 +1143,28 @@
 
   function updatePlayer(dt) {
     const p = world.player;
-    const sp = 2.8 + Math.min(1.3, world.idx * 0.025);
     let move = 0;
     if (keys["arrowleft"] || keys["a"]) move -= 1;
     if (keys["arrowright"] || keys["d"]) move += 1;
 
-    const climb = climbAt(p);
-    p.onClimb = !!climb;
-    const up = keys["arrowup"] || keys["w"];
-    const down = keys["arrowdown"] || keys["s"];
-    const jumpKey = keys[" "] || keys["z"];
-    const climbing = !!(climb && (up || down || p._holdingClimb));
+    const jumpKey = keys[" "] || keys["z"] || keys["arrowup"] || keys["w"];
 
-    // Stick to climb when overlapping and pressing vertical, or already climbing
-    if (climb && (up || down)) p._holdingClimb = true;
-    if (!climb) p._holdingClimb = false;
-    if (climb && jumpKey && !up && !down) p._holdingClimb = false;
+    p.onClimb = false;
+    p.vx = move * MOVE_SPEED;
+    if (move) p.facing = move > 0 ? 1 : -1;
 
-    // Auto-climb when near stairs/ladder and holding UP (most reliable)
-    if (climb && up) {
-      p._holdingClimb = true;
-      p.vx = move * sp * 0.2;
-      p.vy = -5.2;
-      if (move) p.facing = move > 0 ? 1 : -1;
-      const targetX = climb.x + climb.w / 2 - p.w / 2;
-      p.x += (targetX - p.x) * 0.35;
-      if (Math.random() < 0.02) gatorSay("Gotta go faster!", false);
-    } else if (climb && down) {
-      p._holdingClimb = true;
-      p.vx = move * sp * 0.2;
-      p.vy = 5.0;
-      if (move) p.facing = move > 0 ? 1 : -1;
-      const targetX = climb.x + climb.w / 2 - p.w / 2;
-      p.x += (targetX - p.x) * 0.35;
-    } else if (climb && p._holdingClimb && !jumpKey) {
-      p.vx = move * sp * 0.15;
-      p.vy = 0;
-      const targetX = climb.x + climb.w / 2 - p.w / 2;
-      p.x += (targetX - p.x) * 0.25;
+    if (jumpKey && p.onGround) {
+      if (Math.random() < 0.3) gatorLine("jump");
+      p.vy = JUMP;
+      p.onGround = false;
     } else {
-      p._holdingClimb = false;
-      p.vx = move * sp;
-      if (move) p.facing = move > 0 ? 1 : -1;
-      if ((up || jumpKey) && p.onGround) {
-        if (Math.random() < 0.35) gatorLine("jump");
-        p.vy = -8.4 - Math.min(1.2, world.idx * 0.03);
-        p.onGround = false;
-      } else {
-        p.vy += GRAV;
-        if (p.vy > 11) p.vy = 11;
-      }
+      p.vy += GRAV;
+      if (p.vy > 10) p.vy = 10;
     }
-
-    // Jump off climb with space
-    if (climb && jumpKey && !up && !down) {
-      p.vy = -7.5;
-      p._holdingClimb = false;
-    }
-
-    const useClimbPhys = !!(climb && (up || down || p._holdingClimb));
 
     // horizontal
     p.x += p.vx;
-    let hit = solidAt(p.x, p.y, p.w, p.h, { climbing: useClimbPhys });
+    let hit = solidAt(p.x, p.y, p.w, p.h);
     if (hit) {
       if (p.vx > 0) p.x = hit.x - p.w - 0.01;
       else if (p.vx < 0) p.x = hit.x + hit.w + 0.01;
@@ -1317,61 +1173,51 @@
     // vertical
     p.y += p.vy;
     p.onGround = false;
-    hit = solidAt(p.x, p.y, p.w, p.h, { climbing: useClimbPhys });
+    hit = solidAt(p.x, p.y, p.w, p.h);
     if (hit) {
-      // One-way: allow rising through thin floors while climbing
-      if (useClimbPhys && !hit.wall && p.vy < 0) {
-        // pass through
-      } else if (p.vy > 0) {
+      if (p.vy > 0) {
         p.y = hit.y - p.h - 0.01;
         p.onGround = true;
-        p._holdingClimb = false;
         p.vy = 0;
       } else if (p.vy < 0) {
         p.y = hit.y + hit.h + 0.01;
         p.vy = 0;
-      } else {
-        p.vy = 0;
       }
     }
 
-    if (climb && useClimbPhys) {
-      // Stepped onto upper floor
-      if (p.y + p.h <= climb.y + 8) {
-        p.y = climb.y - p.h - 1;
-        p._holdingClimb = false;
-        p.onGround = true;
-        p.vy = 0;
-      }
-      if (p.y + p.h > climb.y + climb.h + 24) {
-        p.y = climb.y + climb.h - p.h + 10;
-      }
-    }
+    // Soft walls at ends of the level
+    if (p.x < 8) p.x = 8;
+    if (p.x + p.w > world.len - 8) p.x = world.len - 8 - p.w;
 
     if (p.y > H + 40) {
-      hurt();
-      p.x = 48;
-      p.y = 420;
+      // gentle respawn (no maze fall-through frustration)
+      p.x = 40;
+      p.y = (world.goalY || 470) - p.h - 2;
       p.vy = 0;
       world.camera = 0;
+      world.inv = 1.5;
     }
 
-    world.camera = Math.max(0, Math.min(world.len - W, p.x - 100));
-
-    // On-screen climb hint
-    world.climbHint = !!climb;
+    world.camera = Math.max(0, Math.min(world.len - W, p.x - 90));
+    world.climbHint = false;
   }
 
   function hurt() {
     if (world.inv > 0) return;
     state.lives -= 1;
-    world.inv = 1.2;
+    world.inv = 2.0; // long invincibility - very forgiving
+    // Knock back a little so you aren't stuck in the hazard
+    if (world.player) {
+      world.player.vx = -world.player.facing * 2;
+      world.player.vy = -4;
+      world.player.onGround = false;
+    }
     updateHud();
     gatorLine("hurt");
     if (state.lives <= 0) {
-      // gentle restart level
+      // gentle restart level - keep most of your score
       state.lives = 3;
-      state.score = Math.max(0, state.score - 20);
+      state.score = Math.max(0, state.score - 5);
       gatorSay("Reset! Let's go again!", true);
       startLevel(state.level, true);
     }
@@ -1382,68 +1228,61 @@
   }
 
   function updateHazards(dt) {
+    // Shrunk hurt-box vs drawn size so close jumps still feel fair
+    function hurtBox(h) {
+      const pad = 10;
+      return {
+        x: h.x + pad,
+        y: h.y + pad * 0.5,
+        w: Math.max(10, (h.w || 20) - pad * 2),
+        h: Math.max(10, (h.h || 20) - pad),
+      };
+    }
+
     world.hazards.forEach(function (h) {
       h.phase += dt;
 
       if (h.kind === "fire") {
-      // Stay on ground; damage if player walks through bonfire
-      h.y = h.baseY;
-      const box = {
-        x: h.x + 4,
-        y: h.y - 28,
-        w: Math.max(16, h.w - 8),
-        h: 36,
-      };
-      const near =
-        Math.abs(world.player.x - h.x) < 50 &&
-        Math.abs(world.player.y - h.y) < 60;
-      if (near && Math.random() < 0.01) gatorLine("fire");
-      if (world.inv <= 0 && aabb(world.player, box)) hurt();
-      return;
-    }
-
-      if (h.kind === "cave") {
-        // Opening / closing rock jaws - only hurts when closing on you
-        const cycle = (h.phase % h.period) / h.period;
-        h.open = cycle < 0.55;
-        const nearCave = Math.abs(world.player.x - h.x) < 36;
-        if (nearCave && h.open && Math.random() < 0.012) gatorLine("cave");
-        if (!h.open) {
-          const box = { x: h.x + 2, y: h.y + 4, w: h.w - 4, h: h.h - 8 };
-          if (world.inv <= 0 && aabb(world.player, box)) hurt();
-        }
+        h.y = h.baseY;
+        const box = {
+          x: h.x + 10,
+          y: h.y - 18,
+          w: Math.max(12, h.w - 20),
+          h: 22,
+        };
+        const near =
+          Math.abs(world.player.x - h.x) < 50 &&
+          Math.abs(world.player.y - h.y) < 60;
+        if (near && Math.random() < 0.008) gatorLine("fire");
+        if (world.inv <= 0 && aabb(world.player, box)) hurt();
         return;
       }
 
+      // Slow, predictable patrol
       if (h.kind === "hawk" || h.kind === "bird") {
-        h.x += h.vx * (Math.sin(h.phase) > 0 ? 1 : -1);
-        h.y = h.baseY + Math.sin(h.phase * 2.2) * 18;
-      } else if (h.kind === "boat") {
-        h.x += h.vx * 0.85;
-        if (h.x > world.len + 20) h.x = -30;
-      } else if (h.kind === "panther" || h.kind === "boar" || h.kind === "rattler") {
-        h.x += Math.sin(h.phase * 1.1) * h.vx * 1.2;
-        h.y = h.baseY;
-      } else if (h.kind === "rival") {
-        h.x += Math.sin(h.phase * 0.8) * h.vx;
+        h.x += Math.sin(h.phase * 0.9) * h.vx;
+        h.y = h.baseY + Math.sin(h.phase * 1.4) * 10;
       } else {
-        h.x += Math.sin(h.phase) * h.vx * 0.5;
+        h.x += Math.sin(h.phase * 0.7) * h.vx;
+        h.y = h.baseY;
       }
 
-      const box = {
-        x: h.x,
-        y: h.y,
-        w: h.w || 14,
-        h: h.h || 12,
-      };
-      if (world.inv <= 0 && aabb(world.player, box)) hurt();
+      if (world.inv <= 0 && aabb(world.player, hurtBox(h))) hurt();
     });
   }
 
   function updateItems() {
     world.items.forEach(function (it) {
       if (it.taken) return;
-      if (aabb(world.player, { x: it.x, y: it.y, w: 6, h: 6 })) {
+      // Large pickup radius - easy snacks
+      if (
+        aabb(world.player, {
+          x: it.x - 12,
+          y: it.y - 12,
+          w: 34,
+          h: 34,
+        })
+      ) {
         it.taken = true;
         state.score += 10;
         updateHud();
@@ -1456,7 +1295,15 @@
   function updateQuizzes() {
     world.quizzes.forEach(function (q) {
       if (q.hit) return;
-      if (aabb(world.player, { x: q.x, y: q.y, w: 12, h: 12 })) {
+      // Generous touch zone for the yellow ?
+      if (
+        aabb(world.player, {
+          x: q.x - 16,
+          y: q.y - 16,
+          w: 48,
+          h: 48,
+        })
+      ) {
         q.hit = true;
         openComicQuiz();
       }
@@ -1465,28 +1312,23 @@
 
   function updateGoal() {
     const dist = world.goalX - (world.player.x + world.player.w);
-    if (dist < 140 && dist > 24 && Math.random() < 0.01) gatorLine("nearFlag");
-    // Distance milestones (every ~22% of the run)
+    if (dist < 160 && dist > 20 && Math.random() < 0.012) gatorLine("nearFlag");
     if (world && world.len) {
-      const progress = world.player.x / world.len;
-      const mark = world.nextStepAt || 3;
-      // nextStepAt counts snacks/quizzes; also award path milestones
       if (!world._mile) world._mile = 0;
-      const mile = Math.floor(progress * 4); // 0..3
-      if (mile > world._mile && mile < 4) {
+      const mile = Math.floor((world.player.x / world.len) * 3);
+      if (mile > world._mile && mile < 3) {
         world._mile = mile;
         if (mile >= 1) {
-          gatorSay("Gotta go faster!", false);
+          gatorSay("Almost there!", false);
           accomplishStep("mile");
         }
       }
     }
-    // Goal on upper story near the end
-    const gy = world.goalY || 145;
+    // Reach the flag anywhere near the end of the ground path
+    const gy = world.goalY || 470;
     if (
-      world.player.x + world.player.w >= world.goalX &&
-      world.player.y + world.player.h >= gy - 10 &&
-      world.player.y < gy + 30
+      world.player.x + world.player.w >= world.goalX - 20 &&
+      world.player.y + world.player.h >= gy - 120
     ) {
       world.won = true;
       finishLevel();
@@ -1710,7 +1552,7 @@
 
     updatePlayer(dt);
     updateHazards(dt);
-    updateSkyDanger(dt);
+    // Sky hazards removed - keep the game simple and calm
     updateItems();
     updateQuizzes();
     if (!world.won) updateGoal();
@@ -1733,23 +1575,21 @@
       state.lives = 3;
     }
     world = buildLevel(idx);
-    // reseed random-ish layout variation by playSeed
-    world.hazards.forEach(function (h, i) {
-      h.x += ((state.playSeed + i) % 7) * 3;
-    });
     updateHud();
     $("#level-title").textContent =
       "Level " + (idx + 1) + " · " + stageName(idx);
-    $("#level-blurb").textContent =
-      "Dodge fire pits, closing caves, rattlers, hawks, panthers, and more. Grab snacks and beat the flag!";
+    const blurb = $("#level-blurb");
+    if (blurb) {
+      blurb.style.display = "none";
+      blurb.textContent = "";
+    }
     $("#play-hint").textContent =
-      "Walk onto a ladder or snake-rope, then hold UP/W to climb (DOWN/S to go down). Space = jump.";
+      "← → move · Jump · Reach the green flag →";
     show("play");
     world._last = 0;
     lastGatorLineAt = 0;
     lastOwlLineAt = 0;
     loopId = requestAnimationFrame(tick);
-    // Exact level-start hype line (kid energy)
     gatorSay(GATOR_START_LINE, true);
   }
 
@@ -1778,14 +1618,12 @@
     updateHud();
   }
 
-  /* ---------- Touch pads ---------- */
+  /* ---------- Touch pads (Left · Jump · Right) ---------- */
   function bindTouch() {
     const map = [
       ["pad-left", "arrowleft"],
       ["pad-right", "arrowright"],
       ["pad-jump", " "],
-      ["pad-up", "arrowup"],
-      ["pad-down", "arrowdown"],
     ];
     map.forEach(function (pair) {
       const el = $("#" + pair[0]);
@@ -1835,9 +1673,24 @@
     });
 
     $("#btn-start").addEventListener("click", function () {
-      renderLevels();
-      show("levels");
+      // Jump straight into the first unfinished unlocked level (less friction)
+      let startAt = 0;
+      for (let i = 0; i < state.unlocked && i < TOTAL_LEVELS; i++) {
+        if (!state.completed[i]) {
+          startAt = i;
+          break;
+        }
+        startAt = Math.min(TOTAL_LEVELS - 1, i);
+      }
+      startLevel(startAt);
     });
+    const btnLevels = $("#btn-levels");
+    if (btnLevels) {
+      btnLevels.addEventListener("click", function () {
+        renderLevels();
+        show("levels");
+      });
+    }
     $("#btn-how").addEventListener("click", function () {
       const b = $("#how-box");
       b.style.display = b.style.display === "none" ? "block" : "none";
@@ -1858,6 +1711,15 @@
       }
     });
     $("#comic-continue").addEventListener("click", closeComicQuiz);
+    const quitPlay = $("#btn-quit-play");
+    if (quitPlay) {
+      quitPlay.addEventListener("click", function () {
+        stopLoop();
+        stopVoice();
+        closeComicQuiz();
+        show("start");
+      });
+    }
     $("#btn-fact-levels").addEventListener("click", function () {
       renderLevels();
       show("levels");

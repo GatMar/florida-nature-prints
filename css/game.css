@@ -235,10 +235,41 @@
 
 .play-hint {
   text-align: center;
-  font-size: 0.8rem;
-  color: #9dc4a8;
-  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  color: #c5e6d0;
+  margin-top: 0.55rem;
   line-height: 1.35;
+  font-weight: 700;
+}
+
+/* Big, easy touch controls */
+.control-pads {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr 1fr;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pad-btn {
+  min-height: 64px;
+  font-size: 1.35rem;
+  border-radius: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.pad-jump {
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+}
+
+.pad-btn:active {
+  transform: scale(0.97);
+  filter: brightness(1.08);
 }
 
 /* Meme-style NPC speech quiz popup */
