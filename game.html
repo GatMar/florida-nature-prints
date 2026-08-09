@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <title>Gator Grow - Florida Nature Prints</title>
+    <title>Gator Life - Florida Nature Prints</title>
     <meta
       name="description"
-      content="Gator Grow: a fun kid-friendly game about the life of an American alligator in Florida, from egg to adult."
+      content="Gator Life: a free Florida alligator adventure game with 50 levels, pixel art, and comic-book wildlife quizzes."
     />
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/game.css" />
@@ -31,7 +31,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="gallery.html">Gallery</a></li>
           <li><a href="shop.html">Shop</a></li>
-          <li><a href="game.html" class="active">Gator Grow</a></li>
+          <li><a href="game.html" class="active">Gator Life</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
@@ -43,15 +43,18 @@
         <div class="game-card">
           <!-- START -->
           <section id="screen-start" class="game-screen active">
-            <div class="start-hero" aria-hidden="true">🥚 → 🐊 → 🐊</div>
-            <h1>Gator Grow</h1>
+            <div class="start-hero" aria-hidden="true">🐊</div>
+            <h1>Gator Life</h1>
             <p class="subtitle">
-              Grow up as a Florida alligator - from egg to full adult!
+              50 short Florida wetland levels · one gator hero · comic quiz pop-ups
             </p>
             <ul class="start-list">
-              <li>Short levels for each stage of life</li>
-              <li>Real dangers &amp; adventures (kept friendly)</li>
-              <li>Quiz bonuses with true gator facts</li>
+              <li>Pixel gator, real Florida greens, water, and pastures</li>
+              <li>Jump gaps, dodge wildlife hazards, grab snacks</li>
+              <li>Quizzes appear mid-level as comic speech bubbles</li>
+              <li>
+                Huge question pool (<span id="q-count">2500+</span>) so replays stay fresh
+              </li>
               <li>Progress saves on this device</li>
             </ul>
             <div class="btn-row">
@@ -62,33 +65,35 @@
                 How to play
               </button>
             </div>
-            <div id="how-box" style="display: none; margin-top: 1rem" class="fact-card">
-              <p>
-                <strong>Move:</strong> drag with your finger or mouse, or use arrow
-                keys / WASD.<br />
-                <strong>Goal:</strong> finish each mini-challenge, then answer fun
-                quiz questions.<br />
-                <strong>Tips:</strong> correct answers give points and temporary
-                powers. Wrong answers still teach you - no scary game over!
+            <div
+              id="how-box"
+              class="fact-card"
+              style="display: none; margin-top: 1rem; background: #fffef5; color: #1a3324"
+            >
+              <p style="color: #1a3324">
+                <strong>Move</strong> with arrows / WASD or the on-screen pads.
+                <strong>Jump</strong> with UP, W, Space, or Z.<br />
+                Reach the green flag to finish a level. Yellow <strong>?</strong> blocks open
+                comic quizzes during the run. Wrong answers still teach you - no harsh punishment.
               </p>
             </div>
             <p class="controls-note">
-              Total score saved here:
+              Total score:
               <strong id="global-score">0</strong>
             </p>
           </section>
 
-          <!-- LEVEL SELECT -->
+          <!-- LEVELS -->
           <section id="screen-levels" class="game-screen">
-            <h1>Choose a stage</h1>
-            <p class="subtitle">Unlock the next stage by finishing the one before.</p>
+            <h1>50 Levels</h1>
+            <p class="subtitle">Clear a stage to unlock the next. Replay anytime.</p>
             <div class="level-grid" id="level-grid"></div>
             <div class="btn-row">
               <button type="button" class="game-btn game-btn-secondary" id="btn-levels-back">
                 Back
               </button>
               <button type="button" class="game-btn game-btn-secondary" id="btn-reset">
-                Reset progress
+                Reset
               </button>
             </div>
           </section>
@@ -96,56 +101,58 @@
           <!-- PLAY -->
           <section id="screen-play" class="game-screen">
             <div class="game-hud">
-              <span id="play-hud-hearts">❤️❤️❤️</span>
-              <span>Score: <span id="play-hud-score">0</span></span>
-              <span id="play-hud-powers"></span>
+              <span>LV <span id="play-hud-level">1</span></span>
+              <span class="hearts" id="play-hud-hearts">♥♥♥</span>
+              <span>Score <span id="play-hud-score">0</span></span>
             </div>
-            <div class="level-intro">
-              <h2 id="level-title">Level</h2>
-              <p id="level-blurb"></p>
+            <div class="level-intro" style="margin-bottom: 0.5rem">
+              <h2 id="level-title" style="font-size: 1rem; color: #b8f0c8; text-align: center">
+                Level
+              </h2>
+              <p id="level-blurb" style="display: none"></p>
             </div>
-            <div id="play-area" class="play-area" role="application" aria-label="Game play area"></div>
-            <div class="goal-bar" aria-hidden="true">
-              <div class="goal-bar-fill" id="goal-fill"></div>
-            </div>
-            <div class="goal-label" id="goal-label">Goal</div>
-            <p class="play-hint" id="play-hint"></p>
-          </section>
-
-          <!-- QUIZ -->
-          <section id="screen-quiz" class="game-screen">
-            <div class="game-hud">
-              <span id="quiz-hud-hearts">❤️❤️❤️</span>
-              <span>Score: <span id="quiz-hud-score">0</span></span>
-            </div>
-            <div class="quiz-box">
-              <div class="quiz-progress" id="quiz-progress">Question 1</div>
-              <h3 id="quiz-question">Question</h3>
-              <div class="quiz-options" id="quiz-options"></div>
-              <div class="quiz-feedback" id="quiz-feedback"></div>
-              <div class="btn-row" id="quiz-next-wrap" style="display: none">
-                <button type="button" class="game-btn game-btn-primary" id="btn-quiz-next">
-                  Next
-                </button>
+            <div class="stage-wrap">
+              <canvas id="game-canvas" width="320" height="180" aria-label="Gator Life game"></canvas>
+              <div id="comic-overlay" class="comic-overlay" aria-modal="true" role="dialog">
+                <div class="comic-bubble">
+                  <span class="comic-tag">Quiz Pop!</span>
+                  <h3 id="comic-question">Question</h3>
+                  <div class="comic-options" id="comic-options"></div>
+                  <div class="comic-feedback" id="comic-feedback"></div>
+                  <button
+                    type="button"
+                    class="game-btn game-btn-primary comic-continue"
+                    id="comic-continue"
+                    style="display: none"
+                  >
+                    Back to run!
+                  </button>
+                </div>
               </div>
+            </div>
+            <p class="play-hint" id="play-hint"></p>
+            <div class="btn-row" style="margin-top: 0.5rem">
+              <button type="button" class="game-btn game-btn-secondary" id="pad-left">◀ Left</button>
+              <button type="button" class="game-btn game-btn-primary" id="pad-jump">Jump</button>
+              <button type="button" class="game-btn game-btn-secondary" id="pad-right">Right ▶</button>
             </div>
           </section>
 
           <!-- FACT -->
           <section id="screen-fact" class="game-screen">
-            <div class="complete-emoji" id="fact-emoji">🐊🎉</div>
-            <h1 id="fact-title">Level complete!</h1>
+            <div class="complete-emoji" id="fact-emoji">🐊</div>
+            <h1 id="fact-title">Level clear!</h1>
             <p class="score-pop" id="fact-score">Score</p>
             <div class="fact-card">
-              <div class="label">Gator Fact</div>
-              <p id="fact-text">Fact goes here</p>
+              <div class="label">Florida Gator Fact</div>
+              <p id="fact-text">Fact</p>
             </div>
             <div class="btn-row">
               <button type="button" class="game-btn game-btn-primary" id="btn-fact-next">
-                Continue
+                Next level
               </button>
               <button type="button" class="game-btn game-btn-secondary" id="btn-fact-levels">
-                Level select
+                Level map
               </button>
             </div>
           </section>
@@ -165,15 +172,15 @@
           <ul class="footer-links">
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="shop.html">Shop</a></li>
-            <li><a href="game.html">Gator Grow</a></li>
+            <li><a href="game.html">Gator Life</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="contact.html">Contact</a></li>
           </ul>
         </div>
         <div class="footer-bottom">
           &copy; <span id="year"></span>
-          <span data-business-name>Florida Nature Prints</span>. Educational game
-          for fun learning about American alligators.
+          <span data-business-name>Florida Nature Prints</span>. Gator Life is an original
+          educational game (not affiliated with any other video game brand).
         </div>
       </div>
     </footer>
@@ -183,6 +190,7 @@
     </script>
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/gator-questions.js"></script>
     <script src="js/game.js"></script>
   </body>
 </html>

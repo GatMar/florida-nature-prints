@@ -1,334 +1,644 @@
 /**
- * Gator Grow - Florida American alligator life adventure
- * Kid-friendly, educational, localStorage progress
+ * Gator Life - original Florida wetland pixel adventure
+ * 50 levels, mid-run comic quiz popups, localStorage progress
+ * (Inspired by classic side-scrollers; original art/design - not affiliated with any trademarked game)
  */
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "gatorGrowProgress_v1";
-
-  const LEVELS = [
-    {
-      id: 0,
-      name: "Egg Nest",
-      year: "Year 0",
-      emoji: "🥚",
-      blurb: "You are an egg in a warm Florida nest. Stay safe until you hatch!",
-      challenge: "nest",
-      goalLabel: "Stay safe until hatch time",
-      duration: 28,
-      fact: "Nest temperature decides if babies are boys or girls! Cooler nests often mean girls; warmer nests often mean boys.",
-      player: "🥚",
-      playerSize: "",
-    },
-    {
-      id: 1,
-      name: "Hatchling",
-      year: "Year 1",
-      emoji: "🐊",
-      blurb: "You hatched! Tiny with yellow stripes. Stay near Mom and hide from danger.",
-      challenge: "hatchling",
-      goalLabel: "Stay near Mom and avoid dangers",
-      duration: 32,
-      fact: "Baby alligators have bright yellow stripes for camouflage in sunny grass and water plants.",
-      player: "🐊",
-      playerSize: "",
-    },
-    {
-      id: 2,
-      name: "Young Juvenile",
-      year: "Years 2-4",
-      emoji: "🐊",
-      blurb: "Find water holes and catch small snacks. Watch out for bigger gators!",
-      challenge: "juvenile",
-      goalLabel: "Catch snacks and find water",
-      needCatch: 6,
-      fact: "Young alligators eat insects, frogs, and small fish. As they grow, their menu gets bigger too!",
-      player: "🐊",
-      playerSize: "big",
-    },
-    {
-      id: 3,
-      name: "Sub-adult",
-      year: "Years 5-8",
-      emoji: "🐊",
-      blurb: "Cross dry land to find new territory. Avoid boats and other big gators.",
-      challenge: "subadult",
-      goalLabel: "Reach the new wetland safely",
-      fact: "Alligators dig dens called 'gator holes' that hold water in dry seasons and help other animals too!",
-      player: "🐊",
-      playerSize: "big",
-    },
-    {
-      id: 4,
-      name: "Adult Gator",
-      year: "Years 9+",
-      emoji: "🐊",
-      blurb: "Claim your territory, bellow, and protect your nest. You are a full Florida gator!",
-      challenge: "adult",
-      goalLabel: "Build nest points and hold territory",
-      needNest: 5,
-      fact: "Adult alligators bellow and slap the water with their heads to talk, attract mates, and show strength - without fighting every time.",
-      player: "🐊",
-      playerSize: "huge",
-    },
-  ];
-
-  const QUIZZES = {
-    0: [
-      {
-        q: "What decides if baby alligators are boys or girls?",
-        choices: ["The moon", "Nest temperature", "How many eggs", "The father's size"],
-        correct: 1,
-        explain: "Nest temperature decides! This is called temperature-dependent sex determination.",
-        power: "health",
-      },
-      {
-        q: "Who often guards the nest?",
-        choices: ["Nobody", "The mother alligator", "Only birds", "Fish"],
-        correct: 1,
-        explain: "Mom alligator usually stays near and guards the nest.",
-        power: "hide",
-      },
-      {
-        q: "What is a danger to alligator eggs?",
-        choices: ["Raccoons", "Butterflies", "Clouds", "Palm trees"],
-        correct: 0,
-        explain: "Raccoons (and flooding or too much heat) can harm eggs.",
-        power: "points",
-      },
-      {
-        q: "Where do American alligators live in this game?",
-        choices: ["Only deserts", "Florida wetlands and swamps", "Deep ocean only", "Snowy mountains"],
-        correct: 1,
-        explain: "American alligators love Florida wetlands, marshes, and swamps.",
-        power: "speed",
-      },
-    ],
-    1: [
-      {
-        q: "Baby alligators have yellow stripes for…",
-        choices: ["Looking pretty only", "Camouflage in grass", "Attracting friends", "Swimming faster"],
-        correct: 1,
-        explain: "Stripes help them blend into grass and plants - camouflage!",
-        power: "hide",
-      },
-      {
-        q: "How long do moms usually protect the hatchlings?",
-        choices: ["A few days", "About 1-2 years", "Forever", "Until bigger than her"],
-        correct: 1,
-        explain: "Mom often protects young for about one to two years.",
-        power: "health",
-      },
-      {
-        q: "What might hunt a tiny hatchling?",
-        choices: ["Big birds", "Ladybugs", "Frogs only", "Flowers"],
-        correct: 0,
-        explain: "Birds, big fish, snakes, and other animals can be dangers.",
-        power: "speed",
-      },
-      {
-        q: "Hatchlings are best at…",
-        choices: ["Driving boats", "Staying near Mom and hiding", "Building houses", "Flying"],
-        correct: 1,
-        explain: "Staying near Mom and hiding keeps tiny gators safer.",
-        power: "points",
-      },
-    ],
-    2: [
-      {
-        q: "What might a young juvenile eat?",
-        choices: ["Only leaves", "Insects, frogs, and small fish", "Only coconuts", "Metal cans"],
-        correct: 1,
-        explain: "Small prey first - insects, frogs, and little fish!",
-        power: "bite",
-      },
-      {
-        q: "Why are water holes important?",
-        choices: ["They are toys", "They hold water in dry times", "They scare birds only", "They make noise"],
-        correct: 1,
-        explain: "Water holes help gators (and other wildlife) survive dry seasons.",
-        power: "health",
-      },
-      {
-        q: "Should a small gator pick a fight with a huge gator?",
-        choices: ["Yes always", "No - better to avoid bigger gators", "Only on Tuesdays", "Only if dancing"],
-        correct: 1,
-        explain: "Young gators stay safer by avoiding much bigger alligators.",
-        power: "hide",
-      },
-      {
-        q: "American alligators are native to…",
-        choices: ["Antarctica", "Parts of the southeastern USA like Florida", "The Moon", "Only Europe"],
-        correct: 1,
-        explain: "They live in the southeastern United States, including Florida!",
-        power: "points",
-      },
-    ],
-    3: [
-      {
-        q: "What is a 'gator hole'?",
-        choices: ["A golf course", "A den that holds water", "A type of boat", "A bird nest"],
-        correct: 1,
-        explain: "Gator holes are dens that keep water available in dry seasons.",
-        power: "health",
-      },
-      {
-        q: "Why might a sub-adult travel over dry land?",
-        choices: ["To find new territory or water", "To buy ice cream", "To go to school", "To fly"],
-        correct: 0,
-        explain: "They may search for territory, water, or mates as they grow.",
-        power: "speed",
-      },
-      {
-        q: "What should gators try to avoid near people?",
-        choices: ["Sunlight", "Boats and close contact with pets/people", "Rain", "Reeds"],
-        correct: 1,
-        explain: "Boats and close human or pet encounters can be dangerous for both sides.",
-        power: "hide",
-      },
-      {
-        q: "As gators grow, their diet…",
-        choices: ["Stays only insects", "Often includes larger prey", "Becomes only fruit", "Stops completely"],
-        correct: 1,
-        explain: "Bigger gators can take larger prey as their jaws and size grow.",
-        power: "bite",
-      },
-    ],
-    4: [
-      {
-        q: "Why do adult alligators bellow?",
-        choices: ["To sing pop songs", "To communicate and attract mates", "To call pizza", "To scare clouds"],
-        correct: 1,
-        explain: "Bellowing helps them communicate, show strength, and attract mates.",
-        power: "points",
-      },
-      {
-        q: "Head-slapping the water can mean…",
-        choices: ["They are bored only", "A signal during courtship or display", "It is an accident always", "They dislike water"],
-        correct: 1,
-        explain: "Slapping and displays are part of alligator communication.",
-        power: "bite",
-      },
-      {
-        q: "Who usually builds and guards the nest?",
-        choices: ["The mother", "A raccoon", "A tourist", "A fish"],
-        correct: 0,
-        explain: "Female alligators build nests of vegetation and guard them.",
-        power: "health",
-      },
-      {
-        q: "Large males may…",
-        choices: ["Share every snack politely always", "Defend territory from other big males", "Turn into lizards", "Hibernate in trees"],
-        correct: 1,
-        explain: "Big males often hold and defend territories.",
-        power: "speed",
-      },
-    ],
-  };
+  const STORAGE = "gatorLifeProgress_v2";
+  const W = 320;
+  const H = 180;
+  const GRAV = 0.28;
+  const TOTAL_LEVELS = 50;
 
   const state = {
     screen: "start",
-    score: 0,
     totalScore: 0,
     unlocked: 1,
     completed: {},
-    levelId: 0,
-    health: 3,
-    maxHealth: 3,
-    powers: { speed: 0, hide: 0, bite: 0 },
-    quizIndex: 0,
-    quizOrder: [],
-    phase: "play", // play | quiz | fact
+    level: 0,
+    score: 0,
+    lives: 3,
+    playSeed: 1,
+    usedQ: {},
   };
 
-  let play = null;
-  let raf = null;
+  let canvas, ctx;
+  let loopId = null;
   let keys = {};
+  let world = null;
+  let pausedForQuiz = false;
 
-  const $ = (sel) => document.querySelector(sel);
-  const screens = {
-    start: $("#screen-start"),
-    levels: $("#screen-levels"),
-    play: $("#screen-play"),
-    quiz: $("#screen-quiz"),
-    fact: $("#screen-fact"),
+  const $ = function (s) {
+    return document.querySelector(s);
   };
 
-  function loadProgress() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      state.totalScore = data.totalScore || 0;
-      state.unlocked = data.unlocked || 1;
-      state.completed = data.completed || {};
-    } catch (e) {
-      /* ignore */
-    }
+  function stageName(i) {
+    if (i < 10) return "Nestling";
+    if (i < 20) return "Hatchling";
+    if (i < 30) return "Juvenile";
+    if (i < 40) return "Sub-adult";
+    return "Adult";
   }
 
-  function saveProgress() {
+  function gatorScale(i) {
+    if (i < 10) return 0.7;
+    if (i < 20) return 0.85;
+    if (i < 30) return 1;
+    if (i < 40) return 1.15;
+    return 1.35;
+  }
+
+  function load() {
+    try {
+      const d = JSON.parse(localStorage.getItem(STORAGE) || "{}");
+      state.totalScore = d.totalScore || 0;
+      state.unlocked = d.unlocked || 1;
+      state.completed = d.completed || {};
+      state.playSeed = d.playSeed || 1;
+      state.usedQ = d.usedQ || {};
+    } catch (e) {}
+  }
+
+  function save() {
     localStorage.setItem(
-      STORAGE_KEY,
+      STORAGE,
       JSON.stringify({
         totalScore: state.totalScore,
         unlocked: state.unlocked,
         completed: state.completed,
+        playSeed: state.playSeed,
+        usedQ: state.usedQ,
       })
     );
   }
 
-  function showScreen(name) {
+  function show(name) {
     state.screen = name;
-    Object.keys(screens).forEach(function (k) {
-      screens[k].classList.toggle("active", k === name);
+    ["start", "levels", "play", "fact"].forEach(function (k) {
+      const el = $("#screen-" + k);
+      if (el) el.classList.toggle("active", k === name);
     });
   }
 
-  function updateGlobalHud() {
-    const el = $("#global-score");
-    if (el) el.textContent = String(state.totalScore);
-  }
-
-  function heartString() {
+  function hearts() {
     let s = "";
-    for (let i = 0; i < state.maxHealth; i++) {
-      s += i < state.health ? "❤️" : "🖤";
-    }
+    for (let i = 0; i < 3; i++) s += i < state.lives ? "♥" : "·";
     return s;
   }
 
-  function powerLabels() {
-    const parts = [];
-    if (state.powers.speed > 0) parts.push("⚡ Speed");
-    if (state.powers.hide > 0) parts.push("🌿 Hide");
-    if (state.powers.bite > 0) parts.push("🦷 Bite");
-    return parts.length
-      ? parts.map(function (p) {
-          return '<span class="power-badge">' + p + "</span>";
-        }).join("")
-      : "";
+  function updateHud() {
+    const a = $("#play-hud-hearts");
+    const b = $("#play-hud-score");
+    const c = $("#play-hud-level");
+    const g = $("#global-score");
+    if (a) a.textContent = hearts();
+    if (b) b.textContent = String(state.score);
+    if (c) c.textContent = String(state.level + 1);
+    if (g) g.textContent = String(state.totalScore);
   }
 
-  function toast(area, text) {
-    let t = area.querySelector(".msg-toast");
-    if (!t) {
-      t = document.createElement("div");
-      t.className = "msg-toast";
-      area.appendChild(t);
+  /* ---------- Level geometry ---------- */
+  function buildLevel(idx) {
+    const platforms = [];
+    const hazards = [];
+    const quizzes = [];
+    const items = [];
+    const len = 900 + idx * 28;
+    const groundY = 150;
+
+    // ground segments with gaps
+    let x = 0;
+    while (x < len) {
+      const w = 80 + Math.floor(Math.random() * 60) + (idx < 5 ? 40 : 0);
+      platforms.push({ x: x, y: groundY, w: w, h: 30 });
+      const gap = 20 + Math.min(50, 10 + idx);
+      x += w + (idx > 3 && Math.random() < 0.35 ? gap : 8);
     }
-    t.textContent = text;
-    t.classList.add("show");
-    setTimeout(function () {
-      t.classList.remove("show");
-    }, 900);
+    // floating pads
+    for (let i = 0; i < 4 + Math.floor(idx / 5); i++) {
+      platforms.push({
+        x: 120 + i * 140 + (idx % 7) * 9,
+        y: 100 - (i % 3) * 18,
+        w: 48 + (idx % 5) * 4,
+        h: 10,
+      });
+    }
+
+    // hazards
+    const kinds = ["raccoon", "bird", "log", "snake", "boat", "rival"];
+    const count = 3 + Math.floor(idx / 3);
+    for (let i = 0; i < count; i++) {
+      const k = kinds[Math.min(kinds.length - 1, Math.floor(i / 2) + Math.floor(idx / 12))];
+      hazards.push({
+        x: 160 + i * (90 - Math.min(40, idx)) + Math.random() * 30,
+        y: groundY - 12,
+        w: 14,
+        h: 12,
+        kind: k,
+        vx: k === "bird" ? 0.6 + idx * 0.02 : k === "boat" ? 0.9 : 0.35,
+        baseY: groundY - 12,
+        phase: Math.random() * 10,
+      });
+    }
+
+    // mid-level quiz triggers (2-4)
+    const qn = 2 + (idx % 3);
+    for (let i = 0; i < qn; i++) {
+      quizzes.push({
+        x: 180 + ((i + 1) * len) / (qn + 2),
+        y: groundY - 40,
+        hit: false,
+      });
+    }
+
+    // snacks
+    for (let i = 0; i < 8 + (idx % 5); i++) {
+      items.push({
+        x: 100 + i * 70,
+        y: groundY - 28 - (i % 3) * 20,
+        taken: false,
+      });
+    }
+
+    return {
+      idx: idx,
+      len: len,
+      platforms: platforms,
+      hazards: hazards,
+      quizzes: quizzes,
+      items: items,
+      goalX: len - 40,
+      camera: 0,
+      time: 0,
+      inv: 0,
+      won: false,
+      player: {
+        x: 40,
+        y: 100,
+        vx: 0,
+        vy: 0,
+        w: 16 * gatorScale(idx),
+        h: 10 * gatorScale(idx),
+        onGround: false,
+        facing: 1,
+      },
+    };
   }
 
-  function renderLevelSelect() {
+  /* ---------- Drawing (original pixel style) ---------- */
+  function drawBackground(cam, t, idx) {
+    // Florida sky
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#7eb8d4");
+    g.addColorStop(0.45, "#b8d4c8");
+    g.addColorStop(0.55, "#5a9a6a");
+    g.addColorStop(1, "#3d7a4a");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // distant treeline (soft realistic green masses)
+    ctx.fillStyle = "rgba(30, 70, 45, 0.55)";
+    for (let i = 0; i < 12; i++) {
+      const tx = ((i * 70 - cam * 0.2) % (W + 80)) - 40;
+      ctx.beginPath();
+      ctx.ellipse(tx + 30, 88, 36, 28, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // water band
+    ctx.fillStyle = "rgba(50, 120, 150, 0.55)";
+    ctx.fillRect(0, 118, W, 40);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+    for (let i = 0; i < 8; i++) {
+      const wx = ((i * 50 + t * 20 - cam * 0.5) % (W + 40)) - 20;
+      ctx.fillRect(wx, 125 + (i % 3) * 4, 24, 2);
+    }
+
+    // grass foreground pixels
+    ctx.fillStyle = "#4a9a58";
+    ctx.fillRect(0, 148, W, H - 148);
+    ctx.fillStyle = "#3d8048";
+    for (let i = 0; i < W; i += 4) {
+      const hx = Math.floor((i + cam) / 4) % 3;
+      ctx.fillRect(i, 146 - hx, 2, 4 + hx);
+    }
+
+    // sun
+    ctx.fillStyle = "rgba(255, 230, 150, 0.85)";
+    ctx.fillRect(W - 50, 18, 18, 18);
+  }
+
+  function drawPlatforms(cam) {
+    world.platforms.forEach(function (p) {
+      const x = Math.floor(p.x - cam);
+      if (x > W || x + p.w < 0) return;
+      // muddy bank / grass top
+      ctx.fillStyle = "#5c4030";
+      ctx.fillRect(x, p.y, p.w, p.h);
+      ctx.fillStyle = "#4f8f45";
+      ctx.fillRect(x, p.y, p.w, 4);
+      ctx.fillStyle = "#6aaa55";
+      for (let i = 0; i < p.w; i += 6) ctx.fillRect(x + i, p.y - 2, 3, 2);
+    });
+  }
+
+  function drawPixelGator(p, scale, facing) {
+    const x = Math.floor(p.x - world.camera);
+    const y = Math.floor(p.y);
+    const s = scale;
+    ctx.save();
+    if (facing < 0) {
+      ctx.translate(x + p.w / 2, 0);
+      ctx.scale(-1, 1);
+      ctx.translate(-(x + p.w / 2), 0);
+    }
+    // body blocks - original design
+    ctx.fillStyle = "#2f6b3a";
+    ctx.fillRect(x, y + 2 * s, 12 * s, 6 * s);
+    ctx.fillStyle = "#3d8a4a";
+    ctx.fillRect(x + 2 * s, y + 1 * s, 8 * s, 3 * s);
+    // head
+    ctx.fillStyle = "#357a42";
+    ctx.fillRect(x + 10 * s, y + 2 * s, 7 * s, 5 * s);
+    // snout
+    ctx.fillStyle = "#2a6035";
+    ctx.fillRect(x + 15 * s, y + 4 * s, 5 * s, 2 * s);
+    // eye
+    ctx.fillStyle = "#f0e060";
+    ctx.fillRect(x + 13 * s, y + 2 * s, 2 * s, 2 * s);
+    ctx.fillStyle = "#111";
+    ctx.fillRect(x + 14 * s, y + 2 * s, 1 * s, 1 * s);
+    // legs
+    ctx.fillStyle = "#245530";
+    ctx.fillRect(x + 2 * s, y + 7 * s, 3 * s, 3 * s);
+    ctx.fillRect(x + 8 * s, y + 7 * s, 3 * s, 3 * s);
+    // hatchling stripes
+    if (world.idx < 20) {
+      ctx.fillStyle = "#e8d060";
+      ctx.fillRect(x + 3 * s, y + 2 * s, 1 * s, 5 * s);
+      ctx.fillRect(x + 6 * s, y + 2 * s, 1 * s, 5 * s);
+      ctx.fillRect(x + 9 * s, y + 2 * s, 1 * s, 5 * s);
+    }
+    // egg form early
+    if (world.idx < 5) {
+      ctx.fillStyle = "#f0e8c8";
+      ctx.fillRect(x + 2 * s, y, 10 * s, 12 * s);
+      ctx.fillStyle = "#e0d0a0";
+      ctx.fillRect(x + 4 * s, y + 2 * s, 2 * s, 2 * s);
+    }
+    ctx.restore();
+  }
+
+  function drawHazard(h, cam) {
+    const x = Math.floor(h.x - cam);
+    const y = Math.floor(h.y);
+    if (x < -20 || x > W + 20) return;
+    if (h.kind === "bird") {
+      ctx.fillStyle = "#4a4a4a";
+      ctx.fillRect(x, y, 12, 6);
+      ctx.fillRect(x + 10, y - 2, 6, 4);
+      ctx.fillStyle = "#222";
+      ctx.fillRect(x + 2, y + 2, 3, 2);
+    } else if (h.kind === "boat") {
+      ctx.fillStyle = "#8b4513";
+      ctx.fillRect(x, y, 20, 8);
+      ctx.fillStyle = "#c0c0c0";
+      ctx.fillRect(x + 6, y - 6, 3, 6);
+    } else if (h.kind === "raccoon") {
+      ctx.fillStyle = "#6b5b4b";
+      ctx.fillRect(x, y, 12, 8);
+      ctx.fillStyle = "#111";
+      ctx.fillRect(x + 2, y + 2, 8, 2);
+    } else if (h.kind === "snake") {
+      ctx.fillStyle = "#5a7a3a";
+      ctx.fillRect(x, y + 4, 16, 3);
+      ctx.fillRect(x + 12, y, 4, 5);
+    } else if (h.kind === "rival") {
+      drawPixelGator({ x: h.x, y: h.y - 4, w: 18, h: 12 }, 1.1, -1);
+      return;
+    } else {
+      ctx.fillStyle = "#5c4030";
+      ctx.fillRect(x, y + 2, 16, 6);
+    }
+  }
+
+  function drawWorld() {
+    const p = world.player;
+    const cam = world.camera;
+    drawBackground(cam, world.time, world.idx);
+    drawPlatforms(cam);
+
+    // items
+    world.items.forEach(function (it) {
+      if (it.taken) return;
+      const x = Math.floor(it.x - cam);
+      ctx.fillStyle = "#e8c040";
+      ctx.fillRect(x, it.y, 6, 6);
+      ctx.fillStyle = "#fff8c0";
+      ctx.fillRect(x + 1, it.y + 1, 2, 2);
+    });
+
+    // quiz markers (comic stars)
+    world.quizzes.forEach(function (q) {
+      if (q.hit) return;
+      const x = Math.floor(q.x - cam);
+      ctx.fillStyle = "#ffe566";
+      ctx.fillRect(x, q.y, 12, 12);
+      ctx.fillStyle = "#111";
+      ctx.font = "bold 10px monospace";
+      ctx.fillText("?", x + 3, q.y + 10);
+    });
+
+    // goal flag
+    const gx = Math.floor(world.goalX - cam);
+    ctx.fillStyle = "#f5f5f5";
+    ctx.fillRect(gx, 100, 3, 50);
+    ctx.fillStyle = "#3cb371";
+    ctx.fillRect(gx + 3, 100, 14, 10);
+
+    world.hazards.forEach(function (h) {
+      drawHazard(h, cam);
+    });
+
+    drawPixelGator(p, gatorScale(world.idx), p.facing);
+
+    // HUD strip on canvas
+    ctx.fillStyle = "rgba(10,30,18,0.55)";
+    ctx.fillRect(0, 0, W, 14);
+    ctx.fillStyle = "#e8f5ec";
+    ctx.font = "10px monospace";
+    ctx.fillText(
+      "LV " + (world.idx + 1) + "  " + stageName(world.idx) + "  SCORE " + state.score,
+      4,
+      10
+    );
+  }
+
+  /* ---------- Physics ---------- */
+  function solidAt(x, y, w, h) {
+    for (let i = 0; i < world.platforms.length; i++) {
+      const p = world.platforms[i];
+      if (x < p.x + p.w && x + w > p.x && y < p.y + p.h && y + h > p.y) return p;
+    }
+    return null;
+  }
+
+  function updatePlayer(dt) {
+    const p = world.player;
+    const sp = 1.35 + Math.min(0.8, world.idx * 0.015);
+    let move = 0;
+    if (keys["arrowleft"] || keys["a"]) move -= 1;
+    if (keys["arrowright"] || keys["d"]) move += 1;
+    p.vx = move * sp;
+    if (move) p.facing = move > 0 ? 1 : -1;
+    if ((keys["arrowup"] || keys["w"] || keys[" "] || keys["z"]) && p.onGround) {
+      p.vy = -4.6 - Math.min(0.8, world.idx * 0.02);
+      p.onGround = false;
+    }
+    p.vy += GRAV;
+    if (p.vy > 6) p.vy = 6;
+
+    // horizontal
+    p.x += p.vx;
+    let hit = solidAt(p.x, p.y, p.w, p.h);
+    if (hit) {
+      if (p.vx > 0) p.x = hit.x - p.w - 0.01;
+      else if (p.vx < 0) p.x = hit.x + hit.w + 0.01;
+      p.vx = 0;
+    }
+    // vertical
+    p.y += p.vy;
+    p.onGround = false;
+    hit = solidAt(p.x, p.y, p.w, p.h);
+    if (hit) {
+      if (p.vy > 0) {
+        p.y = hit.y - p.h - 0.01;
+        p.onGround = true;
+      } else if (p.vy < 0) {
+        p.y = hit.y + hit.h + 0.01;
+      }
+      p.vy = 0;
+    }
+
+    if (p.y > H + 20) {
+      hurt();
+      p.x = 40;
+      p.y = 80;
+      p.vy = 0;
+      world.camera = 0;
+    }
+
+    world.camera = Math.max(0, Math.min(world.len - W, p.x - 80));
+  }
+
+  function hurt() {
+    if (world.inv > 0) return;
+    state.lives -= 1;
+    world.inv = 1.2;
+    updateHud();
+    if (state.lives <= 0) {
+      // gentle restart level
+      state.lives = 3;
+      state.score = Math.max(0, state.score - 20);
+      startLevel(state.level, true);
+    }
+  }
+
+  function aabb(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function updateHazards(dt) {
+    world.hazards.forEach(function (h) {
+      h.phase += dt;
+      if (h.kind === "bird") {
+        h.x += h.vx * (Math.sin(h.phase) > 0 ? 1 : -1);
+        h.y = h.baseY - 40 + Math.sin(h.phase * 2) * 16;
+      } else if (h.kind === "boat") {
+        h.x += h.vx * 0.8;
+        if (h.x > world.len) h.x = -20;
+      } else {
+        h.x += Math.sin(h.phase) * h.vx * 0.5;
+      }
+      const box = { x: h.x, y: h.y, w: h.w || 14, h: h.h || 12 };
+      if (world.inv <= 0 && aabb(world.player, box)) hurt();
+    });
+  }
+
+  function updateItems() {
+    world.items.forEach(function (it) {
+      if (it.taken) return;
+      if (aabb(world.player, { x: it.x, y: it.y, w: 6, h: 6 })) {
+        it.taken = true;
+        state.score += 10;
+        updateHud();
+      }
+    });
+  }
+
+  function updateQuizzes() {
+    world.quizzes.forEach(function (q) {
+      if (q.hit) return;
+      if (aabb(world.player, { x: q.x, y: q.y, w: 12, h: 12 })) {
+        q.hit = true;
+        openComicQuiz();
+      }
+    });
+  }
+
+  function updateGoal() {
+    if (world.player.x + world.player.w >= world.goalX) {
+      world.won = true;
+      finishLevel();
+    }
+  }
+
+  /* ---------- Comic quiz ---------- */
+  function openComicQuiz() {
+    if (pausedForQuiz) return;
+    pausedForQuiz = true;
+    const used = state.usedQ[state.level] || [];
+    const q = window.GATOR_QUESTIONS.pickQuestion(state.level, used, state.playSeed);
+    if (!q) {
+      pausedForQuiz = false;
+      return;
+    }
+    used.push(q.key);
+    if (used.length > 80) used.shift();
+    state.usedQ[state.level] = used;
+    state.playSeed += 1;
+    save();
+
+    const overlay = $("#comic-overlay");
+    const title = $("#comic-question");
+    const opts = $("#comic-options");
+    const fb = $("#comic-feedback");
+    const cont = $("#comic-continue");
+    overlay.classList.add("show");
+    title.textContent = q.q;
+    fb.className = "comic-feedback";
+    fb.textContent = "";
+    cont.style.display = "none";
+    opts.innerHTML = "";
+
+    q.choices.forEach(function (c, idx) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "comic-opt";
+      b.textContent = String.fromCharCode(65 + idx) + ". " + c;
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(opts.querySelectorAll(".comic-opt"), function (el) {
+          el.disabled = true;
+        });
+        if (idx === q.correct) {
+          b.classList.add("correct");
+          state.score += 35;
+          fb.className = "comic-feedback show";
+          fb.textContent = "POW! Correct! +" + 35 + "  " + q.explain;
+        } else {
+          b.classList.add("wrong");
+          const right = opts.children[q.correct];
+          if (right) right.classList.add("correct");
+          state.score += 5;
+          fb.className = "comic-feedback show";
+          fb.textContent = "Nice try! " + q.explain;
+        }
+        updateHud();
+        cont.style.display = "block";
+      });
+      opts.appendChild(b);
+    });
+  }
+
+  function closeComicQuiz() {
+    $("#comic-overlay").classList.remove("show");
+    pausedForQuiz = false;
+  }
+
+  function finishLevel() {
+    stopLoop();
+    state.totalScore += state.score;
+    state.completed[state.level] = true;
+    if (state.unlocked < state.level + 2) state.unlocked = Math.min(TOTAL_LEVELS, state.level + 2);
+    save();
+    $("#fact-emoji").textContent = "🐊";
+    $("#fact-title").textContent = "Level " + (state.level + 1) + " clear!";
+    $("#fact-score").textContent =
+      "Level score: " + state.score + " · Total: " + state.totalScore;
+    const facts = [
+      "Florida wetlands are home to American alligators and many other species.",
+      "Nest temperature helps decide whether hatchlings are male or female.",
+      "Gator holes hold water in dry times and help other animals too.",
+      "Baby alligators have yellow stripes for camouflage.",
+      "Adults bellow and slap water to communicate.",
+      "Keep a safe distance from wild alligators - never feed them.",
+    ];
+    $("#fact-text").textContent = facts[state.level % facts.length];
+    const g = $("#global-score");
+    if (g) g.textContent = String(state.totalScore);
+    show("fact");
+  }
+
+  /* ---------- Loop ---------- */
+  function tick(ts) {
+    if (!world || pausedForQuiz) {
+      if (world && !pausedForQuiz) drawWorld();
+      else if (world) drawWorld();
+      loopId = requestAnimationFrame(tick);
+      return;
+    }
+    if (!world._last) world._last = ts;
+    const dt = Math.min(0.05, (ts - world._last) / 1000);
+    world._last = ts;
+    world.time += dt;
+    if (world.inv > 0) world.inv -= dt;
+
+    updatePlayer(dt);
+    updateHazards(dt);
+    updateItems();
+    updateQuizzes();
+    if (!world.won) updateGoal();
+    drawWorld();
+    loopId = requestAnimationFrame(tick);
+  }
+
+  function stopLoop() {
+    if (loopId) cancelAnimationFrame(loopId);
+    loopId = null;
+  }
+
+  function startLevel(idx, soft) {
+    stopLoop();
+    closeComicQuiz();
+    pausedForQuiz = false;
+    state.level = idx;
+    if (!soft) {
+      state.score = 0;
+      state.lives = 3;
+    }
+    world = buildLevel(idx);
+    // reseed random-ish layout variation by playSeed
+    world.hazards.forEach(function (h, i) {
+      h.x += ((state.playSeed + i) % 7) * 3;
+    });
+    updateHud();
+    $("#level-title").textContent =
+      "Level " + (idx + 1) + " · " + stageName(idx);
+    $("#level-blurb").textContent =
+      "Guide your gator through Florida wetlands. Jump gaps, dodge trouble, grab snacks, and answer comic quiz pop-ups!";
+    $("#play-hint").textContent =
+      "Move: arrows/WASD or on-screen pads · Jump: UP/W/SPACE/Z · Reach the green flag";
+    show("play");
+    world._last = 0;
+    loopId = requestAnimationFrame(tick);
+  }
+
+  function renderLevels() {
     const grid = $("#level-grid");
     grid.innerHTML = "";
-    LEVELS.forEach(function (lv, i) {
+    for (let i = 0; i < TOTAL_LEVELS; i++) {
       const unlocked = i < state.unlocked;
       const done = !!state.completed[i];
       const btn = document.createElement("button");
@@ -337,682 +647,109 @@
       btn.disabled = !unlocked;
       btn.innerHTML =
         '<span class="emoji">' +
-        (unlocked ? lv.emoji : "🔒") +
+        (unlocked ? (i < 5 ? "🥚" : "🐊") : "🔒") +
         "</span>" +
-        '<div class="name">' +
-        lv.name +
-        "</div>" +
-        '<div class="meta">' +
-        lv.year +
-        (done ? " · ★ done" : unlocked ? "" : " · locked") +
-        "</div>";
+        (i + 1);
       if (unlocked) {
         btn.addEventListener("click", function () {
           startLevel(i);
         });
       }
       grid.appendChild(btn);
-    });
-    updateGlobalHud();
-  }
-
-  function startLevel(id) {
-    stopPlayLoop();
-    state.levelId = id;
-    state.score = 0;
-    state.health = 3;
-    state.maxHealth = 3;
-    state.powers = { speed: 0, hide: 0, bite: 0 };
-    state.phase = "play";
-    state.quizIndex = 0;
-    const qs = QUIZZES[id].slice();
-    // shuffle quiz order lightly
-    for (let i = qs.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const tmp = qs[i];
-      qs[i] = qs[j];
-      qs[j] = tmp;
     }
-    state.quizOrder = qs;
-
-    const lv = LEVELS[id];
-    $("#level-title").textContent = lv.emoji + " " + lv.name;
-    $("#level-blurb").textContent = lv.blurb;
-    $("#play-hud-hearts").innerHTML = heartString();
-    $("#play-hud-score").textContent = "0";
-    $("#play-hud-powers").innerHTML = powerLabels();
-    $("#goal-label").textContent = lv.goalLabel;
-    $("#goal-fill").style.width = "0%";
-
-    showScreen("play");
-    initChallenge(lv);
+    updateHud();
   }
 
-  function speedMul() {
-    return state.powers.speed > 0 ? 1.45 : 1;
-  }
-
-  function hideActive() {
-    return state.powers.hide > 0;
-  }
-
-  function biteMul() {
-    return state.powers.bite > 0 ? 2 : 1;
-  }
-
-  function tickPowerTimers(dt) {
-    ["speed", "hide", "bite"].forEach(function (k) {
-      if (state.powers[k] > 0) {
-        state.powers[k] -= dt;
-        if (state.powers[k] < 0) state.powers[k] = 0;
-      }
-    });
-  }
-
-  function hurt(amount) {
-    if (hideActive() && Math.random() < 0.55) {
-      toast(play.area, "Hidden! 🌿");
-      return;
-    }
-    state.health -= amount || 1;
-    if (state.health < 0) state.health = 0;
-    $("#play-hud-hearts").innerHTML = heartString();
-    toast(play.area, "Ouch! Be careful");
-    if (state.health <= 0) {
-      // gentle retry - no harsh game over story
-      endPlay(false);
-    }
-  }
-
-  function addScore(n) {
-    state.score += n;
-    $("#play-hud-score").textContent = String(state.score);
-  }
-
-  function endPlay(won) {
-    stopPlayLoop();
-    if (!won) {
-      // soft fail: still allow quiz with encouragement
-      state.score = Math.max(state.score, 20);
-    }
-    beginQuiz();
-  }
-
-  function beginQuiz() {
-    state.phase = "quiz";
-    state.quizIndex = 0;
-    showScreen("quiz");
-    renderQuiz();
-  }
-
-  function applyPower(type) {
-    if (type === "health") {
-      state.health = Math.min(state.maxHealth, state.health + 1);
-    } else if (type === "speed") {
-      state.powers.speed = 12;
-    } else if (type === "hide") {
-      state.powers.hide = 12;
-    } else if (type === "bite") {
-      state.powers.bite = 12;
-    } else if (type === "points") {
-      addScore(25);
-      state.score += 0;
-    }
-  }
-
-  function renderQuiz() {
-    const list = state.quizOrder;
-    const i = state.quizIndex;
-    const item = list[i];
-    $("#quiz-progress").textContent =
-      "Question " + (i + 1) + " of " + list.length;
-    $("#quiz-question").textContent = item.q;
-    const box = $("#quiz-options");
-    box.innerHTML = "";
-    const fb = $("#quiz-feedback");
-    fb.className = "quiz-feedback";
-    fb.textContent = "";
-    $("#quiz-next-wrap").style.display = "none";
-
-    item.choices.forEach(function (c, idx) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "quiz-opt";
-      b.textContent = String.fromCharCode(97 + idx) + ") " + c;
-      b.addEventListener("click", function () {
-        answerQuiz(idx, item, b, box);
-      });
-      box.appendChild(b);
-    });
-
-    $("#quiz-hud-score").textContent = String(state.score);
-    $("#quiz-hud-hearts").innerHTML = heartString();
-  }
-
-  function answerQuiz(idx, item, btn, box) {
-    const buttons = box.querySelectorAll(".quiz-opt");
-    buttons.forEach(function (b) {
-      b.disabled = true;
-    });
-    const fb = $("#quiz-feedback");
-    if (idx === item.correct) {
-      btn.classList.add("correct");
-      addScore(40);
-      applyPower(item.power);
-      fb.className = "quiz-feedback show good";
-      fb.textContent =
-        "Yes! +" +
-        40 +
-        " points. " +
-        item.explain +
-        (item.power && item.power !== "points"
-          ? " Bonus skill ready for later levels!"
-          : "");
-    } else {
-      btn.classList.add("wrong");
-      buttons[item.correct].classList.add("correct");
-      fb.className = "quiz-feedback show learn";
-      fb.textContent = "Good try! " + item.explain + " You still learned something cool.";
-      addScore(5);
-    }
-    $("#quiz-hud-score").textContent = String(state.score);
-    $("#quiz-hud-hearts").innerHTML = heartString();
-    $("#quiz-next-wrap").style.display = "flex";
-  }
-
-  function nextQuiz() {
-    state.quizIndex++;
-    if (state.quizIndex >= state.quizOrder.length) {
-      showFact();
-    } else {
-      renderQuiz();
-    }
-  }
-
-  function showFact() {
-    state.phase = "fact";
-    const lv = LEVELS[state.levelId];
-    state.totalScore += state.score;
-    state.completed[state.levelId] = true;
-    if (state.unlocked < state.levelId + 2) {
-      state.unlocked = Math.min(LEVELS.length, state.levelId + 2);
-    }
-    // complete all unlock flag
-    if (state.levelId === LEVELS.length - 1) {
-      state.unlocked = LEVELS.length;
-    }
-    saveProgress();
-    updateGlobalHud();
-
-    $("#fact-emoji").textContent = lv.emoji + "🎉";
-    $("#fact-title").textContent = lv.name + " complete!";
-    $("#fact-text").textContent = lv.fact;
-    $("#fact-score").textContent =
-      "Level score: " + state.score + " · Total: " + state.totalScore;
-    showScreen("fact");
-  }
-
-  /* ---------- Challenges ---------- */
-
-  function stopPlayLoop() {
-    if (raf) cancelAnimationFrame(raf);
-    raf = null;
-    play = null;
-  }
-
-  function initChallenge(lv) {
-    const area = $("#play-area");
-    area.innerHTML = "";
-    area.className = "play-area";
-    if (lv.challenge === "hatchling" || lv.challenge === "juvenile") {
-      area.classList.add("water-more");
-    }
-
-    const rect = function () {
-      return area.getBoundingClientRect();
-    };
-
-    play = {
-      area: area,
-      lv: lv,
-      t: 0,
-      last: performance.now(),
-      w: 0,
-      h: 0,
-      player: { x: 0.5, y: 0.7 },
-      entities: [],
-      caught: 0,
-      nestPts: 0,
-      invuln: 0,
-      won: false,
-    };
-
-    resizePlay();
-
-    // player
-    const pEl = document.createElement("div");
-    pEl.className = "entity player " + (lv.playerSize || "");
-    pEl.textContent = lv.player;
-    pEl.id = "player-el";
-    area.appendChild(pEl);
-
-    if (lv.challenge === "nest") {
-      const nest = document.createElement("div");
-      nest.className = "nest-zone";
-      nest.textContent = "🪺";
-      nest.style.left = "50%";
-      nest.style.top = "62%";
-      area.appendChild(nest);
-      play.player.x = 0.5;
-      play.player.y = 0.62;
-    }
-
-    if (lv.challenge === "hatchling") {
-      const mom = document.createElement("div");
-      mom.className = "entity mom";
-      mom.textContent = "🐊";
-      mom.dataset.role = "mom";
-      area.appendChild(mom);
-      play.mom = { x: 0.5, y: 0.55, el: mom, phase: 0 };
-      play.player.x = 0.48;
-      play.player.y = 0.62;
-    }
-
-    if (lv.challenge === "subadult") {
-      play.player.x = 0.12;
-      play.player.y = 0.72;
-      const flag = document.createElement("div");
-      flag.className = "entity good";
-      flag.textContent = "🏁";
-      flag.style.left = "88%";
-      flag.style.top = "70%";
-      area.appendChild(flag);
-      play.goal = { x: 0.88, y: 0.7 };
-    }
-
-    if (lv.challenge === "adult") {
-      play.player.x = 0.5;
-      play.player.y = 0.65;
-    }
-
-    bindPlayInput(area);
-    $("#play-hint").textContent = hintFor(lv.challenge);
-
-    function loop(now) {
-      if (!play) return;
-      const dt = Math.min(0.05, (now - play.last) / 1000);
-      play.last = now;
-      play.t += dt;
-      if (play.invuln > 0) play.invuln -= dt;
-      tickPowerTimers(dt);
-      $("#play-hud-powers").innerHTML = powerLabels();
-      updateChallenge(dt);
-      raf = requestAnimationFrame(loop);
-    }
-    raf = requestAnimationFrame(loop);
-  }
-
-  function hintFor(type) {
-    switch (type) {
-      case "nest":
-        return "Drag or use arrows/WASD to stay in the nest. Avoid raccoons! 🦝";
-      case "hatchling":
-        return "Stay close to Mom 🐊 · Avoid birds and danger · Drag or arrows";
-      case "juvenile":
-        return "Collect bugs & frogs 🐸 · Touch water holes 💧 · Avoid big gators";
-      case "subadult":
-        return "Cross to the flag 🏁 · Avoid boats 🚤 and rival gators";
-      case "adult":
-        return "Tap/click nest spots 🪺 · Bellow with SPACE or double-tap · Hold territory";
-      default:
-        return "Move with fingers, mouse, or arrow keys";
-    }
-  }
-
-  function resizePlay() {
-    if (!play) return;
-    const r = play.area.getBoundingClientRect();
-    play.w = r.width;
-    play.h = r.height;
-  }
-
-  function bindPlayInput(area) {
-    keys = {};
-    window.onkeydown = function (e) {
-      keys[e.key.toLowerCase()] = true;
-      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].indexOf(e.key.toLowerCase()) >= 0 || e.key === " ") {
+  /* ---------- Touch pads ---------- */
+  function bindTouch() {
+    const map = [
+      ["pad-left", "arrowleft"],
+      ["pad-right", "arrowright"],
+      ["pad-jump", " "],
+    ];
+    map.forEach(function (pair) {
+      const el = $("#" + pair[0]);
+      if (!el) return;
+      const key = pair[1];
+      const on = function (e) {
         e.preventDefault();
-      }
-      if ((e.key === " " || e.code === "Space") && play && play.lv.challenge === "adult") {
-        bellow();
-      }
-    };
-    window.onkeyup = function (e) {
-      keys[e.key.toLowerCase()] = false;
-    };
-
-    let dragging = false;
-    let lastTap = 0;
-
-    function pointerPos(e) {
-      const r = area.getBoundingClientRect();
-      const t = e.touches ? e.touches[0] : e;
-      return {
-        x: (t.clientX - r.left) / r.width,
-        y: (t.clientY - r.top) / r.height,
+        keys[key] = true;
       };
-    }
-
-    area.onpointerdown = function (e) {
-      dragging = true;
-      area.setPointerCapture(e.pointerId);
-      const p = pointerPos(e);
-      play.player.x = clamp(p.x, 0.05, 0.95);
-      play.player.y = clamp(p.y, 0.2, 0.92);
-      if (play.lv.challenge === "adult") {
-        tryNest(p.x, p.y);
-        const now = Date.now();
-        if (now - lastTap < 320) bellow();
-        lastTap = now;
-      }
-    };
-    area.onpointermove = function (e) {
-      if (!dragging || !play) return;
-      const p = pointerPos(e);
-      play.player.x = clamp(p.x, 0.05, 0.95);
-      play.player.y = clamp(p.y, 0.2, 0.92);
-    };
-    area.onpointerup = function () {
-      dragging = false;
-    };
-    area.onpointercancel = function () {
-      dragging = false;
-    };
-  }
-
-  function clamp(v, a, b) {
-    return Math.max(a, Math.min(b, v));
-  }
-
-  function dist(a, b) {
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  function movePlayer(dt) {
-    let dx = 0;
-    let dy = 0;
-    if (keys["arrowleft"] || keys["a"]) dx -= 1;
-    if (keys["arrowright"] || keys["d"]) dx += 1;
-    if (keys["arrowup"] || keys["w"]) dy -= 1;
-    if (keys["arrowdown"] || keys["s"]) dy += 1;
-    if (dx || dy) {
-      const len = Math.sqrt(dx * dx + dy * dy) || 1;
-      const sp = 0.55 * speedMul() * dt;
-      play.player.x = clamp(play.player.x + (dx / len) * sp, 0.05, 0.95);
-      play.player.y = clamp(play.player.y + (dy / len) * sp, 0.2, 0.92);
-    }
-    const el = document.getElementById("player-el");
-    if (el) {
-      el.style.left = play.player.x * 100 + "%";
-      el.style.top = play.player.y * 100 + "%";
-      el.style.opacity = hideActive() ? "0.55" : "1";
-    }
-  }
-
-  function spawnEntity(kind, emoji, x, y, vx, vy) {
-    const el = document.createElement("div");
-    el.className = "entity " + (kind === "danger" ? "danger" : "good");
-    el.textContent = emoji;
-    play.area.appendChild(el);
-    const ent = { kind: kind, emoji: emoji, x: x, y: y, vx: vx || 0, vy: vy || 0, el: el, life: 8 };
-    play.entities.push(ent);
-    return ent;
-  }
-
-  function updateEntities(dt) {
-    play.entities = play.entities.filter(function (e) {
-      e.x += e.vx * dt;
-      e.y += e.vy * dt;
-      e.life -= dt;
-      e.el.style.left = e.x * 100 + "%";
-      e.el.style.top = e.y * 100 + "%";
-      if (e.x < -0.1 || e.x > 1.1 || e.y < -0.1 || e.y > 1.1 || e.life <= 0) {
-        e.el.remove();
-        return false;
-      }
-      return true;
+      const off = function (e) {
+        e.preventDefault();
+        keys[key] = false;
+      };
+      el.addEventListener("pointerdown", on);
+      el.addEventListener("pointerup", off);
+      el.addEventListener("pointerleave", off);
+      el.addEventListener("pointercancel", off);
     });
   }
-
-  function collideEntities() {
-    play.entities.forEach(function (e) {
-      if (dist(play.player, e) < 0.08) {
-        if (e.kind === "danger") {
-          if (play.invuln <= 0) {
-            hurt(1);
-            play.invuln = 1.1;
-          }
-          e.life = 0;
-        } else if (e.kind === "food") {
-          play.caught += biteMul();
-          addScore(15 * biteMul());
-          toast(play.area, "Yum! +" + 15 * biteMul());
-          e.life = 0;
-        } else if (e.kind === "water") {
-          play.caught += 1;
-          addScore(20);
-          toast(play.area, "Water hole! 💧");
-          e.life = 0;
-        }
-      }
-    });
-  }
-
-  function setGoal(pct) {
-    $("#goal-fill").style.width = clamp(pct, 0, 100) + "%";
-  }
-
-  function updateChallenge(dt) {
-    movePlayer(dt);
-    const lv = play.lv;
-    const type = lv.challenge;
-
-    if (type === "nest") {
-      // stay in nest, avoid raccoons
-      if (Math.random() < 0.02 + play.t * 0.0008) {
-        const side = Math.random() < 0.5 ? 0 : 1;
-        spawnEntity(
-          "danger",
-          "🦝",
-          side ? 1.05 : -0.05,
-          0.4 + Math.random() * 0.4,
-          side ? -0.25 : 0.25,
-          (Math.random() - 0.5) * 0.1
-        );
-      }
-      if (Math.random() < 0.008) {
-        spawnEntity("danger", "💧", Math.random(), -0.05, 0, 0.3);
-      }
-      updateEntities(dt);
-      collideEntities();
-      const inNest = dist(play.player, { x: 0.5, y: 0.62 }) < 0.14;
-      if (!inNest && play.t > 1 && play.invuln <= 0 && Math.random() < 0.01) {
-        // mild warning only when far
-      }
-      const progress = (play.t / lv.duration) * 100;
-      setGoal(progress);
-      if (inNest) addScore(Math.floor(dt * 8));
-      if (play.t >= lv.duration) endPlay(true);
-    }
-
-    if (type === "hatchling") {
-      play.mom.phase += dt;
-      play.mom.x = 0.5 + Math.sin(play.mom.phase * 0.7) * 0.18;
-      play.mom.y = 0.52 + Math.cos(play.mom.phase * 0.5) * 0.06;
-      play.mom.el.style.left = play.mom.x * 100 + "%";
-      play.mom.el.style.top = play.mom.y * 100 + "%";
-
-      if (Math.random() < 0.025) {
-        spawnEntity("danger", "🐦", Math.random(), -0.05, (Math.random() - 0.5) * 0.2, 0.28);
-      }
-      if (Math.random() < 0.012) {
-        spawnEntity("danger", "🐍", -0.05, 0.6 + Math.random() * 0.2, 0.3, 0);
-      }
-      updateEntities(dt);
-      collideEntities();
-      const nearMom = dist(play.player, play.mom) < 0.16;
-      if (nearMom) addScore(Math.floor(dt * 10));
-      else if (play.t > 2 && play.invuln <= 0 && Math.random() < 0.004) {
-        toast(play.area, "Stay near Mom!");
-      }
-      setGoal((play.t / lv.duration) * 100);
-      if (play.t >= lv.duration) endPlay(true);
-    }
-
-    if (type === "juvenile") {
-      if (Math.random() < 0.03) {
-        const foods = ["🐛", "🐸", "🐟", "🦗"];
-        spawnEntity("food", foods[Math.floor(Math.random() * foods.length)], Math.random() * 0.9 + 0.05, Math.random() * 0.5 + 0.35, 0, 0);
-      }
-      if (Math.random() < 0.01) {
-        spawnEntity("water", "💧", Math.random() * 0.8 + 0.1, Math.random() * 0.4 + 0.45, 0, 0);
-      }
-      if (Math.random() < 0.012) {
-        spawnEntity("danger", "🐊", Math.random() < 0.5 ? -0.05 : 1.05, 0.5 + Math.random() * 0.3, Math.random() < 0.5 ? 0.22 : -0.22, 0);
-      }
-      updateEntities(dt);
-      collideEntities();
-      const need = lv.needCatch || 6;
-      setGoal((play.caught / need) * 100);
-      if (play.caught >= need) endPlay(true);
-      // time soft limit
-      if (play.t > 90) endPlay(play.caught >= need * 0.5);
-    }
-
-    if (type === "subadult") {
-      if (Math.random() < 0.018) {
-        spawnEntity("danger", "🚤", -0.05, 0.35 + Math.random() * 0.2, 0.35, 0);
-      }
-      if (Math.random() < 0.012) {
-        spawnEntity("danger", "🐊", 1.05, 0.55 + Math.random() * 0.25, -0.28, 0);
-      }
-      updateEntities(dt);
-      collideEntities();
-      const d = dist(play.player, play.goal);
-      setGoal(clamp((1 - d / 1.2) * 100, 0, 99));
-      if (d < 0.1) {
-        setGoal(100);
-        addScore(50);
-        endPlay(true);
-      }
-      if (play.t > 75) endPlay(false);
-    }
-
-    if (type === "adult") {
-      if (Math.random() < 0.01) {
-        spawnEntity("danger", "🐊", Math.random() < 0.5 ? -0.05 : 1.05, 0.5 + Math.random() * 0.3, Math.random() < 0.5 ? 0.2 : -0.2, 0);
-      }
-      updateEntities(dt);
-      collideEntities();
-      const need = lv.needNest || 5;
-      setGoal((play.nestPts / need) * 100);
-      if (play.nestPts >= need) endPlay(true);
-      if (play.t > 80) endPlay(play.nestPts >= 3);
-    }
-  }
-
-  function tryNest(x, y) {
-    if (!play || play.lv.challenge !== "adult") return;
-    if (play._nestCd && play._nestCd > 0) return;
-    play.nestPts += 1;
-    addScore(20);
-    toast(play.area, "Nest work! 🪺");
-    const n = document.createElement("div");
-    n.className = "nest-zone";
-    n.textContent = "🪺";
-    n.style.left = x * 100 + "%";
-    n.style.top = y * 100 + "%";
-    n.style.width = "40px";
-    n.style.height = "30px";
-    n.style.fontSize = "0.9rem";
-    play.area.appendChild(n);
-    play._nestCd = 0.8;
-    // cooldown tick via invuln style
-    const iv = setInterval(function () {
-      if (!play) {
-        clearInterval(iv);
-        return;
-      }
-      play._nestCd -= 0.1;
-      if (play._nestCd <= 0) clearInterval(iv);
-    }, 100);
-  }
-
-  function bellow() {
-    if (!play || play.lv.challenge !== "adult") return;
-    addScore(10);
-    toast(play.area, "BELLOW! 🔊");
-    // scare nearby dangers
-    play.entities.forEach(function (e) {
-      if (e.kind === "danger" && dist(play.player, e) < 0.25) {
-        e.vx *= -1.5;
-        e.life = Math.min(e.life, 1);
-      }
-    });
-  }
-
-  /* ---------- Wire UI ---------- */
 
   function init() {
-    loadProgress();
-    updateGlobalHud();
+    load();
+    canvas = $("#game-canvas");
+    if (!canvas) return;
+    ctx = canvas.getContext("2d");
+    canvas.width = W;
+    canvas.height = H;
+    ctx.imageSmoothingEnabled = false;
+
+    window.addEventListener("keydown", function (e) {
+      keys[e.key.toLowerCase()] = true;
+      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].indexOf(e.key.toLowerCase()) >= 0 || e.code === "Space") {
+        e.preventDefault();
+      }
+    });
+    window.addEventListener("keyup", function (e) {
+      keys[e.key.toLowerCase()] = false;
+    });
 
     $("#btn-start").addEventListener("click", function () {
-      renderLevelSelect();
-      showScreen("levels");
+      renderLevels();
+      show("levels");
     });
     $("#btn-how").addEventListener("click", function () {
-      $("#how-box").style.display =
-        $("#how-box").style.display === "none" ? "block" : "none";
+      const b = $("#how-box");
+      b.style.display = b.style.display === "none" ? "block" : "none";
     });
     $("#btn-levels-back").addEventListener("click", function () {
-      showScreen("start");
+      show("start");
     });
     $("#btn-reset").addEventListener("click", function () {
-      if (confirm("Reset all Gator Grow progress on this device?")) {
-        localStorage.removeItem(STORAGE_KEY);
+      if (confirm("Reset all Gator Life progress on this device?")) {
+        localStorage.removeItem(STORAGE);
         state.totalScore = 0;
         state.unlocked = 1;
         state.completed = {};
-        renderLevelSelect();
-        updateGlobalHud();
+        state.usedQ = {};
+        state.playSeed = 1;
+        renderLevels();
+        updateHud();
       }
     });
-    $("#btn-quiz-next").addEventListener("click", nextQuiz);
+    $("#comic-continue").addEventListener("click", closeComicQuiz);
     $("#btn-fact-levels").addEventListener("click", function () {
-      stopPlayLoop();
-      renderLevelSelect();
-      showScreen("levels");
+      renderLevels();
+      show("levels");
     });
     $("#btn-fact-next").addEventListener("click", function () {
-      const next = state.levelId + 1;
-      if (next < LEVELS.length && next < state.unlocked) {
-        startLevel(next);
-      } else {
-        renderLevelSelect();
-        showScreen("levels");
+      const n = state.level + 1;
+      if (n < TOTAL_LEVELS && n < state.unlocked) startLevel(n);
+      else {
+        renderLevels();
+        show("levels");
       }
     });
 
-    window.addEventListener("resize", resizePlay);
-    showScreen("start");
+    bindTouch();
+    updateHud();
+    const qc = window.GATOR_QUESTIONS ? window.GATOR_QUESTIONS.count : 0;
+    const meta = $("#q-count");
+    if (meta) meta.textContent = String(qc);
+    show("start");
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
 })();
