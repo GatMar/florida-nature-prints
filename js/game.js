@@ -52,10 +52,11 @@
     if (/samantha|karen|moira|fiona|victoria|zira|susan|allison|ava|nicky|siri|soft|natural|premium|enhanced|neural/i.test(n))
       s += 6;
     if (/google|microsoft|apple/i.test(n)) s += 2;
-    if (prefer === "gator") {
-      // Kid-like: avoid deep male robotic defaults when possible
-      if (/female|woman|girl|child|kids|samantha|karen|moira|fiona|ava/i.test(n)) s += 5;
-      if (/male|david|mark|daniel|fred|alex|bruce|tom/i.test(n) && !/female/i.test(n)) s -= 2;
+    if (prefer === "gator" || prefer === "owl") {
+      // 7–9 year old energy: soft / youthful voices when available
+      if (/child|kids|girl|junior|samantha|karen|moira|fiona|ava|susan|allison|nicky/i.test(n)) s += 8;
+      if (/female|woman/i.test(n)) s += 4;
+      if (/male|david|mark|daniel|fred|alex|bruce|tom|jorge|juan/i.test(n) && !/female/i.test(n)) s -= 3;
     }
     if (prefer === "npc") {
       if (/female|samantha|karen|zira|moira/i.test(n)) s += 3;
@@ -81,7 +82,7 @@
     return best;
   }
 
-  /** Kid-gator style: brighter pitch, quicker, playful wording */
+  /** Kid energy: bright, quick, excited (browser TTS limits apply) */
   function kidify(text) {
     return String(text)
       .replace(/!+/g, "!")
@@ -94,23 +95,30 @@
     try {
       if (!opts.queue) stopVoice();
       let said = String(text);
-      if (kind === "gator") said = kidify(said);
+      if (kind === "gator" || kind === "owl") said = kidify(said);
       const u = new SpeechSynthesisUtterance(said);
       u.lang = "en-US";
-      const v = pickVoice(kind === "npc" ? "npc" : "gator");
+      const prefer =
+        kind === "npc" ? "npc" : kind === "owl" ? "owl" : "gator";
+      const v = pickVoice(prefer);
       if (v) u.voice = v;
       if (kind === "gator") {
-        // Brighter, more playful "kid gator" within Web Speech limits
-        u.rate = 1.14;
-        u.pitch = 1.55;
+        // ~7–9 year old excitement within Web Speech limits
+        u.rate = 1.18;
+        u.pitch = 1.72;
+        u.volume = 1;
+      } else if (kind === "owl") {
+        // Cheerful little sidekick, slightly different from gator
+        u.rate = 1.12;
+        u.pitch = 1.48;
         u.volume = 1;
       } else if (kind === "npc") {
-        u.rate = 1.05;
-        u.pitch = 1.2;
+        u.rate = 1.06;
+        u.pitch = 1.22;
         u.volume = 1;
       } else {
-        u.rate = 1.05;
-        u.pitch = 1.1;
+        u.rate = 1.08;
+        u.pitch = 1.15;
         u.volume = 1;
       }
       window.speechSynthesis.speak(u);
@@ -124,33 +132,51 @@
     speak(line, "gator");
   }
 
+  let lastOwlLineAt = 0;
+  function owlSay(line, force) {
+    const now = Date.now();
+    if (!force && now - lastOwlLineAt < 3200) return;
+    lastOwlLineAt = now;
+    speak(line, "owl");
+    // Show floating cheer near gator briefly
+    if (world) {
+      world.owlCheer = { text: line, t: 2.2 };
+    }
+  }
+
+  const GATOR_START_LINE =
+    "C'mon, let's get this show on the road! Get set, survival mode on!";
+
   const GATOR_LINES = {
-    start: [
-      "Let's gooo!",
-      "Whee, marsh time!",
-      "I got this!",
-      "Tiny gator power!",
-      "Ready set splash!",
-    ],
-    jump: ["Boing!", "Up up!", "Weee!"],
-    fire: [
-      "Hot hot hot!",
-      "Jump jump!",
-      "Gotta go faster!",
-      "Too toasty!",
-    ],
-    cave: ["Now now now!", "Through the cave!", "Zip zip!"],
-    hurt: ["Owie!", "Hey!", "I'm okay!", "Yow!"],
-    snack: ["Yum yum!", "Snack!", "Tasty!"],
-    quiz: ["Hmm, think!", "I can do it!", "Quiz time!"],
-    win: ["Yay! We did it!", "Flag flag flag!", "Best gator!"],
-    nearFlag: ["Almost!", "Go go go!", "Gotta go faster!"],
+    jump: ["Weee!", "Boing!", "Up up!"],
+    fire: ["Hot hot hot!", "Jump the fire!", "Gotta go faster!"],
+    cave: ["Through the cave!", "Now now!", "Zip zip!"],
+    hurt: ["Owie!", "Hey!", "I'm okay!"],
+    snack: ["Yum yum!", "Snack attack!"],
+    quiz: ["Okay, brain time!", "I can do this!"],
+    win: ["Yay! We did it!", "Survival mode success!"],
+    nearFlag: ["Almost there!", "Go go go!"],
   };
 
+  const OWL_LINES = [
+    "Nice job! Now let's do the next!",
+    "Nice job! On to the next!",
+    "Whoo-hoo! Nice job! Let's do the next!",
+    "You got it! Now let's do the next!",
+    "Awesome! Nice job! Keep going!",
+    "Nice job, buddy! Next step!",
+  ];
+
   function gatorLine(kind, force) {
-    const arr = GATOR_LINES[kind] || GATOR_LINES.start;
+    const arr = GATOR_LINES[kind];
+    if (!arr) return;
     const line = arr[Math.floor(Math.random() * arr.length)];
     gatorSay(line, force);
+  }
+
+  function owlCheer(force) {
+    const line = OWL_LINES[Math.floor(Math.random() * OWL_LINES.length)];
+    owlSay(line, force);
   }
 
   // Your site photos only - used as full game backgrounds (no drawn scenery)
@@ -422,6 +448,9 @@
       time: 0,
       inv: 0,
       won: false,
+      steps: 0,
+      nextStepAt: 3,
+      owlCheer: null,
       player: {
         x: 48,
         y: 160,
@@ -434,6 +463,14 @@
         facing: 1,
       },
     };
+  }
+
+  /** Call when player accomplishes a step (snack, quiz, milestone…) */
+  function accomplishStep(reason) {
+    if (!world || world.won) return;
+    world.steps = (world.steps || 0) + 1;
+    // Owl cheers on each accomplished step (with light spacing unless forced)
+    owlCheer(reason === "quiz" || reason === "flag");
   }
 
   /* ---------- Drawing (original pixel style) ---------- */
@@ -726,16 +763,58 @@
 
     drawPixelGator(p, gatorScale(world.idx), p.facing);
 
+    // Companion Florida screech owl (small, rides near gator)
+    drawOwlCompanion(p);
+
+    // Owl cheer bubble
+    if (world.owlCheer && world.owlCheer.t > 0) {
+      const bx = Math.floor(p.x - world.camera + p.w + 6);
+      const by = Math.floor(p.y - 18);
+      ctx.fillStyle = "rgba(255,252,230,0.95)";
+      ctx.fillRect(bx, by, 120, 16);
+      ctx.strokeStyle = "#111";
+      ctx.strokeRect(bx, by, 120, 16);
+      ctx.fillStyle = "#111";
+      ctx.font = "9px monospace";
+      ctx.fillText("🦉 Nice job!", bx + 4, by + 11);
+    }
+
     // HUD strip on canvas
     ctx.fillStyle = "rgba(10,30,18,0.55)";
     ctx.fillRect(0, 0, W, 16);
     ctx.fillStyle = "#e8f5ec";
     ctx.font = "11px monospace";
     ctx.fillText(
-      "LV " + (world.idx + 1) + "  " + stageName(world.idx) + "  SCORE " + state.score,
+      "LV " +
+        (world.idx + 1) +
+        "  " +
+        stageName(world.idx) +
+        "  SCORE " +
+        state.score +
+        "  STEPS " +
+        (world.steps || 0),
       6,
       12
     );
+  }
+
+  function drawOwlCompanion(p) {
+    const ox = Math.floor(p.x - world.camera + (p.facing > 0 ? -10 : p.w + 2));
+    const bob = Math.sin((world.time || 0) * 6) * 2;
+    const oy = Math.floor(p.y - 6 + bob);
+    // tiny screech-owl-ish pixels (original, not a trademarked character)
+    ctx.fillStyle = "#6b5b45";
+    ctx.fillRect(ox + 2, oy + 2, 8, 7);
+    ctx.fillStyle = "#c4a574";
+    ctx.fillRect(ox + 3, oy + 4, 6, 4);
+    ctx.fillStyle = "#f0e8c8";
+    ctx.fillRect(ox + 3, oy + 1, 3, 3);
+    ctx.fillRect(ox + 7, oy + 1, 3, 3);
+    ctx.fillStyle = "#111";
+    ctx.fillRect(ox + 4, oy + 2, 1, 1);
+    ctx.fillRect(ox + 8, oy + 2, 1, 1);
+    ctx.fillStyle = "#e8a020";
+    ctx.fillRect(ox + 5, oy + 5, 3, 2);
   }
 
   /* ---------- Physics ---------- */
@@ -884,7 +963,8 @@
         it.taken = true;
         state.score += 10;
         updateHud();
-        if (Math.random() < 0.45) gatorLine("snack");
+        gatorLine("snack");
+        accomplishStep("snack");
       }
     });
   }
@@ -901,7 +981,22 @@
 
   function updateGoal() {
     const dist = world.goalX - (world.player.x + world.player.w);
-    if (dist < 120 && dist > 20 && Math.random() < 0.008) gatorLine("nearFlag");
+    if (dist < 140 && dist > 24 && Math.random() < 0.01) gatorLine("nearFlag");
+    // Distance milestones (every ~22% of the run)
+    if (world && world.len) {
+      const progress = world.player.x / world.len;
+      const mark = world.nextStepAt || 3;
+      // nextStepAt counts snacks/quizzes; also award path milestones
+      if (!world._mile) world._mile = 0;
+      const mile = Math.floor(progress * 4); // 0..3
+      if (mile > world._mile && mile < 4) {
+        world._mile = mile;
+        if (mile >= 1) {
+          gatorSay("Gotta go faster!", false);
+          accomplishStep("mile");
+        }
+      }
+    }
     if (world.player.x + world.player.w >= world.goalX) {
       world.won = true;
       finishLevel();
@@ -1020,6 +1115,11 @@
           fb.textContent =
             npc.emoji + " YESSS! +" + 35 + "  ·  " + q.explain;
           speak("Yes! " + q.explain, "npc");
+          // Owl cheers after a correct quiz step
+          setTimeout(function () {
+            owlCheer(true);
+          }, 900);
+          world && (world._quizStep = true);
         } else {
           b.classList.add("wrong");
           const right = opts.children[q.correct];
@@ -1029,6 +1129,9 @@
           fb.textContent =
             npc.emoji + " Close! " + q.explain + " (You still learned it.)";
           speak("Not quite. " + q.explain, "npc");
+          setTimeout(function () {
+            owlSay("Nice try! Now let's do the next!", true);
+          }, 900);
         }
         updateHud();
         cont.style.display = "block";
@@ -1041,13 +1144,20 @@
     stopVoice();
     $("#comic-overlay").classList.remove("show");
     pausedForQuiz = false;
-    gatorSay("Let's go!", true);
+    if (world && world._quizStep) {
+      world._quizStep = false;
+      accomplishStep("quiz");
+    }
+    gatorSay("C'mon, let's keep going!", true);
   }
 
   function finishLevel() {
     stopLoop();
     stopVoice();
     gatorLine("win", true);
+    setTimeout(function () {
+      owlSay("Nice job! Now let's do the next!", true);
+    }, 700);
     state.totalScore += state.score;
     state.completed[state.level] = true;
     if (state.unlocked < state.level + 2) state.unlocked = Math.min(TOTAL_LEVELS, state.level + 2);
@@ -1073,8 +1183,12 @@
   /* ---------- Loop ---------- */
   function tick(ts) {
     if (!world || pausedForQuiz) {
-      if (world && !pausedForQuiz) drawWorld();
-      else if (world) drawWorld();
+      if (world) {
+        if (world.owlCheer && world.owlCheer.t > 0) {
+          // still tick cheer timer while paused lightly
+        }
+        drawWorld();
+      }
       loopId = requestAnimationFrame(tick);
       return;
     }
@@ -1083,6 +1197,10 @@
     world._last = ts;
     world.time += dt;
     if (world.inv > 0) world.inv -= dt;
+    if (world.owlCheer) {
+      world.owlCheer.t -= dt;
+      if (world.owlCheer.t <= 0) world.owlCheer = null;
+    }
 
     updatePlayer(dt);
     updateHazards(dt);
@@ -1121,8 +1239,11 @@
       "Jump fire · dash through open caves · avoid predators · yellow ? = NPC meme quiz";
     show("play");
     world._last = 0;
+    lastGatorLineAt = 0;
+    lastOwlLineAt = 0;
     loopId = requestAnimationFrame(tick);
-    gatorLine("start", true);
+    // Exact level-start hype line (kid energy)
+    gatorSay(GATOR_START_LINE, true);
   }
 
   function renderLevels() {
