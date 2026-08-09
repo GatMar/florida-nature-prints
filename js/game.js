@@ -260,6 +260,17 @@
     );
   }
 
+  function applyCardPhotoBg(file) {
+    const card = document.querySelector(".game-card-arcade");
+    if (!card || !file) return;
+    card.style.backgroundImage =
+      "linear-gradient(180deg, rgba(8, 22, 16, 0.78) 0%, rgba(10, 28, 18, 0.82) 100%), url('images/prints/" +
+      String(file).replace(/'/g, "") +
+      "')";
+    card.style.backgroundSize = "cover";
+    card.style.backgroundPosition = "center";
+  }
+
   function show(name) {
     state.screen = name;
     ["start", "levels", "play", "fact"].forEach(function (k) {
@@ -269,6 +280,17 @@
     if (document.body) {
       document.body.classList.toggle("is-playing", name === "play");
     }
+    // Website print photos behind every game screen
+    try {
+      const files = galleryPhotoFiles();
+      if (files && files.length) {
+        const pick =
+          name === "play" && world
+            ? files[world.idx % files.length]
+            : files[(state.level + files.length) % files.length];
+        applyCardPhotoBg(pick);
+      }
+    } catch (e) {}
   }
 
   function hearts() {
