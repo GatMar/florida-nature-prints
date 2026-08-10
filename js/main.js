@@ -5,6 +5,65 @@
 (function () {
   "use strict";
 
+  // ---- Hero video carousel (two muted clips, seamless crossfade) ----
+  (function initHeroVideoCarousel() {
+    const a = document.getElementById("hero-video-a");
+    const b = document.getElementById("hero-video-b");
+    if (!a || !b) return;
+
+    let showingA = true;
+    const playSafe = function (v) {
+      const p = v.play();
+      if (p && typeof p.catch === "function") p.catch(function () {});
+    };
+
+    // Prefer reduced motion: freeze on poster only
+    const reduce =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      a.removeAttribute("autoplay");
+      a.pause();
+      b.pause();
+      a.classList.add("is-active");
+      b.classList.remove("is-active");
+      return;
+    }
+
+    playSafe(a);
+
+    // Crossfade to the other reel when one ends (loop disabled on active switch)
+    a.loop = false;
+    b.loop = false;
+
+    function onEnded(ended, next) {
+      next.currentTime = 0;
+      playSafe(next);
+      ended.classList.remove("is-active");
+      next.classList.add("is-active");
+      showingA = next === a;
+    }
+
+    a.addEventListener("ended", function () {
+      onEnded(a, b);
+    });
+    b.addEventListener("ended", function () {
+      onEnded(b, a);
+    });
+
+    // Fallback: if a clip errors, keep a single looping video
+    a.addEventListener("error", function () {
+      a.loop = true;
+      playSafe(a);
+    });
+    b.addEventListener("error", function () {
+      a.loop = true;
+      a.classList.add("is-active");
+      b.classList.remove("is-active");
+      playSafe(a);
+    });
+  })();
+
   // ---- Mobile navigation ----
   const toggle = document.querySelector(".nav-toggle");
   const navLinks = document.querySelector(".nav-links");

@@ -38,7 +38,33 @@
  </header>
 
  <main>
- <section class="hero">
+ <!-- Soft top-band video carousel from gallery photos (muted, looping) -->
+ <section class="hero" aria-label="Florida nature photo showcase">
+ <div class="hero-media" aria-hidden="true">
+ <video
+ class="hero-video is-active"
+ id="hero-video-a"
+ muted
+ playsinline
+ autoplay
+ loop
+ preload="metadata"
+ poster="images/prints/crimson-marsh.jpeg"
+ >
+ <source src="videos/gallery-showcase.mp4" type="video/mp4" />
+ </video>
+ <video
+ class="hero-video"
+ id="hero-video-b"
+ muted
+ playsinline
+ preload="metadata"
+ poster="images/prints/golden-gulf.jpeg"
+ >
+ <source src="videos/gallery-showcase-2.mp4" type="video/mp4" />
+ </video>
+ <div class="hero-media-veil"></div>
+ </div>
  <div class="container hero-content">
  <h1>Florida nature, printed for your walls</h1>
  <p data-tagline>
@@ -49,6 +75,9 @@
  <a class="btn btn-primary" href="gallery.html">View gallery</a>
  <a class="btn btn-outline" href="shop.html">Buy prints</a>
  </div>
+ <p class="hero-caption">
+ Sunsets · beaches · gators · herons · anhinga · storks — from the gallery
+ </p>
  </div>
  </section>
 
