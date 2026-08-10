@@ -71,59 +71,68 @@ var SITE_CONFIG = window.SITE_CONFIG = {
 
   /**
    * ---- Shipping & packaging ----
-   * Best practice for unframed photo prints: hard mailing tube (rolled), not folded.
-   * One uniform tube fits every print size when rolled along the shorter edge.
-   * We use 3" × 24" so packages stay under the harsh USPS “over 30 inches long” fee.
+   * Customer pays a FLAT FEE (not a live rate calculator).
+   * Carrier assumption: USPS Priority Mail.
    *
-   * totals = what the customer pays (packaging materials + postage buffer).
+   * Tube: one uniform 3" × 24" kraft with end caps for every print size
+   * (roll along the shorter edge). Under 30" long helps avoid the steep
+   * USPS nonstandard-length fee.
+   *
+   * Tube cost reality (approx., early 2026):
+   *   - Bulk (Uline carton ~25): ~$1.50–$3.50 each (thin vs heavy wall)
+   *   - Small packs / Amazon singles: often ~$5–$10 each
+   * packaging below assumes small-pack buying (~$5 tube + wrap/label ~$1 = $6).
+   * totals = flat fee charged to customer (packaging + postage buffer).
    * Edit any number anytime — shop page reads this automatically.
    */
   shipping: {
     region: "Continental U.S.",
+    carrier: "USPS Priority Mail",
     methodTitle: "Hard mailing tube (rolled print)",
+    feeLabel: "Flat shipping fee",
     tube: {
       label: '3" × 24" kraft mailing tube with end caps',
       diameterIn: 3,
       lengthIn: 24,
-      packageCost: 3.5,
+      packageCost: 6,
       why:
-        "Hard tubes are the standard way to mail unframed prints — they protect against creases better than a flat mailer, especially for 16×20 and 20×30. One tube size for every print keeps packing simple: each print is rolled along its shorter edge with tissue wrap, slid into the same 3″ × 24″ tube, and capped on both ends.",
+        "Hard tubes are the standard way to mail unframed prints — they protect against creases better than a flat mailer, especially for 16×20 and 20×30. One tube size for every print: rolled along the shorter edge, tissue-wrapped, then capped. Packaging cost assumes a real-world small-pack tube (~$5) plus wrap and label (~$1), not bulk warehouse pricing.",
     },
-    // Per print size: packaging + typical USPS Priority postage (avg. zones) + small buffer
+    // packaging + estimated USPS Priority postage → flat fee (total) charged to customer
     printRates: [
       {
         sizeId: "8x10",
-        packaging: 3.5,
-        postage: 8.5,
-        total: 12,
+        packaging: 6,
+        postage: 9,
+        total: 15,
       },
       {
         sizeId: "11x14",
-        packaging: 3.5,
-        postage: 9.5,
-        total: 13,
+        packaging: 6,
+        postage: 10,
+        total: 16,
       },
       {
         sizeId: "16x20",
-        packaging: 3.5,
-        postage: 10.5,
-        total: 14,
+        packaging: 6,
+        postage: 11,
+        total: 17,
       },
       {
         sizeId: "20x30",
-        packaging: 3.5,
-        postage: 12.5,
-        total: 16,
+        packaging: 6,
+        postage: 13,
+        total: 19,
       },
     ],
     mug: {
       methodTitle: "Padded box with bubble wrap",
-      packaging: 3,
-      postage: 7,
-      total: 10,
+      packaging: 4,
+      postage: 8,
+      total: 12,
     },
     note:
-      "Flat shipping rates for the continental U.S. Alaska, Hawaii, and international orders — message me for a quote. Tracking included on Priority Mail.",
+      "These are flat fees (not a live quote). Ships via USPS Priority Mail with tracking within the continental U.S. Alaska, Hawaii, and international — message me for a quote.",
   },
 
   /**

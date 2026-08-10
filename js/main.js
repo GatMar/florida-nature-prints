@@ -514,9 +514,11 @@
 
     if (lead) {
       lead.textContent =
-        "Prints ship rolled in a hard mailing tube (not folded). " +
-        "Packaging is the same tube for every print size — only postage " +
-        "varies a little. Region: " +
+        "Flat shipping fees (not a live rate calculator). " +
+        "Prints go out via " +
+        (ship.carrier || "USPS Priority Mail") +
+        ", rolled in a hard mailing tube — same tube size for every print. " +
+        "Region: " +
         (ship.region || "Continental U.S.") +
         ".";
     }
@@ -524,6 +526,8 @@
     if (tubeEl && ship.tube) {
       tubeEl.innerHTML =
         "<strong>" +
+        escapeHtml(ship.carrier || "USPS Priority Mail") +
+        " · " +
         escapeHtml(ship.methodTitle || "Hard mailing tube") +
         " · " +
         escapeHtml(ship.tube.label || "") +
@@ -584,13 +588,14 @@
         estAmt.textContent = money(ship.mug.total);
         if (estDetail) {
           estDetail.textContent =
+            "Flat fee · " +
+            (ship.carrier || "USPS Priority Mail") +
+            " · " +
             (ship.mug.methodTitle || "Padded box") +
-            " — packaging " +
+            " (packaging " +
             money(ship.mug.packaging) +
-            " + postage " +
+            " + postage est. " +
             money(ship.mug.postage) +
-            " (" +
-            (ship.region || "continental U.S.") +
             ")";
         }
         return;
@@ -611,13 +616,16 @@
       estAmt.textContent = money(r.total);
       if (estDetail) {
         estDetail.textContent =
-          (ship.methodTitle || "Hard mailing tube") +
+          "Flat fee · " +
+          (ship.carrier || "USPS Priority Mail") +
           " · " +
-          (ship.tube && ship.tube.label ? ship.tube.label + " — " : "") +
-          "packaging " +
+          (ship.methodTitle || "Hard mailing tube") +
+          (ship.tube && ship.tube.label ? " · " + ship.tube.label : "") +
+          " (packaging " +
           money(r.packaging) +
-          " + postage " +
-          money(r.postage);
+          " + postage est. " +
+          money(r.postage) +
+          ")";
       }
     }
 
