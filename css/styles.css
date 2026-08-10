@@ -205,6 +205,126 @@ main {
   color: var(--blue-800);
 }
 
+/* Shipping & packaging box on shop */
+.shipping-box {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.35rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.shipping-box h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.shipping-lead {
+  margin: 0 0 0.85rem;
+  font-size: 0.95rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.shipping-tube {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--blue-50, #f0f7f4);
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid rgba(26, 61, 46, 0.1);
+}
+
+.shipping-tube strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--blue-800, #1a3d2e);
+  font-size: 0.95rem;
+}
+
+.shipping-tube p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.shipping-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.shipping-table th,
+.shipping-table td {
+  text-align: left;
+  padding: 0.5rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.shipping-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.shipping-table td:last-child,
+.shipping-table th:last-child {
+  text-align: right;
+  font-weight: 600;
+  color: var(--blue-800, #1a3d2e);
+}
+
+.shipping-table .ship-muted {
+  color: var(--text-soft);
+  font-weight: 400;
+}
+
+.shipping-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.order-shipping-estimate {
+  margin: 0 0 1.1rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: linear-gradient(
+    135deg,
+    rgba(26, 61, 46, 0.06),
+    rgba(26, 61, 46, 0.02)
+  );
+  border: 1px solid rgba(26, 61, 46, 0.12);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+}
+
+.order-shipping-estimate strong {
+  font-size: 0.9rem;
+}
+
+.order-shipping-estimate > span {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--blue-800, #1a3d2e);
+  margin-left: auto;
+}
+
+.order-shipping-estimate p {
+  flex: 1 1 100%;
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  line-height: 1.4;
+}
+
 .btn-payment {
   background: linear-gradient(135deg, #635bff 0%, #0a2540 100%);
   color: var(--white);
@@ -288,48 +408,6 @@ main {
   opacity: 0.82 !important;
   letter-spacing: 0.02em;
   max-width: none !important;
-}
-
-/* Soft floating photo name — exact spelling from the gallery */
-.hero-photo-title {
-  position: absolute;
-  z-index: 2;
-  right: clamp(1rem, 4vw, 2.5rem);
-  bottom: clamp(1rem, 3vw, 1.75rem);
-  margin: 0;
-  max-width: min(46vw, 280px);
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-  font-family: var(--font-display, Georgia, serif);
-  font-size: clamp(0.78rem, 1.6vw, 0.95rem);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  line-height: 1.3;
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(8, 22, 18, 0.42);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
-  pointer-events: none;
-  text-align: right;
-  opacity: 0.92;
-  transition: opacity 0.45s ease, transform 0.45s ease;
-}
-
-.hero-photo-title.is-swap {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-@media (max-width: 640px) {
-  .hero-photo-title {
-    right: 0.85rem;
-    left: 0.85rem;
-    max-width: none;
-    text-align: center;
-    bottom: 0.75rem;
-  }
 }
 
 .hero h1 {

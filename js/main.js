@@ -5,69 +5,16 @@
 (function () {
   "use strict";
 
-  // ---- Hero video carousel (two muted clips, seamless crossfade) ----
-  // Titles are HTML overlays with exact gallery spellings (never baked into video).
+  // ---- Hero video carousel (two muted clips, seamless crossfade, no titles) ----
   (function initHeroVideoCarousel() {
     const a = document.getElementById("hero-video-a");
     const b = document.getElementById("hero-video-b");
-    const titleEl = document.getElementById("hero-photo-title");
     if (!a || !b) return;
-
-    // Exact titles as named on the website / in config.js
-    const titlesA = [
-      "Crimson Marsh",
-      "Golden Gulf",
-      "Gator Mid-Yawn",
-      "Great Blue Heron",
-      "Anhinga Portrait",
-      "Wood Stork Standing Tall",
-      "Sandhill Crane",
-    ];
-    const titlesB = [
-      "Horizon Fire",
-      "Footprints at Sunset",
-      "Floating Gator",
-      "Anhinga on the Branch",
-      "Wood Stork Profile",
-      "Marsh at Dusk",
-    ];
-
-    let showingA = true;
-    let titleTimer = null;
-    let titleIndex = 0;
 
     const playSafe = function (v) {
       const p = v.play();
       if (p && typeof p.catch === "function") p.catch(function () {});
     };
-
-    function setTitle(text) {
-      if (!titleEl) return;
-      titleEl.classList.add("is-swap");
-      window.setTimeout(function () {
-        titleEl.textContent = text;
-        titleEl.classList.remove("is-swap");
-      }, 220);
-    }
-
-    function stopTitleCycle() {
-      if (titleTimer) {
-        window.clearInterval(titleTimer);
-        titleTimer = null;
-      }
-    }
-
-    function startTitleCycle(list) {
-      stopTitleCycle();
-      titleIndex = 0;
-      setTitle(list[0]);
-      // ~10s reels: spread titles evenly so names match the visual pace
-      const stepMs = Math.max(1200, Math.floor(10000 / list.length));
-      titleTimer = window.setInterval(function () {
-        titleIndex = (titleIndex + 1) % list.length;
-        setTitle(list[titleIndex]);
-      }, stepMs);
-    }
 
     // Prefer reduced motion: freeze on poster only
     const reduce =
@@ -79,45 +26,38 @@
       b.pause();
       a.classList.add("is-active");
       b.classList.remove("is-active");
-      if (titleEl) titleEl.textContent = titlesA[0];
       return;
     }
 
     playSafe(a);
-    startTitleCycle(titlesA);
 
-    // Crossfade to the other reel when one ends (loop disabled on active switch)
+    // Crossfade to the other reel when one ends
     a.loop = false;
     b.loop = false;
 
-    function onEnded(ended, next, nextTitles) {
+    function onEnded(ended, next) {
       next.currentTime = 0;
       playSafe(next);
       ended.classList.remove("is-active");
       next.classList.add("is-active");
-      showingA = next === a;
-      startTitleCycle(nextTitles);
     }
 
     a.addEventListener("ended", function () {
-      onEnded(a, b, titlesB);
+      onEnded(a, b);
     });
     b.addEventListener("ended", function () {
-      onEnded(b, a, titlesA);
+      onEnded(b, a);
     });
 
-    // Fallback: if a clip errors, keep a single looping video
     a.addEventListener("error", function () {
       a.loop = true;
       playSafe(a);
-      startTitleCycle(titlesA);
     });
     b.addEventListener("error", function () {
       a.loop = true;
       a.classList.add("is-active");
       b.classList.remove("is-active");
       playSafe(a);
-      startTitleCycle(titlesA);
     });
   })();
 
@@ -532,6 +472,164 @@
   fillSizeList("size-list", SITE_CONFIG.printSizes);
   fillSizeList("mug-size-list", SITE_CONFIG.mugStyles);
 
+  // ---- Shipping panel + live order estimate ----
+  (function initShipping() {
+    const ship = SITE_CONFIG.shipping;
+    if (!ship) return;
+
+    const lead = document.getElementById("shipping-lead");
+    const tubeEl = document.getElementById("shipping-tube");
+    const table = document.getElementById("shipping-table");
+    const noteEl = document.getElementById("shipping-note");
+    const estBox = document.getElementById("order-shipping-estimate");
+    const estAmt = document.getElementById("order-shipping-amount");
+    const estDetail = document.getElementById("order-shipping-detail");
+
+    function money(n) {
+      const x = Number(n);
+      if (isNaN(x)) return "—";
+      return "$" + (x % 1 === 0 ? String(x) : x.toFixed(2));
+    }
+
+    function rateForSizeId(sizeId) {
+      const rates = ship.printRates || [];
+      for (let i = 0; i < rates.length; i++) {
+        if (rates[i].sizeId === sizeId) return rates[i];
+      }
+      return null;
+    }
+
+    function sizeIdFromLabel(label) {
+      const sizes = SITE_CONFIG.printSizes || [];
+      for (let i = 0; i < sizes.length; i++) {
+        if (label && label.indexOf(sizes[i].label) === 0) return sizes[i].id;
+        if (label === sizes[i].id) return sizes[i].id;
+      }
+      // option value is like '8" × 10" print - $35'
+      for (let j = 0; j < sizes.length; j++) {
+        if (label && label.indexOf(sizes[j].label) !== -1) return sizes[j].id;
+      }
+      return "";
+    }
+
+    if (lead) {
+      lead.textContent =
+        "Prints ship rolled in a hard mailing tube (not folded). " +
+        "Packaging is the same tube for every print size — only postage " +
+        "varies a little. Region: " +
+        (ship.region || "Continental U.S.") +
+        ".";
+    }
+
+    if (tubeEl && ship.tube) {
+      tubeEl.innerHTML =
+        "<strong>" +
+        escapeHtml(ship.methodTitle || "Hard mailing tube") +
+        " · " +
+        escapeHtml(ship.tube.label || "") +
+        "</strong><p>" +
+        escapeHtml(ship.tube.why || "") +
+        "</p>";
+    }
+
+    if (table && table.tBodies && table.tBodies[0]) {
+      const tbody = table.tBodies[0];
+      const rows = [];
+      (SITE_CONFIG.printSizes || []).forEach(function (s) {
+        const r = rateForSizeId(s.id) || { packaging: 0, postage: 0, total: 0 };
+        rows.push(
+          "<tr><td>" +
+            escapeHtml(s.label) +
+            '</td><td class="ship-muted">' +
+            money(r.packaging) +
+            '</td><td class="ship-muted">' +
+            money(r.postage) +
+            "</td><td>" +
+            money(r.total) +
+            "</td></tr>"
+        );
+      });
+      if (ship.mug) {
+        rows.push(
+          "<tr><td>12 oz photo mug" +
+            (ship.mug.methodTitle
+              ? ' <span class="ship-muted">(' +
+                escapeHtml(ship.mug.methodTitle) +
+                ")</span>"
+              : "") +
+            '</td><td class="ship-muted">' +
+            money(ship.mug.packaging) +
+            '</td><td class="ship-muted">' +
+            money(ship.mug.postage) +
+            "</td><td>" +
+            money(ship.mug.total) +
+            "</td></tr>"
+        );
+      }
+      tbody.innerHTML = rows.join("");
+    }
+
+    if (noteEl) {
+      noteEl.textContent = ship.note || "";
+    }
+
+    function updateOrderShipping() {
+      if (!estBox || !estAmt) return;
+      const productEl = document.getElementById("order-product");
+      const sizeEl = document.getElementById("order-size");
+      const isMug = productEl && productEl.value === "mug";
+
+      if (isMug && ship.mug) {
+        estBox.hidden = false;
+        estAmt.textContent = money(ship.mug.total);
+        if (estDetail) {
+          estDetail.textContent =
+            (ship.mug.methodTitle || "Padded box") +
+            " — packaging " +
+            money(ship.mug.packaging) +
+            " + postage " +
+            money(ship.mug.postage) +
+            " (" +
+            (ship.region || "continental U.S.") +
+            ")";
+        }
+        return;
+      }
+
+      const sizeVal = sizeEl ? sizeEl.value : "";
+      if (!sizeVal) {
+        estBox.hidden = true;
+        return;
+      }
+      const sid = sizeIdFromLabel(sizeVal);
+      const r = rateForSizeId(sid);
+      if (!r) {
+        estBox.hidden = true;
+        return;
+      }
+      estBox.hidden = false;
+      estAmt.textContent = money(r.total);
+      if (estDetail) {
+        estDetail.textContent =
+          (ship.methodTitle || "Hard mailing tube") +
+          " · " +
+          (ship.tube && ship.tube.label ? ship.tube.label + " — " : "") +
+          "packaging " +
+          money(r.packaging) +
+          " + postage " +
+          money(r.postage);
+      }
+    }
+
+    window.__fnpUpdateShipping = updateOrderShipping;
+
+    const sizeEl = document.getElementById("order-size");
+    const productEl = document.getElementById("order-product");
+    if (sizeEl) sizeEl.addEventListener("change", updateOrderShipping);
+    if (productEl) productEl.addEventListener("change", updateOrderShipping);
+    updateOrderShipping();
+  })();
+
   function optionsFromItems(items, emptyLabel) {
     return (
       '<option value="">' +
@@ -604,13 +702,21 @@
   }
 
   if (productSelect) {
-    productSelect.addEventListener("change", syncProductType);
+    productSelect.addEventListener("change", function () {
+      syncProductType();
+      if (typeof window.__fnpUpdateShipping === "function") {
+        window.__fnpUpdateShipping();
+      }
+    });
     // URL ?product=mug
     const paramsEarly = new URLSearchParams(window.location.search);
     if (paramsEarly.get("product") === "mug") {
       productSelect.value = "mug";
     }
     syncProductType();
+    if (typeof window.__fnpUpdateShipping === "function") {
+      window.__fnpUpdateShipping();
+    }
   }
 
   const printSelect = document.getElementById("order-print");
@@ -717,6 +823,51 @@
     const sizeOrMug = isMug
       ? (form.mug_style && form.mug_style.value) || ""
       : (form.size && form.size.value) || "";
+
+    // Attach shipping line for your order email
+    let shippingLine = "(not calculated)";
+    let shippingTotal = "";
+    const ship = SITE_CONFIG.shipping;
+    if (ship) {
+      if (isMug && ship.mug) {
+        shippingTotal = String(ship.mug.total);
+        shippingLine =
+          "Mug padded box — packaging $" +
+          ship.mug.packaging +
+          " + postage $" +
+          ship.mug.postage +
+          " = $" +
+          ship.mug.total;
+      } else if (ship.printRates && form.size && form.size.value) {
+        const sizes = SITE_CONFIG.printSizes || [];
+        let sid = "";
+        const val = form.size.value;
+        for (let i = 0; i < sizes.length; i++) {
+          if (val.indexOf(sizes[i].label) !== -1) {
+            sid = sizes[i].id;
+            break;
+          }
+        }
+        for (let j = 0; j < ship.printRates.length; j++) {
+          if (ship.printRates[j].sizeId === sid) {
+            const r = ship.printRates[j];
+            shippingTotal = String(r.total);
+            shippingLine =
+              (ship.methodTitle || "Tube") +
+              " (" +
+              (ship.tube && ship.tube.label ? ship.tube.label : "uniform tube") +
+              ") — packaging $" +
+              r.packaging +
+              " + postage $" +
+              r.postage +
+              " = $" +
+              r.total;
+            break;
+          }
+        }
+      }
+    }
+
     const payload = {
       _subject:
         (isMug ? "☕ NEW MUG ORDER" : "🖼️ NEW PRINT ORDER") +
@@ -731,6 +882,8 @@
       size_or_style: sizeOrMug,
       size: isMug ? "(mug)" : form.size.value,
       mug_style: isMug ? form.mug_style.value : "(print)",
+      shipping: shippingLine,
+      shipping_total: shippingTotal ? "$" + shippingTotal : "(n/a)",
       name: form.name.value,
       email: form.email.value,
       _replyto: form.email.value,
@@ -747,6 +900,8 @@
         form.print.value +
         " | " +
         sizeOrMug +
+        " | ship $" +
+        (shippingTotal || "?") +
         " | " +
         form.name.value +
         " | " +

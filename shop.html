@@ -112,6 +112,30 @@
               <p class="notify-box-tip" id="notify-status">TBA</p>
             </div>
 
+            <div class="shipping-box" id="shipping-box">
+              <h3>Shipping &amp; packaging</h3>
+              <p class="shipping-lead" id="shipping-lead">
+                <!-- Filled by main.js -->
+              </p>
+              <div class="shipping-tube" id="shipping-tube">
+                <!-- Filled by main.js -->
+              </div>
+              <table class="shipping-table" id="shipping-table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Packaging</th>
+                    <th>Postage</th>
+                    <th>You pay</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Filled by main.js -->
+                </tbody>
+              </table>
+              <p class="shipping-note" id="shipping-note"></p>
+            </div>
+
             <div class="payment-box" id="payment-box">
               <h3>Payment options</h3>
               <p id="payment-note-text">TBA</p>
@@ -191,6 +215,12 @@
                 <select id="order-mug" name="mug_style">
                   <option value="">Choose…</option>
                 </select>
+              </div>
+
+              <div class="order-shipping-estimate" id="order-shipping-estimate" hidden>
+                <strong>Shipping</strong>
+                <span id="order-shipping-amount">—</span>
+                <p id="order-shipping-detail"></p>
               </div>
 
               <div class="form-group">

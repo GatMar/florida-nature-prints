@@ -70,6 +70,63 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   ],
 
   /**
+   * ---- Shipping & packaging ----
+   * Best practice for unframed photo prints: hard mailing tube (rolled), not folded.
+   * One uniform tube fits every print size when rolled along the shorter edge.
+   * We use 3" × 24" so packages stay under the harsh USPS “over 30 inches long” fee.
+   *
+   * totals = what the customer pays (packaging materials + postage buffer).
+   * Edit any number anytime — shop page reads this automatically.
+   */
+  shipping: {
+    region: "Continental U.S.",
+    methodTitle: "Hard mailing tube (rolled print)",
+    tube: {
+      label: '3" × 24" kraft mailing tube with end caps',
+      diameterIn: 3,
+      lengthIn: 24,
+      packageCost: 3.5,
+      why:
+        "Hard tubes are the standard way to mail unframed prints — they protect against creases better than a flat mailer, especially for 16×20 and 20×30. One tube size for every print keeps packing simple: each print is rolled along its shorter edge with tissue wrap, slid into the same 3″ × 24″ tube, and capped on both ends.",
+    },
+    // Per print size: packaging + typical USPS Priority postage (avg. zones) + small buffer
+    printRates: [
+      {
+        sizeId: "8x10",
+        packaging: 3.5,
+        postage: 8.5,
+        total: 12,
+      },
+      {
+        sizeId: "11x14",
+        packaging: 3.5,
+        postage: 9.5,
+        total: 13,
+      },
+      {
+        sizeId: "16x20",
+        packaging: 3.5,
+        postage: 10.5,
+        total: 14,
+      },
+      {
+        sizeId: "20x30",
+        packaging: 3.5,
+        postage: 12.5,
+        total: 16,
+      },
+    ],
+    mug: {
+      methodTitle: "Padded box with bubble wrap",
+      packaging: 3,
+      postage: 7,
+      total: 10,
+    },
+    note:
+      "Flat shipping rates for the continental U.S. Alaska, Hawaii, and international orders — message me for a quote. Tracking included on Priority Mail.",
+  },
+
+  /**
    * ---- Gallery categories ----
    * Front of the gallery shows one cover photo per category.
    * id must match photo.category values below.
