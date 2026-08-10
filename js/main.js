@@ -292,19 +292,92 @@
     );
   }
 
-  // ---- Gallery: category covers + dropdown sections with photos ----
+  // ---- Gallery: mixed "all" grid + category dropdown sections ----
   const galleryAccordion = document.getElementById("gallery-accordion");
   const gallerySelect = document.getElementById("gallery-select");
 
   if (galleryAccordion && SITE_CONFIG.photos && SITE_CONFIG.categories) {
-    function updateGalleryCount() {
+    function shufflePhotos(list) {
+      const a = list.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+      }
+      return a;
+    }
+
+    function updateGalleryCount(mode, n) {
       const countEl = document.getElementById("gallery-count");
       if (!countEl) return;
-      const n = (SITE_CONFIG.photos || []).length;
-      countEl.textContent = n + " photos total";
+      const total = (SITE_CONFIG.photos || []).length;
+      if (mode === "all") {
+        countEl.textContent = total + " photos · mixed order";
+      } else if (typeof n === "number") {
+        countEl.textContent = n + " of " + total + " photos";
+      } else {
+        countEl.textContent = total + " photos total";
+      }
+    }
+
+    function setUrlCat(catId) {
+      if (!window.history || !window.history.replaceState) return;
+      try {
+        const url = new URL(window.location.href);
+        if (catId) url.searchParams.set("cat", catId);
+        else url.searchParams.delete("cat");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      } catch (e) {}
+    }
+
+    // Mixed “all categories” grid — photos jumbled, not grouped by theme
+    const mixedWrap = document.createElement("div");
+    mixedWrap.id = "gallery-all-mixed";
+    mixedWrap.className = "gallery-all-mixed";
+    mixedWrap.setAttribute("aria-label", "All photos in mixed order");
+    galleryAccordion.parentNode.insertBefore(mixedWrap, galleryAccordion);
+
+    function renderMixedAll() {
+      const mixed = shufflePhotos(SITE_CONFIG.photos || []);
+      mixedWrap.innerHTML =
+        '<div class="photo-grid">' +
+        mixed
+          .map(function (photo) {
+            return photoCardHtml(photo, true);
+          })
+          .join("") +
+        "</div>";
+    }
+
+    function showAllMixed(scrollTop) {
+      // Category covers stay visible for navigation; photos show mixed (not grouped)
+      galleryAccordion.hidden = false;
+      galleryAccordion
+        .querySelectorAll(".gallery-section")
+        .forEach(function (sec) {
+          sec.classList.remove("is-open");
+          const btn = sec.querySelector(".gallery-section-toggle");
+          if (btn) btn.setAttribute("aria-expanded", "false");
+        });
+      if (gallerySelect) gallerySelect.value = "";
+      // Fresh jumble each time they pick All categories
+      renderMixedAll();
+      mixedWrap.hidden = false;
+      updateGalleryCount("all");
+      setUrlCat("");
+      if (scrollTop && mixedWrap.scrollIntoView) {
+        mixedWrap.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
 
     function openAccordionSection(catId, scroll) {
+      if (!catId) {
+        showAllMixed(scroll);
+        return;
+      }
+      mixedWrap.hidden = true;
+      galleryAccordion.hidden = false;
       const sections = galleryAccordion.querySelectorAll(".gallery-section");
       sections.forEach(function (sec) {
         const on = sec.getAttribute("data-category") === catId;
@@ -312,7 +385,8 @@
         const btn = sec.querySelector(".gallery-section-toggle");
         if (btn) btn.setAttribute("aria-expanded", on ? "true" : "false");
       });
-      if (gallerySelect && catId) gallerySelect.value = catId;
+      if (gallerySelect) gallerySelect.value = catId;
+      updateGalleryCount("cat", photosInCategory(catId).length);
       if (scroll) {
         const el = galleryAccordion.querySelector(
           '.gallery-section[data-category="' + catId + '"]'
@@ -321,23 +395,14 @@
           el.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }
-      if (window.history && window.history.replaceState && catId) {
-        try {
-          const url = new URL(window.location.href);
-          url.searchParams.set("cat", catId);
-          window.history.replaceState({}, "", url.pathname + url.search);
-        } catch (e) {}
-      }
+      setUrlCat(catId);
     }
 
-    // Build one dropdown section per category (cover + all photos)
+    // Build one dropdown section per category (cover + photos)
     galleryAccordion.innerHTML = SITE_CONFIG.categories
-      .map(function (cat, index) {
+      .map(function (cat) {
         const list = photosInCategory(cat.id);
-        const cover =
-          cat.cover || (list[0] && list[0].file) || "";
-        const openClass = index === 0 ? " is-open" : "";
-        const expanded = index === 0 ? "true" : "false";
+        const cover = cat.cover || (list[0] && list[0].file) || "";
         const photosHtml = list.length
           ? list
               .map(function (photo) {
@@ -347,16 +412,12 @@
           : '<p class="gallery-empty">No photos in this category yet.</p>';
 
         return (
-          '<section class="gallery-section' +
-          openClass +
-          '" data-category="' +
+          '<section class="gallery-section" data-category="' +
           escapeHtml(cat.id) +
           '" id="cat-' +
           escapeHtml(cat.id) +
           '">' +
-          '<button type="button" class="gallery-section-toggle" aria-expanded="' +
-          expanded +
-          '">' +
+          '<button type="button" class="gallery-section-toggle" aria-expanded="false">' +
           '<div class="gallery-section-cover">' +
           (cover
             ? '<img src="' +
@@ -396,8 +457,8 @@
       const catId = sec.getAttribute("data-category");
       const wasOpen = sec.classList.contains("is-open");
       if (wasOpen) {
-        sec.classList.remove("is-open");
-        btn.setAttribute("aria-expanded", "false");
+        // Closing the only open category → back to mixed all view
+        showAllMixed(false);
       } else {
         openAccordionSection(catId, false);
       }
@@ -405,7 +466,7 @@
 
     if (gallerySelect) {
       gallerySelect.innerHTML =
-        '<option value="">All categories</option>' +
+        '<option value="">All categories (mixed)</option>' +
         SITE_CONFIG.categories
           .map(function (cat) {
             return (
@@ -422,21 +483,20 @@
       gallerySelect.addEventListener("change", function () {
         const v = gallerySelect.value;
         if (!v) {
-          // Open all sections lightly: open first, scroll top
-          openAccordionSection(SITE_CONFIG.categories[0].id, true);
+          showAllMixed(true);
           return;
         }
         openAccordionSection(v, true);
       });
     }
 
-    updateGalleryCount();
-
-    // Deep link: gallery.html?cat=gators
+    // Deep link: gallery.html?cat=gators — else default to mixed all
     const params = new URLSearchParams(window.location.search);
     const startCat = params.get("cat");
     if (startCat && categoryMeta(startCat)) {
       openAccordionSection(startCat, true);
+    } else {
+      showAllMixed(false);
     }
   }
 

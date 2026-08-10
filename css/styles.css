@@ -593,11 +593,28 @@ main {
   padding: 2rem 1rem;
 }
 
+/* Mixed “all categories” grid (jumbled order, not by theme) */
+.gallery-all-mixed {
+  margin: 0.25rem 0 1.25rem;
+}
+
+.gallery-all-mixed[hidden] {
+  display: none !important;
+}
+
+.gallery-all-mixed .photo-grid {
+  margin-top: 0.35rem;
+}
+
 /* Accordion category sections */
 .gallery-accordion {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.gallery-accordion[hidden] {
+  display: none !important;
 }
 
 .gallery-section {
