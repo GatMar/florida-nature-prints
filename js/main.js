@@ -6,16 +6,68 @@
   "use strict";
 
   // ---- Hero video carousel (two muted clips, seamless crossfade) ----
+  // Titles are HTML overlays with exact gallery spellings (never baked into video).
   (function initHeroVideoCarousel() {
     const a = document.getElementById("hero-video-a");
     const b = document.getElementById("hero-video-b");
+    const titleEl = document.getElementById("hero-photo-title");
     if (!a || !b) return;
 
+    // Exact titles as named on the website / in config.js
+    const titlesA = [
+      "Crimson Marsh",
+      "Golden Gulf",
+      "Gator Mid-Yawn",
+      "Great Blue Heron",
+      "Anhinga Portrait",
+      "Wood Stork Standing Tall",
+      "Sandhill Crane",
+    ];
+    const titlesB = [
+      "Horizon Fire",
+      "Footprints at Sunset",
+      "Floating Gator",
+      "Anhinga on the Branch",
+      "Wood Stork Profile",
+      "Marsh at Dusk",
+    ];
+
     let showingA = true;
+    let titleTimer = null;
+    let titleIndex = 0;
+
     const playSafe = function (v) {
       const p = v.play();
       if (p && typeof p.catch === "function") p.catch(function () {});
     };
+
+    function setTitle(text) {
+      if (!titleEl) return;
+      titleEl.classList.add("is-swap");
+      window.setTimeout(function () {
+        titleEl.textContent = text;
+        titleEl.classList.remove("is-swap");
+      }, 220);
+    }
+
+    function stopTitleCycle() {
+      if (titleTimer) {
+        window.clearInterval(titleTimer);
+        titleTimer = null;
+      }
+    }
+
+    function startTitleCycle(list) {
+      stopTitleCycle();
+      titleIndex = 0;
+      setTitle(list[0]);
+      // ~10s reels: spread titles evenly so names match the visual pace
+      const stepMs = Math.max(1200, Math.floor(10000 / list.length));
+      titleTimer = window.setInterval(function () {
+        titleIndex = (titleIndex + 1) % list.length;
+        setTitle(list[titleIndex]);
+      }, stepMs);
+    }
 
     // Prefer reduced motion: freeze on poster only
     const reduce =
@@ -27,40 +79,45 @@
       b.pause();
       a.classList.add("is-active");
       b.classList.remove("is-active");
+      if (titleEl) titleEl.textContent = titlesA[0];
       return;
     }
 
     playSafe(a);
+    startTitleCycle(titlesA);
 
     // Crossfade to the other reel when one ends (loop disabled on active switch)
     a.loop = false;
     b.loop = false;
 
-    function onEnded(ended, next) {
+    function onEnded(ended, next, nextTitles) {
       next.currentTime = 0;
       playSafe(next);
       ended.classList.remove("is-active");
       next.classList.add("is-active");
       showingA = next === a;
+      startTitleCycle(nextTitles);
     }
 
     a.addEventListener("ended", function () {
-      onEnded(a, b);
+      onEnded(a, b, titlesB);
     });
     b.addEventListener("ended", function () {
-      onEnded(b, a);
+      onEnded(b, a, titlesA);
     });
 
     // Fallback: if a clip errors, keep a single looping video
     a.addEventListener("error", function () {
       a.loop = true;
       playSafe(a);
+      startTitleCycle(titlesA);
     });
     b.addEventListener("error", function () {
       a.loop = true;
       a.classList.add("is-active");
       b.classList.remove("is-active");
       playSafe(a);
+      startTitleCycle(titlesA);
     });
   })();
 
