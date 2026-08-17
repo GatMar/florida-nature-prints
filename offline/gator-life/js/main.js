@@ -471,41 +471,6 @@
 
   fillSizeList("size-list", SITE_CONFIG.printSizes);
   fillSizeList("mug-size-list", SITE_CONFIG.mugStyles);
-  fillSizeList("souvenir-size-list", SITE_CONFIG.souvenirs);
-
-  // Souvenir cards on the shop page
-  const souvenirGrid = document.getElementById("souvenir-grid");
-  if (souvenirGrid && SITE_CONFIG.souvenirs) {
-    souvenirGrid.innerHTML = SITE_CONFIG.souvenirs
-      .map(function (s) {
-        return (
-          '<article class="souvenir-card">' +
-          '<div class="souvenir-img-wrap">' +
-          '<img src="images/souvenirs/' +
-          escapeHtml(s.file) +
-          '" alt="' +
-          escapeHtml(s.label) +
-          '" loading="lazy" />' +
-          "</div>" +
-          "<h3>" +
-          escapeHtml(s.label) +
-          "</h3>" +
-          "<p>" +
-          escapeHtml(s.desc || "") +
-          "</p>" +
-          '<div class="souvenir-meta">' +
-          '<span class="size-price">$' +
-          s.price +
-          "</span>" +
-          '<a class="btn btn-primary" href="shop.html?product=souvenir&amp;item=' +
-          encodeURIComponent(s.id) +
-          '#order-form">Add to order</a>' +
-          "</div>" +
-          "</article>"
-        );
-      })
-      .join("");
-  }
 
   // ---- Shipping panel + live order estimate ----
   (function initShipping() {
@@ -605,23 +570,6 @@
             "</td></tr>"
         );
       }
-      if (ship.souvenir) {
-        rows.push(
-          "<tr><td>Shark tooth or shell souvenir" +
-            (ship.souvenir.methodTitle
-              ? ' <span class="ship-muted">(' +
-                escapeHtml(ship.souvenir.methodTitle) +
-                ")</span>"
-              : "") +
-            '</td><td class="ship-muted">' +
-            money(ship.souvenir.packaging) +
-            '</td><td class="ship-muted">' +
-            money(ship.souvenir.postage) +
-            "</td><td>" +
-            money(ship.souvenir.total) +
-            "</td></tr>"
-        );
-      }
       tbody.innerHTML = rows.join("");
     }
 
@@ -633,27 +581,7 @@
       if (!estBox || !estAmt) return;
       const productEl = document.getElementById("order-product");
       const sizeEl = document.getElementById("order-size");
-      const type = productEl ? productEl.value : "print";
-      const isMug = type === "mug";
-      const isSouvenir = type === "souvenir";
-
-      if (isSouvenir && ship.souvenir) {
-        estBox.hidden = false;
-        estAmt.textContent = money(ship.souvenir.total);
-        if (estDetail) {
-          estDetail.textContent =
-            "Flat fee · " +
-            (ship.carrier || "USPS Priority Mail") +
-            " · " +
-            (ship.souvenir.methodTitle || "Padded mailer") +
-            " (packaging " +
-            money(ship.souvenir.packaging) +
-            " + postage est. " +
-            money(ship.souvenir.postage) +
-            ")";
-        }
-        return;
-      }
+      const isMug = productEl && productEl.value === "mug";
 
       if (isMug && ship.mug) {
         estBox.hidden = false;
@@ -749,45 +677,21 @@
     );
   }
 
-  const souvenirSelect = document.getElementById("order-souvenir");
-  if (souvenirSelect && SITE_CONFIG.souvenirs) {
-    souvenirSelect.innerHTML = optionsFromItems(
-      SITE_CONFIG.souvenirs,
-      "Choose a souvenir…"
-    );
-  }
-
   const productSelect = document.getElementById("order-product");
   const sizeGroup = document.getElementById("order-size-group");
   const mugGroup = document.getElementById("order-mug-group");
-  const souvenirGroup = document.getElementById("order-souvenir-group");
-  const printGroup = document.getElementById("order-print-group");
 
   function syncProductType() {
-    const type = productSelect ? productSelect.value : "print";
-    const isMug = type === "mug";
-    const isSouvenir = type === "souvenir";
-    const isPrint = !isMug && !isSouvenir;
-    if (sizeGroup) sizeGroup.hidden = !isPrint;
+    const isMug = productSelect && productSelect.value === "mug";
+    if (sizeGroup) sizeGroup.hidden = !!isMug;
     if (mugGroup) mugGroup.hidden = !isMug;
-    if (souvenirGroup) souvenirGroup.hidden = !isSouvenir;
-    if (printGroup) printGroup.hidden = isSouvenir;
     if (sizeSelect) {
-      sizeSelect.required = isPrint;
-      if (!isPrint) sizeSelect.value = "";
+      sizeSelect.required = !isMug;
+      if (isMug) sizeSelect.value = "";
     }
     if (mugSelect) {
       mugSelect.required = !!isMug;
       if (!isMug) mugSelect.value = "";
-    }
-    if (souvenirSelect) {
-      souvenirSelect.required = !!isSouvenir;
-      if (!isSouvenir) souvenirSelect.value = "";
-    }
-    const printEl = document.getElementById("order-print");
-    if (printEl) {
-      printEl.required = !isSouvenir;
-      if (isSouvenir) printEl.value = "";
     }
     // Swap Stripe button if mug-specific link exists
     const stripeBtn = document.getElementById("stripe-payment-btn");
@@ -812,24 +716,12 @@
         window.__fnpUpdateShipping();
       }
     });
-    // URL ?product=mug | souvenir
+    // URL ?product=mug
     const paramsEarly = new URLSearchParams(window.location.search);
     if (paramsEarly.get("product") === "mug") {
       productSelect.value = "mug";
     }
-    if (paramsEarly.get("product") === "souvenir") {
-      productSelect.value = "souvenir";
-    }
     syncProductType();
-    const itemId = paramsEarly.get("item");
-    if (itemId && souvenirSelect && SITE_CONFIG.souvenirs) {
-      const found = SITE_CONFIG.souvenirs.filter(function (s) {
-        return s.id === itemId;
-      })[0];
-      if (found) {
-        souvenirSelect.value = found.label + " - $" + found.price;
-      }
-    }
     if (typeof window.__fnpUpdateShipping === "function") {
       window.__fnpUpdateShipping();
     }
@@ -936,28 +828,16 @@
     const product =
       (form.product_type && form.product_type.value) || "print";
     const isMug = product === "mug";
-    const isSouvenir = product === "souvenir";
-    const sizeOrMug = isSouvenir
-      ? (form.souvenir && form.souvenir.value) || ""
-      : isMug
-        ? (form.mug_style && form.mug_style.value) || ""
-        : (form.size && form.size.value) || "";
+    const sizeOrMug = isMug
+      ? (form.mug_style && form.mug_style.value) || ""
+      : (form.size && form.size.value) || "";
 
     // Attach shipping line for your order email
     let shippingLine = "(not calculated)";
     let shippingTotal = "";
     const ship = SITE_CONFIG.shipping;
     if (ship) {
-      if (isSouvenir && ship.souvenir) {
-        shippingTotal = String(ship.souvenir.total);
-        shippingLine =
-          "Souvenir padded mailer — packaging $" +
-          ship.souvenir.packaging +
-          " + postage $" +
-          ship.souvenir.postage +
-          " = $" +
-          ship.souvenir.total;
-      } else if (isMug && ship.mug) {
+      if (isMug && ship.mug) {
         shippingTotal = String(ship.mug.total);
         shippingLine =
           "Mug padded box — packaging $" +
@@ -998,27 +878,18 @@
 
     const payload = {
       _subject:
-        (isSouvenir
-          ? "🐚 NEW SOUVENIR ORDER"
-          : isMug
-            ? "☕ NEW MUG ORDER"
-            : "🖼️ NEW PRINT ORDER") +
+        (isMug ? "☕ NEW MUG ORDER" : "🖼️ NEW PRINT ORDER") +
         " — " +
         SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
       form_type: "Order",
-      product_type: isSouvenir
-        ? "Shark tooth / shell souvenir"
-        : isMug
-          ? "12 oz photo mug (Circuit press)"
-          : "Fine art print",
-      scene: isSouvenir ? "(souvenir)" : form.print.value,
-      print: isSouvenir ? "(souvenir)" : form.print.value,
-      souvenir: isSouvenir ? sizeOrMug : "(none)",
+      product_type: isMug ? "12 oz photo mug (Circuit press)" : "Fine art print",
+      scene: form.print.value,
+      print: form.print.value,
       size_or_style: sizeOrMug,
-      size: isSouvenir ? "(souvenir)" : isMug ? "(mug)" : form.size.value,
-      mug_style: isMug ? form.mug_style.value : isSouvenir ? "(souvenir)" : "(print)",
+      size: isMug ? "(mug)" : form.size.value,
+      mug_style: isMug ? form.mug_style.value : "(print)",
       shipping: shippingLine,
       shipping_total: shippingTotal ? "$" + shippingTotal : "(n/a)",
       name: form.name.value,
@@ -1031,14 +902,16 @@
       zip: form.zip.value,
       notes: form.notes.value || "(none)",
       gator_coupon: (form.gator_coupon && form.gator_coupon.value) || "(none)",
-      gift_code: (form.gator_coupon && form.gator_coupon.value) || "(none)",
-      print_discount: describeGiftCode(form.gator_coupon && form.gator_coupon.value),
-      sms_kind: isSouvenir ? "SOUVENIR" : isMug ? "MUG" : "PRINT",
+      print_discount:
+        form.gator_coupon && form.gator_coupon.value
+          ? "Apply extra 10% off prints — Gator Life coupon " +
+            form.gator_coupon.value
+          : "(none)",
       // Plain-text block for SMS gateways (short)
       sms_summary:
-        (isSouvenir ? "SOUVENIR" : isMug ? "MUG" : "PRINT") +
+        (isMug ? "MUG" : "PRINT") +
         ": " +
-        (isSouvenir ? sizeOrMug : form.print.value) +
+        form.print.value +
         " | " +
         sizeOrMug +
         " | ship $" +
@@ -1171,75 +1044,19 @@
     });
   }
 
-  function describeGiftCode(code) {
-    if (!code) return "(none)";
-    try {
-      const matchKey =
-        (SITE_CONFIG.matchReward && SITE_CONFIG.matchReward.storageKey) ||
-        "fnpMatch_v1";
-      const d = JSON.parse(localStorage.getItem(matchKey) || "{}");
-      if (d.reward && d.reward.code === code) {
-        if (d.reward.kind === "shark-tooth") {
-          return "Wildlife Match gift — honor a free shark tooth souvenir. Code " + code;
-        }
-        if (d.reward.kind === "shell") {
-          return "Wildlife Match gift — honor a free shell souvenir. Code " + code;
-        }
-        return (
-          "Wildlife Match gift — apply $" +
-          (d.reward.credit || 8) +
-          " credit toward this order. Code " +
-          code
-        );
-      }
-    } catch (e) {}
-    return "Apply game / gift code " + code;
-  }
-
-  (function fillGameReward() {
+  (function fillGatorCoupon() {
     const input = document.getElementById("order-coupon");
     const note = document.getElementById("coupon-shop-note");
     if (!input) return;
     try {
-      const matchKey =
-        (SITE_CONFIG.matchReward && SITE_CONFIG.matchReward.storageKey) ||
-        "fnpMatch_v1";
-      const match = JSON.parse(localStorage.getItem(matchKey) || "{}");
-      if (match.reward && match.reward.code) {
-        input.value = match.reward.code;
-        if (note) {
-          note.textContent = describeGiftCode(match.reward.code);
-        }
-        const paramsNow = new URLSearchParams(window.location.search);
-        const urlPicked =
-          paramsNow.get("print") ||
-          paramsNow.get("item") ||
-          paramsNow.get("product") === "mug" ||
-          paramsNow.get("product") === "print" ||
-          paramsNow.get("product") === "souvenir";
-        if (
-          !urlPicked &&
-          (match.reward.kind === "shark-tooth" || match.reward.kind === "shell")
-        ) {
-          if (productSelect) {
-            productSelect.value = "souvenir";
-            syncProductType();
-          }
-          if (souvenirSelect && SITE_CONFIG.souvenirs) {
-            const want = SITE_CONFIG.souvenirs.filter(function (s) {
-              return s.giftKind === match.reward.kind;
-            })[0];
-            if (want) souvenirSelect.value = want.label + " - $" + want.price;
-          }
-        }
-        return;
-      }
       const d = JSON.parse(localStorage.getItem("gatorLife_v1") || "{}");
       if (d.coupon && d.coupon.code) {
         input.value = d.coupon.code;
         if (note) {
           note.textContent =
-            "Saved print coupon " + d.coupon.code + " (10% off prints).";
+            "Gator Life complete — extra 10% off prints with code " +
+            d.coupon.code +
+            ".";
         }
       }
     } catch (e) {}

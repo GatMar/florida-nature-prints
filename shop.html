@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Shop — Prints &amp; Mugs | Florida Nature Prints</title>
+    <title>Shop — Prints, Mugs &amp; Souvenirs | Florida Nature Prints</title>
     <meta
       name="description"
       content="Order Florida nature photo prints and specialty mugs. Secure payment options. Order alerts by email and text."
@@ -30,7 +30,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="gallery.html">Gallery</a></li>
           <li><a href="shop.html" class="active">Shop</a></li>
-          <li><a href="game.html">Gator Life</a></li>
+          <li><a href="game.html">Match</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
@@ -40,11 +40,11 @@
     <main>
       <div class="page-hero">
         <div class="container">
-          <h1>Shop — prints &amp; photo mugs</h1>
+          <h1>Shop — prints, mugs &amp; souvenirs</h1>
           <p>
-            Choose a Florida scene for a fine art print or a 12 oz photo mug
-            (Circuit mug press), send your order details, then pay securely.
-            You’ll get confirmation by email — and I’ll get an alert too.
+            Choose a Florida scene for a fine art print or a 12 oz photo mug,
+            or pick a shark tooth or Gulf shell souvenir. Send your order
+            details, then pay securely.
           </p>
         </div>
       </div>
@@ -80,6 +80,32 @@
                 <!-- Filled by main.js -->
               </ul>
             </article>
+            <article class="product-type-card">
+              <div class="product-type-icon" aria-hidden="true">🦈</div>
+              <h3>Shark teeth &amp; shells</h3>
+              <p>
+                Small Florida souvenirs — fossil shark teeth and Gulf shells —
+                packed to mail. A quiet extra from the same coast as the prints.
+              </p>
+              <ul class="size-list" id="souvenir-size-list">
+                <!-- Filled by main.js -->
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="souvenirs">
+        <div class="container">
+          <div class="section-header">
+            <h2>Shark teeth &amp; shells</h2>
+            <p>
+              Beachcomber souvenirs from Florida — add one to an order, or claim
+              a free one if you finished Wildlife Match.
+            </p>
+          </div>
+          <div class="souvenir-grid" id="souvenir-grid">
+            <!-- Filled by main.js -->
           </div>
         </div>
       </section>
@@ -90,11 +116,12 @@
             <h2>How ordering works</h2>
             <ol class="order-steps">
               <li>
-                <strong>Pick product type</strong> — print or specialty mug.
+                <strong>Pick product type</strong> — print, mug, or a shark
+                tooth / shell souvenir.
               </li>
               <li>
-                <strong>Choose a scene</strong> from the gallery photos, then
-                size / mug style.
+                <strong>Choose a scene or souvenir</strong> from the gallery
+                photos, then size / mug style — or pick a shark tooth or shell.
               </li>
               <li>
                 <strong>Enter shipping details</strong> and submit the form so I
@@ -178,7 +205,7 @@
             <h2>Order form</h2>
             <p class="form-intro">
               I’ll receive this by email (and text if SMS is set up) so I can
-              prepare and ship your print or mug.
+              prepare and ship your print, mug, or souvenir.
             </p>
 
             <div id="order-message" class="form-message" role="status"></div>
@@ -193,10 +220,11 @@
                 <select id="order-product" name="product_type" required>
                   <option value="print">Fine art print</option>
                   <option value="mug">12 oz photo mug</option>
+                  <option value="souvenir">Shark tooth or shell souvenir</option>
                 </select>
               </div>
 
-              <div class="form-group">
+              <div class="form-group" id="order-print-group">
                 <label for="order-print">Which scene / photo?</label>
                 <select id="order-print" name="print" required>
                   <option value="">Choose a scene…</option>
@@ -214,6 +242,13 @@
                 <label for="order-mug">Mug</label>
                 <select id="order-mug" name="mug_style">
                   <option value="">Choose…</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="order-souvenir-group" hidden>
+                <label for="order-souvenir">Souvenir</label>
+                <select id="order-souvenir" name="souvenir">
+                  <option value="">Choose a souvenir…</option>
                 </select>
               </div>
 
@@ -309,6 +344,23 @@
                 />
               </div>
 
+              <div class="form-group" id="coupon-shop-wrap">
+                <label for="order-coupon"
+                  >Gift / game code <span class="hint">(optional)</span></label
+                >
+                <input
+                  id="order-coupon"
+                  name="gator_coupon"
+                  type="text"
+                  maxlength="24"
+                  placeholder="MATCH-XXXXXX"
+                  autocomplete="off"
+                />
+                <p class="hint" id="coupon-shop-note">
+                  Finish all 15 Wildlife Match levels for a souvenir or $8 credit.
+                </p>
+              </div>
+
               <div class="form-group">
                 <label for="order-notes"
                   >Notes <span class="hint">(optional)</span></label
@@ -345,7 +397,7 @@
           <ul class="footer-links">
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="shop.html">Shop</a></li>
-            <li><a href="game.html">Gator Life</a></li>
+            <li><a href="game.html">Match</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="contact.html">Contact</a></li>
           </ul>

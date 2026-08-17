@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1a1408" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Gator Life - Florida Nature Prints</title>
+    <meta
+      name="description"
+      content="Gator Life: hop a hatchling through Florida wetlands, meet herons and spoonbills, and learn real wildlife facts. An original educational game."
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/game.css?v=bound3" />
+  </head>
+  <body class="game-page">
+    <header class="site-header">
+      <div class="container nav-inner">
+        <a href="../../index.html" class="logo" data-business-name
+          >Florida <span>Nature</span> Prints</a
+        >
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="nav-links">
+          <li><a href="../../index.html">Home</a></li>
+          <li><a href="../../gallery.html">Gallery</a></li>
+          <li><a href="../../shop.html">Shop</a></li>
+          <li><a href="index.html" class="active">Gator Life</a></li>
+          <li><a href="../../about.html">About</a></li>
+          <li><a href="../../contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <div class="game-wrap">
+        <div class="game-card game-card-arcade">
+          <!-- START -->
+          <section id="screen-start" class="game-screen active game-screen-photo">
+            <div class="start-hero" aria-hidden="true">
+              <img
+                src="images/game/gator-run.png"
+                alt="Hatchling alligator leaping"
+                class="start-gator-fig start-gator-run"
+                width="320"
+                height="180"
+              />
+            </div>
+            <h1>Gator Life</h1>
+            <p class="subtitle">
+              Walk ponds and canals, climb the hills, and hunt. Food gets
+              bigger as you go. Stay clear of herons.
+            </p>
+            <ul class="start-list">
+              <li>Level 1: walk into 6 fish · Level 2: little turtles · then birds, then bigger meals</li>
+              <li>Tap, click, or press space to <strong>hop</strong></li>
+              <li>Level 1: hop great blue herons · later, an owl may swoop</li>
+              <li>Clear all 50 for an extra 10% off prints coupon</li>
+            </ul>
+            <div class="btn-row">
+              <button type="button" class="game-btn game-btn-primary" id="btn-start">
+                Play
+              </button>
+              <button type="button" class="game-btn game-btn-secondary" id="btn-levels">
+                Levels
+              </button>
+              <button type="button" class="game-btn game-btn-secondary" id="btn-how">
+                How to play
+              </button>
+            </div>
+            <div
+              id="how-box"
+              class="fact-card"
+              style="display: none; margin-top: 1rem; background: #fffef5; color: #1a3324"
+            >
+              <p style="color: #1a3324">
+                <strong>Hop:</strong> tap the trail, tap the big HOP pad, or press
+                space / up / W.<br />
+                <strong>Sawgrass &amp; knees:</strong> hop over them.<br />
+                <strong>Hanging moss:</strong> stay on the bank — don’t hop.<br />
+                <strong>Gaps &amp; logs:</strong> leap the water; land on fallen logs.<br />
+                You can hop twice in the air.<br />
+                Each level has a hunt (eat fish, catch fireflies, avoid herons).
+                Finish the hunt to clear the stretch.<br />
+                All 50 levels are open from the start. Three hearts per run.
+              </p>
+            </div>
+            <div class="fact-card coupon-card" id="coupon-box-start" style="display: none; margin-top: 1rem">
+              <div class="label">Print coupon</div>
+              <p>You earned <strong>10% extra off</strong> prints:</p>
+              <p class="coupon-code" id="coupon-code-start">GATOR10</p>
+              <p class="coupon-hint"><a href="shop.html">Redeem in the shop</a></p>
+            </div>
+            <p class="controls-note">
+              Total score:
+              <strong id="global-score">0</strong>
+              <br />
+              <span class="legal-note"
+                >Original educational game — not affiliated with any other video game
+                brand.</span
+              >
+            </p>
+          </section>
+
+          <!-- LEVELS -->
+          <section id="screen-levels" class="game-screen game-screen-photo">
+            <h1>Pick a stretch</h1>
+            <p class="subtitle">All 50 stretches are open. Each one has its own hunt.</p>
+            <div class="level-grid" id="level-grid"></div>
+            <div class="btn-row">
+              <button type="button" class="game-btn game-btn-secondary" id="btn-levels-back">
+                Back
+              </button>
+              <button type="button" class="game-btn game-btn-secondary" id="btn-reset">
+                Reset progress
+              </button>
+            </div>
+          </section>
+
+          <!-- PLAY -->
+          <section id="screen-play" class="game-screen">
+            <div class="play-layout play-layout-runner">
+              <div class="game-hud game-hud-compact">
+                <span>LV <span id="play-hud-level">1</span></span>
+                <span class="hearts" id="play-hud-hearts">♥♥♥</span>
+                <span>Score <span id="play-hud-score">0</span></span>
+                <button
+                  type="button"
+                  class="game-btn game-btn-secondary btn-quit-inline"
+                  id="btn-quit-play"
+                  aria-label="Quit to menu"
+                >
+                  Menu
+                </button>
+              </div>
+              <h2 id="level-title" class="level-title-compact">Level</h2>
+              <p id="level-blurb" style="display: none"></p>
+              <div class="age-hud" id="age-hud">
+                <div class="age-cell">
+                  <span class="age-kicker">AGE</span>
+                  <span class="age-big" id="age-big">0</span>
+                  <span class="age-sub" id="age-sub">months old</span>
+                </div>
+                <div class="age-cell age-eat" id="eat-cell">
+                  <span class="age-kicker" id="eat-kicker">EAT IN</span>
+                  <span class="age-big" id="eat-big">2</span>
+                  <span class="age-sub" id="eat-sub">days</span>
+                </div>
+              </div>
+
+              <div class="stage-wrap stage-wrap-arcade stage-wrap-runner" id="stage-wrap">
+                <canvas
+                  id="game-canvas"
+                  width="960"
+                  height="440"
+                  aria-label="Gator Life trail — tap to hop"
+                ></canvas>
+                <div id="goal-overlay" class="goal-overlay" role="dialog" aria-modal="true">
+                  <div class="goal-card">
+                    <div class="goal-kicker" id="goal-kicker">Level 1</div>
+                    <h2 id="goal-title">First hunt</h2>
+                    <p id="goal-text">Eat 10 fish. Hop the sawgrass. Don’t get grabbed by a heron.</p>
+                    <button type="button" class="game-btn game-btn-primary" id="goal-go">
+                      Let’s go
+                    </button>
+                  </div>
+                </div>
+                <div id="comic-overlay" class="comic-overlay" aria-modal="true" role="dialog">
+                  <div class="meme-panel">
+                    <button
+                      type="button"
+                      class="comic-close"
+                      id="comic-close"
+                      aria-label="Close quiz and keep playing"
+                    >
+                      ×
+                    </button>
+                    <div class="meme-npc" aria-hidden="true">
+                      <div class="meme-npc-face" id="comic-npc-face">🐦</div>
+                      <div class="meme-npc-name" id="comic-npc-name">Hattie the Heron</div>
+                    </div>
+                    <div class="comic-bubble meme-bubble">
+                      <span class="comic-tag" id="comic-tag">QUIZ</span>
+                      <p class="meme-npc-line" id="comic-npc-line">Quick one!</p>
+                      <h3 id="comic-question">Question</h3>
+                      <div class="comic-options" id="comic-options"></div>
+                      <div class="comic-feedback" id="comic-feedback"></div>
+                      <button
+                        type="button"
+                        class="game-btn game-btn-primary comic-continue"
+                        id="comic-continue"
+                        style="display: none"
+                      >
+                        Keep hopping
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="play-hint" id="play-hint">Tap the trail or the HOP pad</p>
+
+              <button type="button" class="hop-btn" id="btn-hop" aria-label="Hop">
+                <span class="hop-btn-label">HOP</span>
+                <span class="hop-btn-sub">tap · space</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- FACT -->
+          <section id="screen-fact" class="game-screen game-screen-photo">
+            <div class="complete-emoji fact-gator-wrap" id="fact-emoji">
+              <img
+                src="images/game/gator-run.png"
+                alt=""
+                class="fact-gator-img fact-gator-run"
+              />
+            </div>
+            <h1 id="fact-title">Stretch clear!</h1>
+            <p class="score-pop" id="fact-score">Score</p>
+            <div class="fact-card">
+              <div class="label" id="fact-label">Florida Wildlife Fact</div>
+              <p id="fact-text">Fact</p>
+            </div>
+            <div class="fact-card coupon-card" id="coupon-box" style="display: none">
+              <div class="label">You finished Gator Life!</div>
+              <p>
+                Extra <strong>10% off</strong> prints. Use this code at checkout:
+              </p>
+              <p class="coupon-code" id="coupon-code">GATOR10</p>
+              <p class="coupon-hint">
+                Open the <a href="shop.html">shop</a> — the code fills in for you.
+              </p>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="game-btn game-btn-primary" id="btn-fact-next">
+                Next stretch
+              </button>
+              <button type="button" class="game-btn game-btn-secondary" id="btn-fact-levels">
+                Level map
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-brand" data-business-name>
+              Florida <span>Nature</span> Prints
+            </div>
+            <p data-tagline>Calm moments from the Sunshine State</p>
+          </div>
+          <ul class="footer-links">
+            <li><a href="../../gallery.html">Gallery</a></li>
+            <li><a href="../../shop.html">Shop</a></li>
+            <li><a href="index.html">Gator Life</a></li>
+            <li><a href="../../about.html">About</a></li>
+            <li><a href="../../contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-bottom">
+          &copy; <span id="year"></span>
+          <span data-business-name>Florida Nature Prints</span>. Gator Life is an
+          original educational game (not affiliated with any other video game brand).
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/gator-questions.js"></script>
+    <script src="js/game.js?v=gator12"></script>
+  </body>
+</html>

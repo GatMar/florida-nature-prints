@@ -20,13 +20,34 @@ Your site lives in this folder:
 |---------------|------------|
 | `index.html` | Home page |
 | `gallery.html` | Photo gallery |
-| `shop.html` | Buy prints + order form |
+| `shop.html` | Buy prints, mugs, shark teeth & shells |
+| `game.html` | Wildlife Match (10-level matching game) |
+| `offline/gator-life/` | Gator Life hop-runner, saved for later |
 | `about.html` | About you |
 | `contact.html` | Contact form |
 | `css/styles.css` | Look and colors |
 | `js/config.js` | **Edit this** for name, email, prices, photos, Stripe, Formspree |
 | `js/main.js` | Makes buttons and forms work (usually leave alone) |
 | `images/prints/` | **Put your photos here** |
+
+---
+
+## Wildlife Match (the live game)
+
+The **Match** tab is a 10-level memory game using your real print photos (birds, gators, and other Florida wildlife).
+
+- Level 1 starts with **7 pairs**, then 8, 9, and so on, up to **20 pairs** on level 15.
+- Each match scores visible points.
+- Finish all 15 levels to earn a gift certificate: shark tooth souvenir, shell souvenir, or $8 toward the next order.
+- Quiet ads around the board link prints to your shop order form, and cookies/spices to [maricooks.com](https://maricooks.com).
+
+Gator Life (the older hop-runner) is saved here for later work:
+
+```
+florida-nature-prints/offline/gator-life/
+```
+
+Open `offline/gator-life/index.html` anytime. It is not in the public menu.
 
 ---
 
@@ -69,6 +90,12 @@ florida-nature-prints/images/prints/
 2. Delete that file from `images/prints/` (example: delete `gator-eyes.jpeg`).
 3. Open `js/config.js` and delete that photo’s whole `{ file: ..., title: ..., desc: ... },` block.
 4. Save and refresh the browser.
+
+## Shark teeth & shells
+
+Souvenirs are listed in `js/config.js` under `souvenirs`. Photos live in `images/souvenirs/`. The shop page and order form read that list automatically.
+
+---
 
 ### After you add photos — update the list
 

@@ -2,23 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-    />
-    <meta name="theme-color" content="#0a1a12" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>Gator Life - Florida Nature Prints</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wildlife Match — Florida Nature Prints</title>
     <meta
       name="description"
-      content="Gator Life: swim Florida river labyrinths, eat fish, climb hills, and dodge big gators in an original swamp adventure."
+      content="Match Florida birds, alligators, and wetland wildlife across 15 levels. Finish the game for a souvenir gift certificate."
     />
     <link rel="stylesheet" href="css/styles.css" />
-    <link rel="stylesheet" href="css/game.css" />
+    <link rel="stylesheet" href="css/match.css" />
   </head>
-  <body class="game-page">
+  <body class="match-page">
     <header class="site-header">
       <div class="container nav-inner">
         <a href="index.html" class="logo" data-business-name
@@ -38,7 +31,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="gallery.html">Gallery</a></li>
           <li><a href="shop.html">Shop</a></li>
-          <li><a href="game.html" class="active">Gator Life</a></li>
+          <li><a href="game.html" class="active">Match</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
@@ -46,165 +39,142 @@
     </header>
 
     <main>
-      <div class="game-wrap">
-        <div class="game-card game-card-arcade">
-          <!-- START -->
-          <section id="screen-start" class="game-screen active game-screen-photo">
-            <div class="start-hero" aria-hidden="true">
-              <img
-                src="images/game/gator-hatchling.png?v=7"
-                alt="Baby hatchling alligator"
-                class="start-gator-fig"
-                width="280"
-                height="380"
-              />
-            </div>
-            <h1>Gator Life</h1>
+      <div class="container match-layout">
+        <aside class="ad-rail" id="ad-rail-left" aria-label="Prints from the shop"></aside>
+
+        <div class="match-card-shell">
+          <section id="screen-start" class="match-screen active">
+            <h1>Wildlife Match</h1>
             <p class="subtitle">
-              Swim Florida’s swirly river labyrinth — eat fish, climb hills, dodge big gators.
+              Flip two cards at a time. Match the same Florida bird, alligator,
+              or wetland neighbor. Fifteen levels, each a little harder.
             </p>
             <ul class="start-list">
-              <li>Match &amp; eat fish pairs in order (level 1 = 10 fish / 5 pairs)</li>
-              <li>Tap LOG/ROCK to move them — or hold into banks/rocks to smash with a big BAM!</li>
-              <li>Big gators can smash through too — use that chaos</li>
-              <li>Grow as you eat · splat OUCH if a big gator catches you</li>
+              <li>Level 1 starts with <strong>7 matches</strong> (14 cards)</li>
+              <li>Each level adds one more pair, up to <strong>20 pairs</strong></li>
+              <li>Each pair is two of the same picture</li>
+              <li>Every match shows points right on the board</li>
+              <li>
+                Clear all 15 levels for a gift certificate: a shark tooth
+                souvenir, a shell souvenir, or credit toward your next order
+              </li>
             </ul>
             <div class="btn-row">
-              <button type="button" class="game-btn game-btn-primary" id="btn-start">
+              <button type="button" class="match-btn match-btn-primary" id="btn-start">
                 Play
               </button>
-              <button type="button" class="game-btn game-btn-secondary" id="btn-levels">
-                Levels
-              </button>
-              <button type="button" class="game-btn game-btn-secondary" id="btn-how">
-                How to play
-              </button>
+              <button type="button" class="match-btn" id="btn-levels">Levels</button>
+              <button type="button" class="match-btn" id="btn-how">How to play</button>
             </div>
-            <div
-              id="how-box"
-              class="fact-card"
-              style="display: none; margin-top: 1rem; background: #fffef5; color: #1a3324"
-            >
-              <p style="color: #1a3324">
-                <strong>Move:</strong> swipe or D-pad (arrows / WASD on desktop).<br />
-                <strong>Match fish:</strong> each fish has a colored number. Eat one, then its
-                <em>match</em> next (level 1 has 5 pairs / 10 fish).<br />
-                <strong>Move tiles:</strong> tap a <strong>LOG</strong> or <strong>ROCK</strong>,
-                then an adjacent square — or <strong>hold into a bank/rock</strong> to break
-                through with a big <strong>BAM!</strong> (big gators smash too).<br />
-                Avoid <strong>BIG gators</strong> — splat + <strong>OUCH!</strong> if caught.
+            <div id="how-box" class="how-box" hidden>
+              <p class="label">How to play</p>
+              <p>
+                Tap a card, then tap another. Same picture? That’s a match — you
+                keep the pair and earn points. Different? They flip back.
+                Early levels give you a short peek. Later levels add a timer and
+                look-alike birds and gators. Your progress stays on this device.
               </p>
             </div>
+            <div id="reward-box-start" class="reward-card" hidden>
+              <div class="label">Gift certificate</div>
+              <p id="reward-text-start"></p>
+              <p class="reward-code" id="reward-code-start"></p>
+              <p><a href="shop.html#order-form">Redeem in the shop</a></p>
+            </div>
             <p class="controls-note">
-              Total score:
-              <strong id="global-score">0</strong>
+              Total score: <strong id="global-score" data-match-score>0</strong>
             </p>
           </section>
 
-          <!-- LEVELS -->
-          <section id="screen-levels" class="game-screen game-screen-photo">
+          <section id="screen-levels" class="match-screen">
             <h1>Pick a level</h1>
-            <p class="subtitle">Clear one to unlock the next. Replay anytime.</p>
+            <p class="subtitle">Finish a level to unlock the next one.</p>
             <div class="level-grid" id="level-grid"></div>
             <div class="btn-row">
-              <button type="button" class="game-btn game-btn-secondary" id="btn-levels-back">
-                Back
-              </button>
-              <button type="button" class="game-btn game-btn-secondary" id="btn-reset">
-                Reset progress
-              </button>
+              <button type="button" class="match-btn" id="btn-levels-back">Back</button>
+              <button type="button" class="match-btn" id="btn-reset">Reset progress</button>
             </div>
           </section>
 
-          <!-- PLAY -->
-          <section id="screen-play" class="game-screen">
-            <div class="play-layout">
-              <div class="game-hud game-hud-compact">
-                <span>LV <span id="play-hud-level">1</span></span>
-                <span class="hearts" id="play-hud-hearts">♥♥♥</span>
-                <span>Score <span id="play-hud-score">0</span></span>
-                <button
-                  type="button"
-                  class="game-btn game-btn-secondary btn-quit-inline"
-                  id="btn-quit-play"
-                  aria-label="Quit to menu"
-                >
-                  Menu
+          <section id="screen-play" class="match-screen">
+            <div class="match-hud">
+              <span class="hud-stat">Level <strong id="play-level">1</strong></span>
+              <span class="hud-stat"
+                >Matches <strong id="play-matches">0 / 7</strong></span>
+              >
+              <span class="hud-stat"
+                >Score <strong id="play-score" data-match-score>0</strong></span
+              >
+              <span class="hud-stat" id="play-timer-wrap" hidden
+                >Time <strong id="play-timer">0:00</strong></span
+              >
+              <button type="button" class="match-btn btn-quit-inline" id="btn-quit-play">
+                Menu
+              </button>
+            </div>
+            <h2 id="play-title">Level 1</h2>
+            <p class="play-blurb" id="play-blurb"></p>
+            <div
+              class="match-board"
+              id="match-board"
+              role="group"
+              aria-label="Matching cards"
+            ></div>
+            <p class="play-hint" id="play-hint">Find two of the same picture.</p>
+            <p class="visually-hidden" id="match-live" aria-live="polite"></p>
+          </section>
+
+          <section id="screen-clear" class="match-screen">
+            <h1 id="clear-title">Level complete</h1>
+            <p class="score-pop" id="clear-score">Score 0</p>
+            <p id="clear-text"></p>
+            <div id="reward-choose" class="reward-card" hidden>
+              <div class="label">Choose your gift</div>
+              <p>
+                You finished all 15 levels. Pick one gift certificate — then
+                redeem it in the shop.
+              </p>
+              <div class="reward-choices">
+                <button type="button" class="match-btn match-btn-primary" data-reward="shark-tooth">
+                  Shark tooth souvenir
+                </button>
+                <button type="button" class="match-btn match-btn-primary" data-reward="shell">
+                  Shell souvenir
+                </button>
+                <button type="button" class="match-btn match-btn-primary" data-reward="credit">
+                  $8 toward next purchase
                 </button>
               </div>
-              <h2 id="level-title" class="level-title-compact">Level</h2>
-              <p id="level-blurb" style="display: none"></p>
-
-              <div class="stage-wrap stage-wrap-arcade" id="stage-wrap">
-                <canvas
-                  id="game-canvas"
-                  width="570"
-                  height="510"
-                  aria-label="Gator Life maze — swipe to move"
-                ></canvas>
-                <div id="comic-overlay" class="comic-overlay" aria-modal="true" role="dialog">
-                  <div class="meme-panel">
-                    <div class="meme-npc" aria-hidden="true">
-                      <div class="meme-npc-face" id="comic-npc-face">🐍</div>
-                      <div class="meme-npc-name" id="comic-npc-name">Rita the Rattler</div>
-                    </div>
-                    <div class="comic-bubble meme-bubble">
-                      <span class="comic-tag" id="comic-tag">SNAKE SAYS</span>
-                      <p class="meme-npc-line" id="comic-npc-line">Ssssay… answer me this!</p>
-                      <h3 id="comic-question">Question</h3>
-                      <div class="comic-options" id="comic-options"></div>
-                      <div class="comic-feedback" id="comic-feedback"></div>
-                      <button
-                        type="button"
-                        class="game-btn game-btn-primary comic-continue"
-                        id="comic-continue"
-                        style="display: none"
-                      >
-                        Back to the maze!
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <p class="play-hint" id="play-hint">Swipe the maze or tap the pad</p>
-
-              <!-- Large mobile-friendly D-pad (CSS grid diamond) -->
-              <div class="dpad" id="dpad" aria-label="Direction pad">
-                <button type="button" class="dpad-btn dpad-up" id="pad-up" data-dir="up" aria-label="Up">▲</button>
-                <button type="button" class="dpad-btn dpad-left" id="pad-left" data-dir="left" aria-label="Left">◀</button>
-                <div class="dpad-btn dpad-center" aria-hidden="true">🐊</div>
-                <button type="button" class="dpad-btn dpad-right" id="pad-right" data-dir="right" aria-label="Right">▶</button>
-                <button type="button" class="dpad-btn dpad-down" id="pad-down" data-dir="down" aria-label="Down">▼</button>
-              </div>
             </div>
-          </section>
-
-          <!-- FACT -->
-          <section id="screen-fact" class="game-screen game-screen-photo">
-            <div class="complete-emoji fact-gator-wrap" id="fact-emoji">
-              <img
-                src="images/game/gator-hatchling.png?v=7"
-                alt=""
-                class="fact-gator-img"
-              />
-            </div>
-            <h1 id="fact-title">Level clear!</h1>
-            <p class="score-pop" id="fact-score">Score</p>
-            <div class="fact-card">
-              <div class="label">Florida Gator Fact</div>
-              <p id="fact-text">Fact</p>
+            <div id="reward-done" class="reward-card" hidden>
+              <div class="label">Your gift certificate</div>
+              <p id="reward-done-text"></p>
+              <p class="reward-code" id="reward-done-code"></p>
+              <p><a href="shop.html#order-form">Open the shop to redeem</a></p>
             </div>
             <div class="btn-row">
-              <button type="button" class="game-btn game-btn-primary" id="btn-fact-next">
+              <button type="button" class="match-btn match-btn-primary" id="btn-next-level">
                 Next level
               </button>
-              <button type="button" class="game-btn game-btn-secondary" id="btn-fact-levels">
-                Level map
-              </button>
+              <button type="button" class="match-btn" id="btn-clear-menu">Menu</button>
             </div>
           </section>
+
+          <section id="screen-fail" class="match-screen">
+            <h1>Time’s up</h1>
+            <p id="fail-text"></p>
+            <div class="btn-row">
+              <button type="button" class="match-btn match-btn-primary" id="btn-fail-retry">
+                Try this level again
+              </button>
+              <button type="button" class="match-btn" id="btn-fail-menu">Menu</button>
+            </div>
+          </section>
+
+          <div class="ad-strip" id="ad-strip" aria-label="Quiet shop notes"></div>
         </div>
+
+        <aside class="ad-rail" id="ad-rail-right" aria-label="MariCooks cookies and spices"></aside>
       </div>
     </main>
 
@@ -220,15 +190,16 @@
           <ul class="footer-links">
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="shop.html">Shop</a></li>
-            <li><a href="game.html">Gator Life</a></li>
+            <li><a href="game.html">Match</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="contact.html">Contact</a></li>
           </ul>
         </div>
         <div class="footer-bottom">
           &copy; <span id="year"></span>
-          <span data-business-name>Florida Nature Prints</span>. Gator Life is an original
-          educational game (not affiliated with any other video game brand).
+          <span data-business-name>Florida Nature Prints</span>. Quiet notes
+          around the board are our own prints and sister kitchen,
+          <a href="https://maricooks.com" rel="noopener noreferrer">MariCooks</a>.
         </div>
       </div>
     </footer>
@@ -238,7 +209,6 @@
     </script>
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/gator-questions.js"></script>
-    <script src="js/game.js"></script>
+    <script src="js/match.js"></script>
   </body>
 </html>

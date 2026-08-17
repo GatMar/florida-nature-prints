@@ -69,57 +69,6 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     },
   ],
 
-  // ---- Shark teeth & shell souvenirs ----
-  souvenirs: [
-    {
-      id: "shark-tooth",
-      label: "Florida shark tooth souvenir",
-      price: 12,
-      file: "shark-tooth.jpg",
-      desc: "A fossil Florida shark tooth packed as a small beach souvenir.",
-      giftKind: "shark-tooth",
-    },
-    {
-      id: "shark-tooth-trio",
-      label: "Shark tooth trio",
-      price: 22,
-      file: "shark-tooth-trio.jpg",
-      desc: "Three fossil shark teeth in a little kraft pouch — a pocket-sized Florida find.",
-      giftKind: "shark-tooth",
-    },
-    {
-      id: "gulf-shells",
-      label: "Gulf shell collection",
-      price: 14,
-      file: "gulf-shells.jpg",
-      desc: "A mixed handful of Florida Gulf shells — whelk, olive, cockle, scallop, and sand dollar.",
-      giftKind: "shell",
-    },
-    {
-      id: "whelk-keepsake",
-      label: "Lightning whelk keepsake",
-      price: 10,
-      file: "whelk-keepsake.jpg",
-      desc: "A single Florida lightning whelk shell — a quiet piece of the Gulf to take home.",
-      giftKind: "shell",
-    },
-  ],
-
-  // Sister bakery (cookies + pantry spices) — used as quiet ads around the match game
-  sisterSite: {
-    name: "MariCooks",
-    url: "https://maricooks.com",
-    orderUrl: "https://maricooks.com/order.html",
-    menuUrl: "https://maricooks.com/menu.html",
-    blurb: "Homemade cookies, spice mixes, and pantry jars",
-  },
-
-  // Wildlife Match gift after all 15 levels
-  matchReward: {
-    creditAmount: 8,
-    storageKey: "fnpMatch_v1",
-  },
-
   /**
    * ---- Shipping & packaging ----
    * Customer pays a FLAT FEE (not a live rate calculator).
@@ -181,12 +130,6 @@ var SITE_CONFIG = window.SITE_CONFIG = {
       packaging: 4,
       postage: 8,
       total: 12,
-    },
-    souvenir: {
-      methodTitle: "Padded mailer",
-      packaging: 3,
-      postage: 5,
-      total: 8,
     },
     note:
       "These are flat fees (not a live quote). Ships via USPS Priority Mail with tracking within the continental U.S. Alaska, Hawaii, and international — message me for a quote.",
