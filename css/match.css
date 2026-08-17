@@ -206,26 +206,28 @@
 }
 
 .match-board {
-  --cols: 4;
   width: 100%;
-  max-width: 36rem;
+  max-width: 34rem;
   margin-inline: auto;
-  display: grid;
-  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-  gap: 0.55rem;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-auto-rows: auto;
+  gap: 0.65rem;
   perspective: 900px;
 }
 
 .match-card {
   position: relative;
-  aspect-ratio: 1;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   min-width: 0;
-  min-height: 4.5rem;
+  min-height: 5.5rem;
   border: 0;
   padding: 0;
   background: transparent;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .match-card-inner {
@@ -447,14 +449,14 @@
 
 @media (max-width: 720px) {
   .match-board {
-    --cols: 3 !important;
     max-width: 100%;
-    gap: 0.45rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.5rem;
   }
 
   .match-card {
-    min-height: 5.25rem;
-    border-radius: 9px;
+    min-height: 5.75rem;
+    border-radius: 10px;
   }
 
   .match-card-shell {
@@ -468,11 +470,11 @@
 
 @media (max-width: 380px) {
   .match-board {
-    --cols: 3 !important;
-    gap: 0.35rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.4rem;
   }
 
   .match-card {
-    min-height: 4.75rem;
+    min-height: 5rem;
   }
 }

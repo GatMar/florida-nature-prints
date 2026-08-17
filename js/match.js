@@ -342,8 +342,9 @@
     state.cards = shuffle(deck);
 
     const board = $("match-board");
-    board.style.setProperty("--cols", String(columnsFor(state.cards.length)));
+    board.removeAttribute("style");
     board.setAttribute("data-count", String(state.cards.length));
+    board.setAttribute("data-cols", String(columnsFor(state.cards.length)));
     board.innerHTML = state.cards
       .map(function (card, idx) {
         return (
