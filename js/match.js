@@ -251,7 +251,6 @@
   function rewardLabel(reward) {
     if (!reward) return "";
     if (reward.kind === "shark-tooth") return "a jar of 15 shark teeth";
-    if (reward.kind === "shell") return "a shell souvenir";
     return "$" + CREDIT + " toward your next purchase";
   }
 

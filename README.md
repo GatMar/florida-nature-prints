@@ -20,7 +20,7 @@ Your site lives in this folder:
 |---------------|------------|
 | `index.html` | Home page |
 | `gallery.html` | Photo gallery |
-| `shop.html` | Buy prints, mugs, shark teeth & shells |
+| `shop.html` | Buy prints, mugs, and a jar of shark teeth |
 | `game.html` | Wildlife Match (10-level matching game) |
 | `offline/gator-life/` | Gator Life hop-runner, saved for later |
 | `about.html` | About you |
@@ -38,7 +38,7 @@ The **Match** tab is a 10-level memory game using your real print photos (birds,
 
 - Level 1 starts with **7 pairs**, then 8, 9, and so on, up to **20 pairs** on level 15.
 - Each match scores visible points.
-- Finish all 15 levels to earn a gift certificate: shark tooth souvenir, shell souvenir, or $8 toward the next order.
+- Finish all 15 levels to earn a gift certificate: a jar of 15 shark teeth, or $8 toward the next order.
 - Quiet ads around the board link prints to your shop order form, and cookies/spices to [maricooks.com](https://maricooks.com).
 
 Gator Life (the older hop-runner) is saved here for later work:
@@ -91,9 +91,9 @@ florida-nature-prints/images/prints/
 3. Open `js/config.js` and delete that photo’s whole `{ file: ..., title: ..., desc: ... },` block.
 4. Save and refresh the browser.
 
-## Shark teeth & shells
+## Shark teeth
 
-Souvenirs are listed in `js/config.js` under `souvenirs`. Photos live in `images/souvenirs/`. The shop page and order form read that list automatically.
+The shop currently offers one extra item: a jar of 15 fossil shark teeth ($20 plus shipping). It is listed in `js/config.js` under `souvenirs`. The photo is in `images/souvenirs/`.
 
 ---
 

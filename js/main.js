@@ -1009,7 +1009,7 @@
       _captcha: "false",
       form_type: "Order",
       product_type: isSouvenir
-        ? "Shark tooth / shell souvenir"
+        ? "Jar of 15 Florida shark teeth"
         : isMug
           ? "12 oz photo mug (Circuit press)"
           : "Fine art print",
@@ -1182,9 +1182,7 @@
         if (d.reward.kind === "shark-tooth") {
           return "Wildlife Match gift — honor a free jar of 15 shark teeth. Code " + code;
         }
-        if (d.reward.kind === "shell") {
-          return "Wildlife Match gift — honor a free shell souvenir. Code " + code;
-        }
+
         return (
           "Wildlife Match gift — apply $" +
           (d.reward.credit || 8) +
@@ -1219,7 +1217,7 @@
           paramsNow.get("product") === "souvenir";
         if (
           !urlPicked &&
-          (match.reward.kind === "shark-tooth" || match.reward.kind === "shell")
+          match.reward.kind === "shark-tooth"
         ) {
           if (productSelect) {
             productSelect.value = "souvenir";
