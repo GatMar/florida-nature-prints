@@ -311,8 +311,10 @@
     return pool.slice(0, cfg.pairs);
   }
 
-  function columnsFor() {
-    return 12;
+  function columnsFor(nCards) {
+    if (nCards <= 20) return 4;
+    if (nCards <= 30) return 4;
+    return 5;
   }
 
   function startLevel(n) {
