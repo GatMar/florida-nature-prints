@@ -29,6 +29,7 @@ Your site lives in this folder:
 | `js/config.js` | **Edit this** for name, email, prices, photos, Stripe, Formspree |
 | `js/main.js` | Makes buttons and forms work (usually leave alone) |
 | `images/prints/` | **Put your photos here** |
+| `metrics.html` | **Your** visitor counts (not in the public menu) |
 
 ---
 
@@ -48,6 +49,14 @@ florida-nature-prints/offline/gator-life/
 ```
 
 Open `offline/gator-life/index.html` anytime. It is not in the public menu.
+
+---
+
+## Visitor counts
+
+Open **https://floridanatureprints.com/metrics.html** (bookmark it — it is not in the public menu).
+
+Counts use free [GoatCounter](https://www.goatcounter.com). After you sign up, put your site code in `js/config.js` under `analytics.goatcounterCode`. The dashboard keeps visitors per day, pages, and referrers. You can export a CSV from there.
 
 ---
 

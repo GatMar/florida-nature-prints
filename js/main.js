@@ -79,6 +79,20 @@
     });
   }
 
+  // ---- Visitor counts (GoatCounter). Skips the private metrics page. ----
+  (function initAnalytics() {
+    const a = window.SITE_CONFIG && SITE_CONFIG.analytics;
+    const code = a && String(a.goatcounterCode || "").trim();
+    if (!code) return;
+    const page = window.location.pathname.split("/").pop() || "index.html";
+    if (page === "metrics.html") return;
+    const s = document.createElement("script");
+    s.async = true;
+    s.dataset.goatcounter = "https://" + code + ".goatcounter.com/count";
+    s.src = "https://gc.zgo.at/count.js";
+    document.head.appendChild(s);
+  })();
+
   // Mark current page in nav
   const path = window.location.pathname.split("/").pop() || "index.html";
   document.querySelectorAll(".nav-links a").forEach(function (link) {

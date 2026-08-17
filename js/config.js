@@ -37,6 +37,15 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   // Also CC any extra email (assistant, spouse, Gmail, etc.) — blank = none
   orderCcEmail: "",
 
+  // ---- Website visitors (your private metrics page: metrics.html) ----
+  // Free, no cookie banner. Sign up at https://www.goatcounter.com
+  // Then put your site code here (the part before .goatcounter.com).
+  // Example: if your dashboard is https://floridanatureprints.goatcounter.com
+  // then goatcounterCode is "floridanatureprints"
+  analytics: {
+    goatcounterCode: "",
+  },
+
   // ---- Payment options ----
   // Create Payment Links in Stripe Dashboard → Payment links
   // Use one general “Florida Nature Prints order” product, or separate links.

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Website metrics — Florida Nature Prints</title>
+    <meta
+      name="description"
+      content="Private visitor counts for Florida Nature Prints."
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-inner">
+        <a href="index.html" class="logo" data-business-name
+          >Florida <span>Nature</span> Prints</a
+        >
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="shop.html">Shop</a></li>
+          <li><a href="game.html">Match</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-hero">
+        <div class="container">
+          <h1>Website metrics</h1>
+          <p>
+            This page is for you — it is not in the public menu. Bookmark it.
+            Visitor counts live in your GoatCounter dashboard (visitors per day,
+            which pages they opened, and how they found you).
+          </p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="container">
+          <div id="metrics-ready" class="metrics-panel" hidden>
+            <p class="metrics-kicker">Your dashboard</p>
+            <h2>Open daily visitor counts</h2>
+            <p>
+              GoatCounter keeps the history: today, this week, this month, top
+              pages (gallery, shop, game), and referrers. You can export a CSV
+              anytime if you want a backup.
+            </p>
+            <p>
+              <a
+                id="metrics-dash"
+                class="btn btn-primary"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Open visitor dashboard</a
+              >
+            </p>
+            <p class="metrics-url" id="metrics-url"></p>
+          </div>
+
+          <div id="metrics-setup" class="metrics-panel">
+            <p class="metrics-kicker">One-time setup · about 3 minutes</p>
+            <h2>Turn on visitor counts</h2>
+            <p>
+              GitHub Pages does not count shoppers by itself. GoatCounter is
+              free, private, and does not use tracking cookies — no cookie
+              banner needed.
+            </p>
+            <ol class="metrics-steps">
+              <li>
+                Open
+                <a href="https://www.goatcounter.com" target="_blank" rel="noopener noreferrer"
+                  >goatcounter.com</a
+                >
+                and click <strong>Sign up</strong>. Use
+                <strong>hello@floridanatureprints.com</strong> (or any email you
+                check).
+              </li>
+              <li>
+                Create a site. For the code, use
+                <code>floridanatureprints</code> if it is available.
+              </li>
+              <li>
+                Open
+                <code>js/config.js</code>
+                on your computer and set:
+                <pre>analytics: {
+  goatcounterCode: "floridanatureprints",
+},</pre>
+                Use whatever code GoatCounter gave you, if it is different.
+              </li>
+              <li>
+                Save, then tell me to publish — or push the file to GitHub the
+                usual way.
+              </li>
+              <li>
+                After that, this page will show a button to your dashboard.
+                Counts start from the day you turn it on (not the past).
+              </li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <h2>What you will see</h2>
+            <p>Once counting is on, the dashboard keeps these for you.</p>
+          </div>
+          <div class="features">
+            <div class="feature-card">
+              <div class="feature-icon" aria-hidden="true">📅</div>
+              <h3>Visitors per day</h3>
+              <p>A simple chart of how many people opened the site each day.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon" aria-hidden="true">📄</div>
+              <h3>Pages</h3>
+              <p>Home, gallery, shop, match game, about, and contact — which ones get opened.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon" aria-hidden="true">🔗</div>
+              <h3>How they arrived</h3>
+              <p>Direct visits, Google, Instagram, or a link someone shared.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon" aria-hidden="true">💾</div>
+              <h3>A place to keep it</h3>
+              <p>
+                GoatCounter stores the history. Export CSV from the dashboard if
+                you want a file on your computer too.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-brand" data-business-name>
+              Florida <span>Nature</span> Prints
+            </div>
+            <p data-tagline>Calm moments from the Sunshine State</p>
+          </div>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="game.html">Match</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-bottom">
+          &copy; <span id="year"></span>
+          <span data-business-name>Florida Nature Prints</span>. Private metrics
+          page — not listed in the public menu.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="js/config.js?v=metrics1"></script>
+    <script src="js/main.js?v=metrics1"></script>
+    <script>
+      (function () {
+        var a = window.SITE_CONFIG && SITE_CONFIG.analytics;
+        var code = a && String(a.goatcounterCode || "").trim();
+        var ready = document.getElementById("metrics-ready");
+        var setup = document.getElementById("metrics-setup");
+        var dash = document.getElementById("metrics-dash");
+        var urlEl = document.getElementById("metrics-url");
+        if (code) {
+          var url = "https://" + code + ".goatcounter.com";
+          if (dash) dash.href = url;
+          if (urlEl) urlEl.textContent = url;
+          if (ready) ready.hidden = false;
+          if (setup) setup.hidden = true;
+        }
+      })();
+    </script>
+  </body>
+</html>
