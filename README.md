@@ -200,8 +200,8 @@ In `js/config.js`, edit the `printSizes` list:
 
 ```js
 printSizes: [
-  { id: "8x10", label: '8" × 10"', price: 35 },
-  { id: "11x14", label: '11" × 14"', price: 55 },
+  { id: "8x10", label: '8" × 10"', price: 28 },
+  { id: "11x14", label: '11" × 14"', price: 44 },
   // add or remove lines as needed
 ],
 ```

@@ -51,11 +51,24 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     "After you submit the order form, pay with one of the secure options. I’ll match your payment to your order email.",
 
   // ---- Print sizes & prices ----
+  // Regular sizes are ready to order. Larger sizes are custom (made to order).
   printSizes: [
-    { id: "8x10", label: '8" × 10" print', price: 35 },
-    { id: "11x14", label: '11" × 14" print', price: 55 },
-    { id: "16x20", label: '16" × 20" print', price: 85 },
-    { id: "20x30", label: '20" × 30" print', price: 125 },
+    { id: "8x10", label: '8" × 10" print', price: 28 },
+    { id: "11x14", label: '11" × 14" print', price: 44 },
+    {
+      id: "16x20",
+      label: '16" × 20" print',
+      price: 68,
+      custom: true,
+      desc: "Custom order · made to size",
+    },
+    {
+      id: "20x30",
+      label: '20" × 30" print',
+      price: 100,
+      custom: true,
+      desc: "Custom order · made to size",
+    },
   ],
 
   // ---- Mugs (standard 12 oz blanks for Circuit / mug press printing) ----

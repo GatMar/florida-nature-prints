@@ -457,12 +457,20 @@
     if (!el || !items || !items.length) return;
     el.innerHTML = items
       .map(function (s) {
+        const priceText = s.custom ? "from $" + s.price : "$" + s.price;
+        const extra = s.custom
+          ? "Custom order"
+          : s.desc
+            ? s.desc
+            : "";
         return (
           '<li><span class="size-label">' +
           escapeHtml(s.label) +
-          (s.desc ? '<span class="size-desc">' + escapeHtml(s.desc) + "</span>" : "") +
-          '</span><span class="size-price">$' +
-          s.price +
+          (extra
+            ? '<span class="size-desc">' + escapeHtml(extra) + "</span>"
+            : "") +
+          '</span><span class="size-price">' +
+          escapeHtml(priceText) +
           "</span></li>"
         );
       })
@@ -579,6 +587,9 @@
         rows.push(
           "<tr><td>" +
             escapeHtml(s.label) +
+            (s.custom
+              ? ' <span class="ship-muted">(custom order)</span>'
+              : "") +
             '</td><td class="ship-muted">' +
             money(r.packaging) +
             '</td><td class="ship-muted">' +
@@ -717,17 +728,13 @@
       "</option>" +
       (items || [])
         .map(function (s) {
-          return (
-            '<option value="' +
-            escapeHtml(s.label) +
-            " - $" +
-            s.price +
-            '">' +
-            escapeHtml(s.label) +
-            " — $" +
-            s.price +
-            "</option>"
-          );
+          const tag = s.custom
+            ? escapeHtml(s.label) + " (custom order) — from $" + s.price
+            : escapeHtml(s.label) + " — $" + s.price;
+          const val = s.custom
+            ? escapeHtml(s.label) + " (custom order) - from $" + s.price
+            : escapeHtml(s.label) + " - $" + s.price;
+          return '<option value="' + val + '">' + tag + "</option>";
         })
         .join("")
     );
@@ -735,10 +742,42 @@
 
   const sizeSelect = document.getElementById("order-size");
   if (sizeSelect) {
-    sizeSelect.innerHTML = optionsFromItems(
-      SITE_CONFIG.printSizes,
-      "Choose a size…"
-    );
+    const regular = (SITE_CONFIG.printSizes || []).filter(function (s) {
+      return !s.custom;
+    });
+    const custom = (SITE_CONFIG.printSizes || []).filter(function (s) {
+      return s.custom;
+    });
+    let sizeOpts = '<option value="">Choose a size…</option>';
+    regular.forEach(function (s) {
+      sizeOpts +=
+        '<option value="' +
+        escapeHtml(s.label) +
+        " - $" +
+        s.price +
+        '">' +
+        escapeHtml(s.label) +
+        " — $" +
+        s.price +
+        "</option>";
+    });
+    if (custom.length) {
+      sizeOpts += '<optgroup label="Custom order">';
+      custom.forEach(function (s) {
+        sizeOpts +=
+          '<option value="' +
+          escapeHtml(s.label) +
+          " (custom order) - from $" +
+          s.price +
+          '">' +
+          escapeHtml(s.label) +
+          " — custom, from $" +
+          s.price +
+          "</option>";
+      });
+      sizeOpts += "</optgroup>";
+    }
+    sizeSelect.innerHTML = sizeOpts;
   }
 
   const mugSelect = document.getElementById("order-mug");
