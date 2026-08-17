@@ -1180,7 +1180,7 @@
       const d = JSON.parse(localStorage.getItem(matchKey) || "{}");
       if (d.reward && d.reward.code === code) {
         if (d.reward.kind === "shark-tooth") {
-          return "Wildlife Match gift — honor a free shark tooth souvenir. Code " + code;
+          return "Wildlife Match gift — honor a free jar of 15 shark teeth. Code " + code;
         }
         if (d.reward.kind === "shell") {
           return "Wildlife Match gift — honor a free shell souvenir. Code " + code;

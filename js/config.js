@@ -73,18 +73,10 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   souvenirs: [
     {
       id: "shark-tooth",
-      label: "Florida shark tooth souvenir",
-      price: 12,
-      file: "shark-tooth.jpg",
-      desc: "A fossil Florida shark tooth packed as a small beach souvenir.",
-      giftKind: "shark-tooth",
-    },
-    {
-      id: "shark-tooth-trio",
-      label: "Shark tooth trio",
-      price: 22,
-      file: "shark-tooth-trio.jpg",
-      desc: "Three fossil shark teeth in a little kraft pouch — a pocket-sized Florida find.",
+      label: "Jar of 15 Florida shark teeth",
+      price: 20,
+      file: "shark-tooth-jar.jpg",
+      desc: "Fifteen fossil shark teeth of various sizes in a small glass jar. Price is $20 plus shipping.",
       giftKind: "shark-tooth",
     },
     {
