@@ -53,6 +53,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   // ---- Print sizes & prices ----
   // Regular sizes are ready to order. Larger sizes are custom (made to order).
   printSizes: [
+    { id: "5x7", label: '5" × 7" print', price: 18 },
     { id: "8x10", label: '8" × 10" print', price: 28 },
     { id: "11x14", label: '11" × 14" print', price: 44 },
     {
@@ -140,6 +141,12 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     },
     // packaging + estimated USPS Priority postage → flat fee (total) charged to customer
     printRates: [
+      {
+        sizeId: "5x7",
+        packaging: 6,
+        postage: 8,
+        total: 14,
+      },
       {
         sizeId: "8x10",
         packaging: 6,
