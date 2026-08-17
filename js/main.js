@@ -607,7 +607,7 @@
       }
       if (ship.souvenir) {
         rows.push(
-          "<tr><td>Shark tooth or shell souvenir" +
+          "<tr><td>Jar of 15 shark teeth" +
             (ship.souvenir.methodTitle
               ? ' <span class="ship-muted">(' +
                 escapeHtml(ship.souvenir.methodTitle) +

@@ -69,31 +69,15 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     },
   ],
 
-  // ---- Shark teeth & shell souvenirs ----
+  // ---- Souvenirs (shark teeth only for now) ----
   souvenirs: [
     {
       id: "shark-tooth",
       label: "Jar of 15 Florida shark teeth",
       price: 20,
       file: "shark-tooth-jar.jpg",
-      desc: "Fifteen fossil shark teeth of various sizes in a small glass jar. Price is $20 plus shipping.",
+      desc: "Fifteen fossil shark teeth of various sizes in a small glass jar. $20 plus shipping.",
       giftKind: "shark-tooth",
-    },
-    {
-      id: "gulf-shells",
-      label: "Gulf shell collection",
-      price: 14,
-      file: "gulf-shells.jpg",
-      desc: "A mixed handful of Florida Gulf shells — whelk, olive, cockle, scallop, and sand dollar.",
-      giftKind: "shell",
-    },
-    {
-      id: "whelk-keepsake",
-      label: "Lightning whelk keepsake",
-      price: 10,
-      file: "whelk-keepsake.jpg",
-      desc: "A single Florida lightning whelk shell — a quiet piece of the Gulf to take home.",
-      giftKind: "shell",
     },
   ],
 
