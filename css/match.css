@@ -1,10 +1,18 @@
 /* Florida Wildlife Match */
 
 body.match-page {
-  background:
-    radial-gradient(900px 520px at 8% 0%, #ffe36a 0%, transparent 58%),
-    radial-gradient(800px 480px at 100% 12%, #ff8d6b 0%, transparent 55%),
-    linear-gradient(180deg, #1fa38a 0%, #2ec4a7 32%, #ffbf3f 68%, #ff7a4d 100%) !important;
+  background-color: #13b39a !important;
+  background-image:
+    radial-gradient(circle at 12% 18%, #ffe24a 0 28px, transparent 29px),
+    radial-gradient(circle at 88% 12%, #ff6b8a 0 22px, transparent 23px),
+    radial-gradient(circle at 78% 78%, #7d5cff 0 18px, transparent 19px),
+    radial-gradient(circle at 18% 82%, #ff8a3d 0 26px, transparent 27px),
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0 28px,
+      rgba(255, 255, 255, 0.12) 28px 32px
+    ),
+    linear-gradient(165deg, #12c2a8 0%, #1ad1b0 35%, #ffcf33 70%, #ff6a3d 100%) !important;
   background-attachment: fixed;
 }
 
@@ -67,14 +75,59 @@ body.match-page {
   margin-bottom: 0.4rem;
 }
 
-.match-screen h1 {
+.match-kicker {
   display: inline-block;
-  background: #ffd34e;
-  color: #16352e;
-  padding: 0.35rem 0.85rem;
+  margin: 0 0 0.45rem;
+  padding: 0.2rem 0.7rem;
+  background: #ff3d7f;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
   border-radius: 999px;
-  box-shadow: 0 6px 0 #e0a80c;
+  transform: rotate(-3deg);
 }
+
+.match-screen h1 {
+  display: block;
+  width: fit-content;
+  background: #ff3d7f;
+  color: #fff8c2;
+  padding: 0.45rem 1rem 0.55rem;
+  border-radius: 18px;
+  box-shadow: 8px 8px 0 #7d1e44;
+  font-size: clamp(2rem, 6vw, 3.1rem);
+  letter-spacing: -0.02em;
+  transform: rotate(-1.5deg);
+}
+
+.match-deco {
+  position: relative;
+  height: 0;
+}
+
+.deco {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.deco-sun { left: auto; right: 0; top: -0.4rem; font-size: 3.2rem; }
+.deco-palm { left: -0.4rem; top: 2.6rem; font-size: 2.6rem; }
+.deco-gator { right: 8%; top: 5.4rem; font-size: 2.4rem; }
+.deco-bird { left: 42%; top: -0.6rem; font-size: 2.1rem; }
+
+.deco-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.d1 { left: 8%; top: 7.5rem; background: #ffe24a; }
+.d2 { right: 4%; top: 1.8rem; background: #7d5cff; }
+.d3 { left: 70%; top: 8.2rem; background: #ff6b8a; }
+.d4 { left: 22%; top: -0.2rem; background: #fff; }
 
 .match-screen .subtitle,
 .match-screen .play-blurb {
@@ -96,22 +149,37 @@ body.match-page {
 .rule-tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
-  margin: 0.15rem 0 1.15rem;
+  gap: 0.95rem;
+  margin: 0.35rem 0 1.3rem;
+  position: relative;
+  z-index: 1;
 }
 
 .rule-tile {
   position: relative;
-  border-radius: 18px;
-  padding: 0.95rem 0.9rem 0.95rem 0.95rem;
+  border-radius: 28px;
+  padding: 1.05rem 1rem 1.1rem;
   color: #16352e;
-  min-height: 7.2rem;
-  box-shadow: 0 8px 18px rgba(22, 53, 46, 0.08);
+  min-height: 9.4rem;
+  border: 4px solid #16352e;
+  box-shadow: 10px 10px 0 #16352e;
 }
+
+.rule-pic {
+  display: block;
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.rule-tile.tile-sun { transform: rotate(-2.4deg); }
+.rule-tile.tile-lagoon { transform: rotate(2deg); }
+.rule-tile.tile-coral { transform: rotate(1.6deg); }
+.rule-tile.tile-sky { transform: rotate(-1.8deg); }
 
 .rule-tile h3 {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.45rem;
   margin: 0 0 0.28rem;
   color: inherit;
 }
@@ -124,34 +192,38 @@ body.match-page {
 }
 
 .rule-num {
+  position: absolute;
+  top: -0.65rem;
+  right: 0.7rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 999px;
-  font-weight: 800;
-  font-size: 0.95rem;
-  margin-bottom: 0.45rem;
-  background: rgba(255, 255, 255, 0.38);
+  font-weight: 900;
+  font-size: 1rem;
+  background: #16352e;
+  color: #ffe24a;
+  border: 3px solid #fff8c2;
 }
 
 .tile-sun {
-  background: #ffd34e;
+  background: #ffe24a;
 }
 
 .tile-lagoon {
-  background: #4ecdc4;
+  background: #2ee0c5;
 }
 
 .tile-coral {
-  background: #ff8b6a;
-  color: #3b1c14;
+  background: #ff6a4d;
+  color: #2a120c;
 }
 
 .tile-sky {
-  background: #6cb6ff;
-  color: #12324a;
+  background: #6d8bff;
+  color: #0d1a4a;
 }
 
 .how-box {
@@ -185,9 +257,12 @@ body.match-page {
 }
 
 .match-btn-primary {
-  background: var(--green-600);
-  border-color: var(--green-600);
-  color: #fff;
+  background: #ff3d7f;
+  border-color: #ff3d7f;
+  color: #fff8c2;
+  box-shadow: 5px 5px 0 #7d1e44;
+  font-size: 1.05rem;
+  padding: 0.7rem 1.35rem;
 }
 
 .match-btn-primary:hover {
@@ -583,6 +658,13 @@ body.match-page {
 
   .rule-tile {
     min-height: 0;
+    transform: none !important;
+  }
+
+  .deco-gator,
+  .deco-bird,
+  .deco-dot {
+    display: none;
   }
 }
 
