@@ -56,7 +56,17 @@ Open `offline/gator-life/index.html` anytime. It is not in the public menu.
 
 Open **https://floridanatureprints.com/metrics.html** (bookmark it — it is not in the public menu).
 
-Counts use free [GoatCounter](https://www.goatcounter.com). After you sign up, put your site code in `js/config.js` under `analytics.goatcounterCode`. The dashboard keeps visitors per day, pages, and referrers. You can export a CSV from there.
+That private page shows:
+
+- how many unique people visited
+- how many pages they opened
+- today and this week
+- the nearest city / region for recent visitors
+- which pages they opened, and how they arrived (Google, Instagram, typed the address, and so on)
+
+Browsers do not share a visitor’s name. If someone orders or writes through Contact, that email is how you learn who they are.
+
+Counts start from the day this was turned on. Local file previews on your computer are not counted.
 
 ---
 

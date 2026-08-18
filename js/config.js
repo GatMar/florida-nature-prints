@@ -37,13 +37,14 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   // Also CC any extra email (assistant, spouse, Gmail, etc.) — blank = none
   orderCcEmail: "",
 
-  // ---- Website visitors (your private metrics page: metrics.html) ----
-  // Free, no cookie banner. Sign up at https://www.goatcounter.com
-  // Then put your site code here (the part before .goatcounter.com).
-  // Example: if your dashboard is https://floridanatureprints.goatcounter.com
-  // then goatcounterCode is "floridanatureprints"
+  // ---- Website visitors (private page: metrics.html) ----
+  // Counts unique people and page views. The metrics page also lists
+  // recent visitors by city/region (browsers do not share a name).
   analytics: {
-    goatcounterCode: "",
+    storePath: "fnp-vlog-k8w3n1-08-18",
+    storeTitle: "fnp-vlog-k8w3n1",
+    storeToken: "3f969f0b6c1f637706f9f3805ad54c520c0699c4a16951314dd9029479d9",
+    counterSpace: "floridanatureprints",
   },
 
   // ---- Payment options ----
