@@ -15,10 +15,10 @@
 }
 
 .match-card-shell {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background: linear-gradient(165deg, #d9f3ec 0%, #fff1c9 48%, #ffd9c4 100%);
+  border: 0;
+  border-radius: 22px;
+  box-shadow: 0 16px 40px rgba(36, 90, 122, 0.12);
   padding: 1.25rem 1.2rem 1.4rem;
 }
 
@@ -50,6 +50,73 @@
 
 .start-list li {
   margin-bottom: 0.35rem;
+}
+
+.rule-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin: 0.15rem 0 1.15rem;
+}
+
+.rule-tile {
+  position: relative;
+  border-radius: 18px;
+  padding: 0.95rem 0.9rem 0.95rem 0.95rem;
+  color: #16352e;
+  min-height: 7.2rem;
+  box-shadow: 0 8px 18px rgba(22, 53, 46, 0.08);
+}
+
+.rule-tile h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  margin: 0 0 0.28rem;
+  color: inherit;
+}
+
+.rule-tile p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: inherit;
+}
+
+.rule-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-bottom: 0.45rem;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.tile-sun {
+  background: #ffd34e;
+}
+
+.tile-lagoon {
+  background: #4ecdc4;
+}
+
+.tile-coral {
+  background: #ff8b6a;
+  color: #3b1c14;
+}
+
+.tile-sky {
+  background: #6cb6ff;
+  color: #12324a;
+}
+
+.how-box {
+  background: #ffe27a;
+  border: 0;
+  color: #3b2d08;
 }
 
 .btn-row {
@@ -98,9 +165,13 @@
 .reward-card {
   margin-top: 1rem;
   padding: 0.9rem 1rem;
-  background: #f3faf6;
-  border: 1px solid rgba(61, 122, 86, 0.22);
-  border-radius: var(--radius-sm);
+  border-radius: 16px;
+}
+
+.reward-card {
+  background: #7bd389;
+  border: 0;
+  color: #14351c;
 }
 
 .reward-card .label,
@@ -444,6 +515,16 @@
 
   .ad-strip {
     display: grid;
+  }
+}
+
+@media (max-width: 560px) {
+  .rule-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .rule-tile {
+    min-height: 0;
   }
 }
 
