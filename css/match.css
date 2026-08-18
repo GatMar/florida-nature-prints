@@ -1,9 +1,39 @@
 /* Florida Wildlife Match */
 
-.match-page {
+body.match-page {
   background:
-    radial-gradient(1200px 500px at 10% -10%, rgba(45, 111, 149, 0.08), transparent 55%),
-    var(--cream);
+    radial-gradient(900px 520px at 8% 0%, #ffe36a 0%, transparent 58%),
+    radial-gradient(800px 480px at 100% 12%, #ff8d6b 0%, transparent 55%),
+    linear-gradient(180deg, #1fa38a 0%, #2ec4a7 32%, #ffbf3f 68%, #ff7a4d 100%) !important;
+  background-attachment: fixed;
+}
+
+.match-page .site-header {
+  background: rgba(14, 92, 82, 0.94);
+  border-bottom: 0;
+}
+
+.match-page .logo,
+.match-page .logo:hover {
+  color: #fff6c8;
+}
+
+.match-page .logo span {
+  color: #7dfff0;
+}
+
+.match-page .nav-links a {
+  color: #e8fff8;
+}
+
+.match-page .nav-links a:hover,
+.match-page .nav-links a.active {
+  color: #fff6c8;
+  border-bottom-color: #ffd34e;
+}
+
+.match-page .nav-toggle {
+  color: #fff6c8;
 }
 
 .match-layout {
@@ -15,11 +45,11 @@
 }
 
 .match-card-shell {
-  background: linear-gradient(165deg, #d9f3ec 0%, #fff1c9 48%, #ffd9c4 100%);
+  background: transparent;
   border: 0;
-  border-radius: 22px;
-  box-shadow: 0 16px 40px rgba(36, 90, 122, 0.12);
-  padding: 1.25rem 1.2rem 1.4rem;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0.35rem 0 0.6rem;
 }
 
 .match-screen {
@@ -33,14 +63,25 @@
 .match-screen h1,
 .match-screen h2 {
   font-family: var(--font-display);
-  color: var(--blue-800);
+  color: #16352e;
   margin-bottom: 0.4rem;
+}
+
+.match-screen h1 {
+  display: inline-block;
+  background: #ffd34e;
+  color: #16352e;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  box-shadow: 0 6px 0 #e0a80c;
 }
 
 .match-screen .subtitle,
 .match-screen .play-blurb {
-  color: var(--text-soft);
-  margin-bottom: 1rem;
+  color: #16352e;
+  font-weight: 650;
+  margin: 0.75rem 0 1rem;
+  max-width: 36rem;
 }
 
 .start-list {
@@ -128,11 +169,11 @@
 
 .match-btn {
   appearance: none;
-  border: 1px solid var(--border);
-  background: var(--white);
-  color: var(--blue-800);
+  border: 0;
+  background: #16352e;
+  color: #fff6c8;
   font: inherit;
-  font-weight: 650;
+  font-weight: 700;
   padding: 0.6rem 1rem;
   border-radius: 999px;
   cursor: pointer;
@@ -158,7 +199,8 @@
 .legal-note {
   margin-top: 1rem;
   font-size: 0.88rem;
-  color: var(--text-soft);
+  color: #16352e;
+  font-weight: 650;
 }
 
 .how-box,
@@ -202,12 +244,13 @@
 
 .match-level-btn {
   text-align: left;
-  border: 1px solid var(--border);
-  background: var(--sand);
-  border-radius: var(--radius-sm);
+  border: 0;
+  background: #ffd34e;
+  border-radius: 14px;
   padding: 0.7rem 0.75rem;
   cursor: pointer;
   font: inherit;
+  color: #16352e;
 }
 
 .match-level-btn:hover:not(:disabled) {
@@ -220,8 +263,7 @@
 }
 
 .match-level-btn.is-done {
-  background: #eef7f1;
-  border-color: rgba(61, 122, 86, 0.35);
+  background: #4ecdc4;
 }
 
 .lvl-num {
@@ -259,9 +301,11 @@
 }
 
 .hud-stat {
-  background: var(--sand);
+  background: #ffd34e;
+  color: #16352e;
   border-radius: 999px;
   padding: 0.25rem 0.7rem;
+  font-weight: 700;
 }
 
 .hud-stat.is-low,
@@ -396,8 +440,9 @@
 .play-hint {
   margin-top: 0.7rem;
   min-height: 1.3em;
-  color: var(--green-700);
-  font-size: 0.92rem;
+  color: #16352e;
+  font-weight: 750;
+  font-size: 0.95rem;
 }
 
 .score-pop {
@@ -438,7 +483,8 @@
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-soft);
+  color: #16352e;
+  font-weight: 800;
   margin: 0 0 0.4rem;
 }
 
@@ -446,9 +492,9 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: #ffd34e;
+  border: 0;
+  border-radius: 14px;
   padding: 0.4rem;
   margin-bottom: 0.5rem;
   color: inherit;
@@ -502,6 +548,18 @@
 .quiet-ad-inline img {
   width: 100%;
   height: 72px;
+}
+
+@media (max-width: 800px) {
+  .match-page .nav-links {
+    background: #0e5c52;
+    border-bottom: 0;
+    box-shadow: none;
+  }
+
+  .match-page .nav-links a {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
 }
 
 @media (max-width: 980px) {
