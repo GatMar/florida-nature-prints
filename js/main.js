@@ -1515,7 +1515,9 @@
     if (page === "metrics.html") return;
 
     const STORAGE_KEY = "fnpMusicOn";
-    const VOLUME = 0.28;
+    const VOL_KEY = "fnpMusicVolStep";
+    const STEPS = [0.12, 0.22, 0.32, 0.48, 0.68, 0.88];
+    const DEFAULT_STEP = 2;
     const SRC = "audio/my-last-mojito.m4a";
 
     function wanted() {
@@ -1532,48 +1534,82 @@
       } catch (e) {}
     }
 
+    function readStep() {
+      try {
+        const n = parseInt(localStorage.getItem(VOL_KEY), 10);
+        if (!isNaN(n) && n >= 0 && n < STEPS.length) return n;
+      } catch (e) {}
+      return DEFAULT_STEP;
+    }
+
+    function writeStep(n) {
+      try {
+        localStorage.setItem(VOL_KEY, String(n));
+      } catch (e) {}
+    }
+
+    let step = readStep();
+
     const audio = document.createElement("audio");
     audio.setAttribute("loop", "");
     audio.setAttribute("preload", "none");
     audio.setAttribute("playsinline", "");
-    audio.volume = VOLUME;
+    audio.volume = STEPS[step];
     const source = document.createElement("source");
     source.src = SRC;
     source.type = "audio/mp4";
     audio.appendChild(source);
     document.body.appendChild(audio);
 
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "music-toggle";
-    btn.setAttribute(
-      "title",
-      "Optional beach music — My Last Mojito by Michael Ramir C. (Mixkit, royalty-free)"
-    );
-    btn.innerHTML =
+    const dock = document.createElement("div");
+    dock.className = "music-dock";
+    dock.innerHTML =
+      '<button type="button" class="music-vol is-down" aria-label="Quieter">−</button>' +
+      '<button type="button" class="music-toggle" aria-pressed="false" title="Optional beach music — My Last Mojito by Michael Ramir C. (Mixkit, royalty-free)">' +
       '<span class="music-toggle-icon" aria-hidden="true">♪</span>' +
-      '<span class="music-toggle-label">Music</span>';
-    document.body.appendChild(btn);
+      '<span class="music-toggle-label">Music</span>' +
+      "</button>" +
+      '<button type="button" class="music-vol is-up" aria-label="Louder">+</button>';
+    document.body.appendChild(dock);
+
+    const btn = dock.querySelector(".music-toggle");
+    const quieter = dock.querySelector(".is-down");
+    const louder = dock.querySelector(".is-up");
 
     function isPlaying() {
       return !audio.paused && !audio.ended;
     }
 
+    function applyVolume() {
+      audio.volume = STEPS[step];
+      quieter.disabled = step <= 0;
+      louder.disabled = step >= STEPS.length - 1;
+      quieter.setAttribute(
+        "aria-label",
+        "Quieter, level " + (step + 1) + " of " + STEPS.length
+      );
+      louder.setAttribute(
+        "aria-label",
+        "Louder, level " + (step + 1) + " of " + STEPS.length
+      );
+    }
+
     function paint() {
       const on = wanted();
       const playing = isPlaying();
-      btn.classList.toggle("is-on", on && playing);
-      btn.classList.toggle("is-waiting", on && !playing);
+      dock.classList.toggle("is-on", on && playing);
+      dock.classList.toggle("is-waiting", on && !playing);
       btn.setAttribute("aria-pressed", on ? "true" : "false");
       btn.setAttribute("aria-label", on ? "Stop beach music" : "Play beach music");
       btn.querySelector(".music-toggle-label").textContent = on ? "On" : "Music";
+      applyVolume();
     }
 
     audio.addEventListener("play", paint);
     audio.addEventListener("pause", paint);
 
     function tryPlay() {
-      audio.volume = VOLUME;
+      applyVolume();
       const p = audio.play();
       if (p && typeof p.catch === "function") {
         p.catch(function () {
@@ -1588,6 +1624,14 @@
       paint();
     }
 
+    function nudge(dir) {
+      const next = Math.max(0, Math.min(STEPS.length - 1, step + dir));
+      if (next === step) return;
+      step = next;
+      writeStep(step);
+      applyVolume();
+    }
+
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (wanted()) {
@@ -1599,10 +1643,19 @@
       tryPlay();
     });
 
+    quieter.addEventListener("click", function (e) {
+      e.stopPropagation();
+      nudge(-1);
+    });
+    louder.addEventListener("click", function (e) {
+      e.stopPropagation();
+      nudge(1);
+    });
+
     document.addEventListener(
       "pointerdown",
       function (e) {
-        if (e.target && e.target.closest && e.target.closest(".music-toggle")) {
+        if (e.target && e.target.closest && e.target.closest(".music-dock")) {
           return;
         }
         if (wanted() && !isPlaying()) tryPlay();
