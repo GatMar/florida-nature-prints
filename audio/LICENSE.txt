@@ -1,0 +1,24 @@
+Track used on floridanatureprints.com
+
+Title:  My Last Mojito
+Artist: Michael Ramir C.
+Source: Mixkit stock music, asset 814
+File:   audio/my-last-mojito.m4a  (compressed from Mixkit's MP3 for faster loading)
+
+License confirmation (from Mixkit's own track metadata):
+  copyrightNotice: Mixkit Stock Music Free License
+  license:         https://mixkit.co/license/#musicFree
+  isAccessibleForFree: true
+  Original file:   https://assets.mixkit.co/music/814/814.mp3
+
+Mixkit states on https://mixkit.co/free-stock-music/ :
+  - Royalty free
+  - No attribution required (appreciated)
+  - Allowed uses include websites, blogs, YouTube, social media,
+    podcasts, and online advertisements
+  - Not for resale as a standalone music file, CDs/DVDs,
+    video games, or TV/radio broadcasts
+  - Do not claim the track as your own
+
+This site uses the track only as optional background music
+behind a visitor-controlled on/off button.

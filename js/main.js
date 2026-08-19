@@ -1508,4 +1508,112 @@
       { passive: true }
     );
   })();
+
+  // ---- Optional beach music (off until the visitor turns it on) ----
+  (function initBeachMusic() {
+    const page = window.location.pathname.split("/").pop() || "index.html";
+    if (page === "metrics.html") return;
+
+    const STORAGE_KEY = "fnpMusicOn";
+    const VOLUME = 0.28;
+    const SRC = "audio/my-last-mojito.m4a";
+
+    function wanted() {
+      try {
+        return localStorage.getItem(STORAGE_KEY) === "1";
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function setWanted(on) {
+      try {
+        localStorage.setItem(STORAGE_KEY, on ? "1" : "0");
+      } catch (e) {}
+    }
+
+    const audio = document.createElement("audio");
+    audio.setAttribute("loop", "");
+    audio.setAttribute("preload", "none");
+    audio.setAttribute("playsinline", "");
+    audio.volume = VOLUME;
+    const source = document.createElement("source");
+    source.src = SRC;
+    source.type = "audio/mp4";
+    audio.appendChild(source);
+    document.body.appendChild(audio);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "music-toggle";
+    btn.setAttribute(
+      "title",
+      "Optional beach music — My Last Mojito by Michael Ramir C. (Mixkit, royalty-free)"
+    );
+    btn.innerHTML =
+      '<span class="music-toggle-icon" aria-hidden="true">♪</span>' +
+      '<span class="music-toggle-label">Music</span>';
+    document.body.appendChild(btn);
+
+    function isPlaying() {
+      return !audio.paused && !audio.ended;
+    }
+
+    function paint() {
+      const on = wanted();
+      const playing = isPlaying();
+      btn.classList.toggle("is-on", on && playing);
+      btn.classList.toggle("is-waiting", on && !playing);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.setAttribute("aria-label", on ? "Stop beach music" : "Play beach music");
+      btn.querySelector(".music-toggle-label").textContent = on ? "On" : "Music";
+    }
+
+    audio.addEventListener("play", paint);
+    audio.addEventListener("pause", paint);
+
+    function tryPlay() {
+      audio.volume = VOLUME;
+      const p = audio.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(function () {
+          paint();
+        });
+      }
+      paint();
+    }
+
+    function stop() {
+      audio.pause();
+      paint();
+    }
+
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (wanted()) {
+        setWanted(false);
+        stop();
+        return;
+      }
+      setWanted(true);
+      tryPlay();
+    });
+
+    document.addEventListener(
+      "pointerdown",
+      function (e) {
+        if (e.target && e.target.closest && e.target.closest(".music-toggle")) {
+          return;
+        }
+        if (wanted() && !isPlaying()) tryPlay();
+      },
+      true
+    );
+
+    if (wanted()) {
+      tryPlay();
+    } else {
+      paint();
+    }
+  })();
 })();
