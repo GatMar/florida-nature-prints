@@ -153,17 +153,32 @@
 
   // ---- Photo helpers ----
   function photoCardHtml(photo, withBuy) {
+    const src = photoUrl(photo.file);
+    const buyHref = withBuy
+      ? "shop.html?print=" + encodeURIComponent(photo.title)
+      : "";
     return (
       '<article class="photo-card" data-category="' +
       escapeHtml(photo.category || "") +
       '">' +
-      '<div class="photo-img-wrap">' +
+      '<button type="button" class="photo-img-wrap photo-zoom" data-src="' +
+      escapeHtml(src) +
+      '" data-title="' +
+      escapeHtml(photo.title) +
+      '" data-desc="' +
+      escapeHtml(photo.desc) +
+      '" data-buy-href="' +
+      escapeHtml(buyHref) +
+      '" data-buy-label="Buy print / mug" aria-label="View larger photo of ' +
+      escapeHtml(photo.title) +
+      '">' +
       '<img class="photo-img" src="' +
-      photoUrl(photo.file) +
+      src +
       '" alt="' +
       escapeHtml(photo.title) +
       '" loading="lazy" />' +
-      "</div>" +
+      '<span class="photo-zoom-hint" aria-hidden="true">View larger</span>' +
+      "</button>" +
       '<div class="photo-body">' +
       "<h3>" +
       escapeHtml(photo.title) +
@@ -173,8 +188,8 @@
       "</p>" +
       (withBuy
         ? '<div class="photo-actions">' +
-          '<a class="btn btn-primary" href="shop.html?print=' +
-          encodeURIComponent(photo.title) +
+          '<a class="btn btn-primary" href="' +
+          escapeHtml(buyHref) +
           '">Buy print / mug</a>' +
           "</div>"
         : "") +
@@ -498,13 +513,24 @@
       .map(function (s) {
         return (
           '<article class="souvenir-card">' +
-          '<div class="souvenir-img-wrap">' +
+          '<button type="button" class="souvenir-img-wrap photo-zoom" data-src="images/souvenirs/' +
+          escapeHtml(s.file) +
+          '" data-title="' +
+          escapeHtml(s.label) +
+          '" data-desc="' +
+          escapeHtml(s.desc || "") +
+          '" data-buy-href="shop.html?product=souvenir&amp;item=' +
+          encodeURIComponent(s.id) +
+          '#order-form" data-buy-label="Add to order" aria-label="View larger photo of ' +
+          escapeHtml(s.label) +
+          '">' +
           '<img src="images/souvenirs/' +
           escapeHtml(s.file) +
           '" alt="' +
           escapeHtml(s.label) +
           '" loading="lazy" />' +
-          "</div>" +
+          '<span class="photo-zoom-hint" aria-hidden="true">View larger</span>' +
+          "</button>" +
           "<h3>" +
           escapeHtml(s.label) +
           "</h3>" +
@@ -1300,4 +1326,186 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
+
+  // ---- Photo lightbox: click a photo to view it large, not the shop ----
+  (function initPhotoLightbox() {
+    let items = [];
+    let index = 0;
+    let lastFocus = null;
+    let touchStartX = 0;
+
+    const overlay = document.createElement("div");
+    overlay.id = "photo-lightbox";
+    overlay.className = "photo-lightbox";
+    overlay.hidden = true;
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "photo-lightbox-title");
+    overlay.innerHTML =
+      '<div class="photo-lightbox-backdrop" data-lightbox-close="1"></div>' +
+      '<div class="photo-lightbox-frame">' +
+      '<button type="button" class="photo-lightbox-close" aria-label="Close large photo">&times;</button>' +
+      '<button type="button" class="photo-lightbox-nav is-prev" aria-label="Previous photo">‹</button>' +
+      '<figure class="photo-lightbox-figure">' +
+      '<img class="photo-lightbox-img" alt="" />' +
+      '<figcaption class="photo-lightbox-caption">' +
+      '<div class="photo-lightbox-copy">' +
+      '<h3 id="photo-lightbox-title"></h3>' +
+      '<p class="photo-lightbox-desc"></p>' +
+      "</div>" +
+      '<a class="btn btn-primary photo-lightbox-buy" href="shop.html">Buy print / mug</a>' +
+      "</figcaption>" +
+      "</figure>" +
+      '<button type="button" class="photo-lightbox-nav is-next" aria-label="Next photo">›</button>' +
+      "</div>";
+    document.body.appendChild(overlay);
+
+    const imgEl = overlay.querySelector(".photo-lightbox-img");
+    const titleEl = overlay.querySelector("#photo-lightbox-title");
+    const descEl = overlay.querySelector(".photo-lightbox-desc");
+    const buyEl = overlay.querySelector(".photo-lightbox-buy");
+    const prevBtn = overlay.querySelector(".is-prev");
+    const nextBtn = overlay.querySelector(".is-next");
+    const closeBtn = overlay.querySelector(".photo-lightbox-close");
+
+    function collectItems() {
+      return Array.prototype.slice
+        .call(document.querySelectorAll(".photo-zoom"))
+        .filter(function (el) {
+          return el.offsetParent !== null;
+        })
+        .map(function (el) {
+          const img = el.querySelector("img");
+          return {
+            src: el.getAttribute("data-src") || (img && img.getAttribute("src")) || "",
+            title: el.getAttribute("data-title") || "",
+            desc: el.getAttribute("data-desc") || "",
+            buyHref: el.getAttribute("data-buy-href") || "",
+            buyLabel: el.getAttribute("data-buy-label") || "Buy print / mug",
+          };
+        });
+    }
+
+    function show(i) {
+      if (!items.length) return;
+      index = ((i % items.length) + items.length) % items.length;
+      const item = items[index];
+      imgEl.src = item.src;
+      imgEl.alt = item.title;
+      titleEl.textContent = item.title;
+      descEl.textContent = item.desc;
+      descEl.hidden = !item.desc;
+      if (item.buyHref) {
+        buyEl.hidden = false;
+        buyEl.href = item.buyHref;
+        buyEl.textContent = item.buyLabel;
+      } else {
+        buyEl.hidden = true;
+      }
+      const many = items.length > 1;
+      prevBtn.hidden = !many;
+      nextBtn.hidden = !many;
+    }
+
+    function openFrom(el) {
+      items = collectItems();
+      const src = el.getAttribute("data-src") || "";
+      const title = el.getAttribute("data-title") || "";
+      let i = 0;
+      for (let n = 0; n < items.length; n++) {
+        if (items[n].src === src && items[n].title === title) {
+          i = n;
+          break;
+        }
+      }
+      lastFocus = document.activeElement;
+      overlay.hidden = false;
+      document.body.classList.add("lightbox-open");
+      show(i);
+      closeBtn.focus();
+    }
+
+    function close() {
+      if (overlay.hidden) return;
+      overlay.hidden = true;
+      document.body.classList.remove("lightbox-open");
+      imgEl.removeAttribute("src");
+      if (lastFocus && typeof lastFocus.focus === "function") {
+        lastFocus.focus();
+      }
+    }
+
+    function focusables() {
+      return Array.prototype.slice
+        .call(overlay.querySelectorAll("button, a[href]"))
+        .filter(function (el) {
+          return !el.hidden;
+        });
+    }
+
+    document.addEventListener("click", function (e) {
+      const zoom = e.target.closest(".photo-zoom");
+      if (zoom) {
+        e.preventDefault();
+        openFrom(zoom);
+        return;
+      }
+      if (e.target.closest("[data-lightbox-close]")) {
+        close();
+      }
+    });
+
+    closeBtn.addEventListener("click", close);
+    prevBtn.addEventListener("click", function () {
+      show(index - 1);
+    });
+    nextBtn.addEventListener("click", function () {
+      show(index + 1);
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (overlay.hidden) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        show(index - 1);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        show(index + 1);
+      } else if (e.key === "Tab") {
+        const list = focusables();
+        if (!list.length) return;
+        const first = list[0];
+        const last = list[list.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+
+    overlay.addEventListener(
+      "touchstart",
+      function (e) {
+        if (!e.changedTouches || !e.changedTouches[0]) return;
+        touchStartX = e.changedTouches[0].screenX;
+      },
+      { passive: true }
+    );
+    overlay.addEventListener(
+      "touchend",
+      function (e) {
+        if (!e.changedTouches || !e.changedTouches[0]) return;
+        const dx = e.changedTouches[0].screenX - touchStartX;
+        if (dx > 60) show(index - 1);
+        else if (dx < -60) show(index + 1);
+      },
+      { passive: true }
+    );
+  })();
 })();

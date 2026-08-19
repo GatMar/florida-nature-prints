@@ -8,7 +8,7 @@
  name="description"
  content="Fine art nature photography prints from Florida - beaches, wetlands, birds, and soft coastal light."
  />
- <link rel="stylesheet" href="css/styles.css" />
+ <link rel="stylesheet" href="css/styles.css?v=lightbox1" />
  </head>
  <body>
  <header class="site-header">
@@ -173,13 +173,23 @@
           </div>
           <div class="souvenir-grid">
             <article class="souvenir-card">
-              <div class="souvenir-img-wrap">
+              <button
+                type="button"
+                class="souvenir-img-wrap photo-zoom"
+                data-src="images/souvenirs/shark-tooth-jar.jpg"
+                data-title="Jar of 15 shark teeth"
+                data-desc="Fifteen fossil teeth of various sizes in a small glass jar."
+                data-buy-href="shop.html#souvenirs"
+                data-buy-label="Add to order"
+                aria-label="View larger photo of jar of 15 shark teeth"
+              >
                 <img
                   src="images/souvenirs/shark-tooth-jar.jpg"
                   alt="Jar of 15 Florida shark teeth"
                   loading="lazy"
                 />
-              </div>
+                <span class="photo-zoom-hint" aria-hidden="true">View larger</span>
+              </button>
               <h3>Jar of 15 shark teeth</h3>
               <p>Fifteen fossil teeth of various sizes in a small glass jar.</p>
               <div class="souvenir-meta">
@@ -229,6 +239,6 @@
  document.getElementById("year").textContent = new Date().getFullYear();
  </script>
  <script src="js/config.js?v=visitors1"></script>
- <script src="js/main.js?v=visitors1"></script>
+ <script src="js/main.js?v=lightbox1"></script>
  </body>
 </html>
