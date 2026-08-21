@@ -98,6 +98,45 @@
     }
   });
 
+  // ---- Print of the day (home) ----
+  (function initPrintOfTheDay() {
+    const el = document.getElementById("print-of-day");
+    if (!el || !SITE_CONFIG.photos || !SITE_CONFIG.photos.length) return;
+    const day = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    let n = 0;
+    for (let i = 0; i < day.length; i++) {
+      const c = day.charCodeAt(i);
+      if (c >= 48 && c <= 57) n = n * 10 + (c - 48);
+    }
+    const photo = SITE_CONFIG.photos[n % SITE_CONFIG.photos.length];
+    const src = photoUrl(photo.file);
+    const nameHref =
+      "name.html?kind=photo&print=" + encodeURIComponent(photo.title);
+    el.innerHTML =
+      '<img src="' +
+      src +
+      '" alt="' +
+      escapeHtml(photo.title) +
+      '" />' +
+      '<div class="home-offer-body">' +
+      '<p class="keep-kicker">Print of the day</p>' +
+      "<h3>" +
+      escapeHtml(photo.title) +
+      "</h3>" +
+      "<p>" +
+      escapeHtml(photo.desc || "A Florida moment from the gallery.") +
+      "</p>" +
+      '<a class="btn btn-primary" href="' +
+      nameHref +
+      '">Name this print</a>' +
+      "</div>";
+  })();
+
   // ---- Helpers ----
   function photoUrl(file) {
     // Keep simple relative paths (encoding only breaks some hosts / cases)

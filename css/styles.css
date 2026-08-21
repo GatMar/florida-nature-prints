@@ -502,6 +502,156 @@ main {
   max-width: 50ch;
 }
 
+/* ---- Home split: why-frame (left) + naming / print of the day (right) ---- */
+.home-split {
+  padding: 2rem 0 2.5rem;
+  background: var(--cream);
+}
+
+.home-split-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) minmax(280px, 1.15fr);
+  gap: 1.35rem;
+  align-items: stretch;
+}
+
+.why-frame {
+  background: #16352f;
+  color: #f6f0e4;
+  border: 3px solid #c9a24a;
+  border-radius: 18px;
+  padding: 1.25rem 1.3rem 1.35rem;
+  box-shadow: 0 10px 28px rgba(22, 53, 47, 0.28);
+}
+
+.why-kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #e8c56b;
+  margin-bottom: 0.3rem;
+}
+
+.why-frame h2 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  color: #fbf6ea;
+  margin-bottom: 0.85rem;
+}
+
+.why-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin: 0 0 1.1rem;
+}
+
+.why-list li {
+  display: grid;
+  grid-template-columns: 1.5rem 1.15rem 1fr;
+  gap: 0.4rem;
+  align-items: start;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #ebe3d2;
+}
+
+.why-list strong {
+  color: #fff8ea;
+}
+
+.why-emoji {
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.why-check {
+  color: #e8c56b;
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.why-btn {
+  background: #e8c56b;
+  color: #16352f;
+  border-color: #e8c56b;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+}
+
+.why-btn:hover {
+  background: #f3d98a;
+  color: #102820;
+}
+
+.home-split-right {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.home-offer {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.home-offer img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.home-offer-body {
+  padding: 0.85rem 0.95rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.home-offer-body h2,
+.home-offer-body h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: var(--blue-800);
+}
+
+.home-offer-body p {
+  font-size: 0.88rem;
+  color: var(--text-soft);
+}
+
+.home-offer-body em {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--blue-800);
+}
+
+.home-offer-body .btn {
+  margin-top: auto;
+  align-self: flex-start;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 900px) {
+  .home-split-grid,
+  .home-split-right {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---- Feature cards (home) ---- */
 .features {
   display: grid;
