@@ -171,11 +171,19 @@
               </div>
 
               <div class="form-group" id="delivery-group" hidden>
-                <label for="naming-delivery">How should we send it?</label>
+                <label for="naming-delivery">How would you like the name used?</label>
                 <select id="naming-delivery" name="delivery">
-                  <option value="email">Email the named image (included)</option>
-                  <option value="mail">Also mail the mini certificate — $2</option>
+                  <option value="digital">
+                    Digital only — keep it in the gallery under this name ($3)
+                  </option>
+                  <option value="print-addon">
+                    Name it on a print I order (print price + $3)
+                  </option>
                 </select>
+                <p class="hint" id="delivery-hint">
+                  Digital only means the photo stays in Named by You. We do not
+                  email a personalized file.
+                </p>
               </div>
 
               <div class="totals-line" id="naming-totals">
@@ -310,10 +318,10 @@
     <script>
       document.getElementById("year").textContent = new Date().getFullYear();
     </script>
-    <script src="js/config.js?v=naming2"></script>
-    <script src="js/main.js?v=naming2"></script>
-    <script src="js/certificates.js?v=naming2"></script>
-    <script src="js/named-registry.js?v=naming2"></script>
-    <script src="js/naming.js?v=naming2"></script>
+    <script src="js/config.js?v=naming3"></script>
+    <script src="js/main.js?v=naming3"></script>
+    <script src="js/certificates.js?v=naming3"></script>
+    <script src="js/named-registry.js?v=naming3"></script>
+    <script src="js/naming.js?v=naming3"></script>
   </body>
 </html>

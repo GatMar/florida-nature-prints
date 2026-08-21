@@ -8,7 +8,7 @@
       name="description"
       content="Order Florida nature photo prints and specialty mugs. Secure payment options. Order alerts by email and text."
     />
-    <link rel="stylesheet" href="css/styles.css?v=naming2" />
+    <link rel="stylesheet" href="css/styles.css?v=naming3" />
   </head>
   <body>
     <header class="site-header">
@@ -279,6 +279,34 @@
                 </select>
               </div>
 
+              <div class="form-group" id="order-name-print-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    id="order-name-print"
+                    name="name_the_print"
+                    value="yes"
+                  />
+                  Name this print
+                  <span class="hint">(+ $3)</span>
+                </label>
+                <p class="hint">
+                  The name is printed with your order and listed in Named by
+                  You. We do not email a separate personalized file. Digital
+                  gallery-only naming is $3 on the
+                  <a href="name.html?kind=photo">Name page</a>.
+                </p>
+                <input
+                  id="order-print-given-name"
+                  name="print_given_name"
+                  type="text"
+                  maxlength="32"
+                  placeholder="The name you choose"
+                  hidden
+                  style="margin-top: 0.5rem"
+                />
+              </div>
+
               <div class="form-group" id="order-mug-group" hidden>
                 <label for="order-mug">Mug</label>
                 <select id="order-mug" name="mug_style">
@@ -455,7 +483,7 @@
     <script>
       document.getElementById("year").textContent = new Date().getFullYear();
     </script>
-    <script src="js/config.js?v=naming2"></script>
-    <script src="js/main.js?v=music2"></script>
+    <script src="js/config.js?v=naming3"></script>
+    <script src="js/main.js?v=naming3"></script>
   </body>
 </html>

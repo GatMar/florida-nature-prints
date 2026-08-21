@@ -922,6 +922,18 @@
     if (mugGroup) mugGroup.hidden = !isMug;
     if (souvenirGroup) souvenirGroup.hidden = !isSouvenir;
     if (printGroup) printGroup.hidden = isSouvenir;
+    const namePrintGroup = document.getElementById("order-name-print-group");
+    if (namePrintGroup) namePrintGroup.hidden = !isPrint;
+    if (!isPrint) {
+      const np = document.getElementById("order-name-print");
+      const gn = document.getElementById("order-print-given-name");
+      if (np) np.checked = false;
+      if (gn) {
+        gn.hidden = true;
+        gn.required = false;
+        gn.value = "";
+      }
+    }
     if (sizeSelect) {
       sizeSelect.required = isPrint;
       if (!isPrint) sizeSelect.value = "";
@@ -969,6 +981,9 @@
     }
     if (paramsEarly.get("product") === "souvenir") {
       productSelect.value = "souvenir";
+    }
+    if (paramsEarly.get("product") === "print") {
+      productSelect.value = "print";
     }
     syncProductType();
     const itemId = paramsEarly.get("item");
@@ -1027,6 +1042,22 @@
     const params = new URLSearchParams(window.location.search);
     const preselect = params.get("print");
     if (preselect) printSelect.value = preselect;
+    const namePrint = document.getElementById("order-name-print");
+    const givenName = document.getElementById("order-print-given-name");
+    if (namePrint && givenName) {
+      namePrint.addEventListener("change", function () {
+        givenName.hidden = !namePrint.checked;
+        givenName.required = !!namePrint.checked;
+        if (!namePrint.checked) givenName.value = "";
+      });
+      if (params.get("nameit") === "1") {
+        namePrint.checked = true;
+        givenName.hidden = false;
+        givenName.required = true;
+      }
+      const gn = params.get("given_name");
+      if (gn) givenName.value = gn;
+    }
   }
 
   // Payment buttons from config
@@ -1180,6 +1211,19 @@
       state: form.state.value,
       zip: form.zip.value,
       notes: form.notes.value || "(none)",
+      name_the_print:
+        !isMug &&
+        !isSouvenir &&
+        form.name_the_print &&
+        form.name_the_print.checked
+          ? "YES — +$3. Given name: " +
+            ((form.print_given_name && form.print_given_name.value) || "(blank)") +
+            ". List in Named by You. Do not email a personalized file."
+          : "(no)",
+      print_given_name:
+        form.print_given_name && form.print_given_name.value
+          ? form.print_given_name.value
+          : "(none)",
       gator_coupon: (form.gator_coupon && form.gator_coupon.value) || "(none)",
       gift_code: (form.gator_coupon && form.gator_coupon.value) || "(none)",
       print_discount: describeGiftCode(form.gator_coupon && form.gator_coupon.value),

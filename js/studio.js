@@ -128,11 +128,10 @@
     }
     if (kind === "photo") {
       return [
-        ["paid", "Payment matched"],
+        ["paid", "Payment matched ($3 digital or +$3 on a print)"],
         ["photo", "Gallery photo confirmed"],
-        ["named-image", "Name added to the image"],
-        ["emailed", "Named image emailed"],
-        ["printed", "Mini-scroll printed (if mailing)"],
+        ["listed", "Listed in Named by You under their name"],
+        ["on-print", "Name on the print (only if they ordered a print)"],
         ["published", "Ready for gallery"],
       ];
     }

@@ -170,9 +170,9 @@ var SITE_CONFIG = window.SITE_CONFIG = {
         folder: "prints",
         kicker: "Name what you love",
         lede:
-          "For $3 you can name one photo from our Florida Nature gallery.",
+          "For $3 you can name a gallery photo digitally — it stays in Named by You under your chosen name.",
         body:
-          "Pick a bird, alligator, shell, sunset, or any image you love. We’ll add your name to the photo and send you the personalized version. It will also appear in our “Named by You” section.",
+          "Pick a bird, alligator, shell, sunset, or any image you love. Digital only: we do not email a personalized file. The photo is kept in our gallery under the name you choose. Want it on your wall? Add the name for an extra $3 when you order the print.",
         galleryNote: "",
         closing:
           "You can’t keep a free-flying bird or a wild alligator — but you can give it a name that stays forever.",
@@ -224,12 +224,13 @@ var SITE_CONFIG = window.SITE_CONFIG = {
         total: 2,
       },
       digital: {
-        methodTitle: "Emailed named image",
+        methodTitle: "Digital only — named in the gallery",
         packaging: 0,
         postage: 0,
         total: 0,
       },
     },
+    printNameAddOn: 3,
   },
 
   // Sister bakery (cookies + pantry spices) — used as quiet ads around the match game

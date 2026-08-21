@@ -97,19 +97,68 @@
     return ship.digital;
   }
 
+  function fillDeliveryOptions(kind) {
+    var sel = $("naming-delivery");
+    var hint = $("delivery-hint");
+    if (!sel) return;
+    if (kind === "photo") {
+      sel.innerHTML =
+        '<option value="digital">Digital only — keep it in the gallery under this name ($3)</option>' +
+        '<option value="print-addon">Name it on a print I order (print price + $3)</option>';
+      if (hint) {
+        hint.textContent =
+          "Digital only means the photo stays in Named by You. We do not email a personalized file. Naming on a print is an extra $3 when you order the print.";
+      }
+    } else {
+      sel.innerHTML =
+        '<option value="email">Email the named image (included)</option>' +
+        '<option value="mail">Also mail the mini certificate — $2</option>';
+      if (hint) {
+        hint.textContent = "Hibiscus naming includes the named image by email.";
+      }
+    }
+  }
+
   function updateTotals() {
     var p = productById(currentKind());
     var ship = shippingFor() || { total: 0, methodTitle: "" };
     var box = $("naming-totals");
     if (!p || !box) return;
+    var delivery = $("naming-delivery") && $("naming-delivery").value;
     var total = Number(p.price) + Number(ship.total || 0);
+    var detail;
+    if (p.id === "photo" && delivery === "print-addon") {
+      total = 0;
+      detail =
+        "No charge on this form. When you order the print, naming is an extra $3 on top of the print and shipping.";
+    } else if (p.id === "photo") {
+      total = Number(p.price);
+      detail =
+        money(p.price) +
+        " digital only — the photo is kept in our gallery under your name. We do not email a personalized file.";
+    } else if (p.physical) {
+      detail =
+        "Includes " +
+        money(p.price) +
+        " for naming + " +
+        money(ship.total) +
+        " shipping (" +
+        (ship.methodTitle || "mailer") +
+        ").";
+    } else if (ship.total) {
+      detail =
+        "Includes " +
+        money(p.price) +
+        " for naming + " +
+        money(ship.total) +
+        " to mail the mini certificate.";
+    } else {
+      detail = "Includes " + money(p.price) + ". Named image sent by email — no shipping.";
+    }
     box.querySelector("strong").textContent =
-      "Total due after you submit: " + money(total);
-    var detail = p.physical
-      ? "Includes " + money(p.price) + " for naming + " + money(ship.total) + " shipping (" + (ship.methodTitle || "mailer") + ")."
-      : ship.total
-        ? "Includes " + money(p.price) + " for naming + " + money(ship.total) + " to mail the mini certificate."
-        : "Includes " + money(p.price) + ". Named image sent by email — no shipping.";
+      total === 0
+        ? "Due here: $0 — pay naming with the print"
+        : "Total due after you submit: " + money(total);
     box.querySelector("p").textContent = detail;
   }
 
@@ -131,7 +180,10 @@
     if ($("hibiscus-group")) $("hibiscus-group").hidden = p.id !== "hibiscus";
     if ($("photo-group")) $("photo-group").hidden = p.id !== "photo";
     if ($("delivery-group")) $("delivery-group").hidden = !!p.physical;
-    var needShip = !!p.physical || ($("naming-delivery") && $("naming-delivery").value === "mail" && !p.physical);
+    if (!p.physical) fillDeliveryOptions(p.id);
+    var delivery = $("naming-delivery") && $("naming-delivery").value;
+    var needShip =
+      !!p.physical || (delivery === "mail" && !p.physical);
     setShippingRequired(needShip);
     updateTotals();
     updatePreview();
@@ -425,6 +477,16 @@
         }
         return;
       }
+      var deliveryChoice = $("naming-delivery") && $("naming-delivery").value;
+      if (p.id === "photo" && deliveryChoice === "print-addon") {
+        var shopUrl =
+          "shop.html?product=print&print=" +
+          encodeURIComponent($("naming-photo").value || "") +
+          "&nameit=1&given_name=" +
+          encodeURIComponent(names[0] || "");
+        window.location.href = shopUrl;
+        return;
+      }
       if (!SITE_CONFIG.yourEmail || SITE_CONFIG.yourEmail.indexOf("@") < 0) {
         if (msg) {
           msg.className = "form-message error";
@@ -435,6 +497,7 @@
 
       var ship = shippingFor() || { total: 0, methodTitle: "none" };
       var total = Number(p.price) + Number(ship.total || 0);
+      if (p.id === "photo") total = Number(p.price);
       var design = C && C.designById($("naming-design").value);
       var payload = {
         _subject: "🌿 NEW NAMING ORDER — " + p.label + " — " + SITE_CONFIG.businessName,
@@ -452,7 +515,15 @@
         photo: p.id === "photo" ? $("naming-photo").value : "(n/a)",
         certificate_design: design ? design.label + " (" + design.id + ")" : $("naming-design").value,
         paper: '2" × 3.5" mini scroll (rolls into bottle)',
-        delivery: p.physical ? "Mail bottle of teeth + rolled certificate" : ($("naming-delivery").value === "mail" ? "Email image + mail mini certificate" : "Email named image"),
+        delivery: p.physical
+          ? "Mail bottle of teeth + rolled certificate"
+          : $("naming-delivery").value === "print-addon"
+            ? "Name on a print order (+$3 with the print; no personalized file emailed)"
+            : $("naming-delivery").value === "mail"
+              ? "Email image + mail mini certificate"
+              : p.id === "photo"
+                ? "Digital only — named in the gallery (no personalized file emailed)"
+                : "Email named image",
         shipping: ship.methodTitle + " — $" + ship.total,
         shipping_total: "$" + ship.total,
         order_total: "$" + total,
@@ -501,7 +572,9 @@
           if (msg) {
             msg.className = "form-message success";
             msg.textContent =
-              "Thank you. Your names were sent. Next: use a payment button so I can match your payment.";
+              p.id === "photo"
+                ? "Thank you. Your name will appear in the gallery. We do not email a personalized file. Next: use a payment button for the $3."
+                : "Thank you. Your names were sent. Next: use a payment button so I can match your payment.";
           }
           var pay = $("payment-box");
           if (pay && pay.scrollIntoView) {

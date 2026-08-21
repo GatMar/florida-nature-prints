@@ -129,7 +129,7 @@ Public page: **https://floridanatureprints.com/name.html** (also the **Name** ta
 |-------|-------|----------------|
 | Name 3 shark teeth | $8 + $6 shipping | Three real teeth in a small cork bottle, certificate rolled and tied with a bow, listed in Named by You |
 | Name a hibiscus | $4 | Named image by email; optional mini-scroll +$2 |
-| Name a gallery photo | $3 | Named image by email; optional mini-scroll +$2 |
+| Name a gallery photo | $3 digital, or +$3 on a print order | Digital: listed in Named by You only (no personalized file emailed). Or name it when ordering the print. |
 
 Prices and hibiscus photos live in `js/config.js` under `naming`. Put your own hibiscus photos in `images/hibiscus/` and list them there.
 
