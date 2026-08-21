@@ -105,6 +105,133 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     },
   ],
 
+  /**
+   * ---- Name a piece of Florida ----
+   * Public page: name.html
+   * Behind-the-scenes tracker + certificate printer: studio.html
+   * Certificates print on one size: 2" × 3.5" mini-scrolls
+   * (US business-card size). Roll with a ribbon into a small bottle.
+   */
+  naming: {
+    paper: {
+      id: "2x3.5",
+      label: '2" × 3.5" mini scroll (Avery 8371 business card)',
+      widthIn: 2,
+      heightIn: 3.5,
+      avery: "8371",
+      why:
+        "US business-card size — the small card you can actually buy. Avery 8371 (inkjet) or 5371 (laser), 10 tear-apart cards per letter sheet, at Amazon, Office Depot, or Walmart. Roll along the 3.5\" side so the scroll is 2\" tall, tie a thin ribbon bow.",
+    },
+    bottle: {
+      label: '50 ml tall cork bottle, about 4–5" high and 1.4" wide',
+      search: "50ml glass bottles with cork 4 inch",
+      why:
+        "This is the common bottle that actually fits a 2\" scroll, a bow, and three teeth. Skip the short squat 50 ml jars (about 2\" tall) — the scroll will not fit.",
+    },
+    products: [
+      {
+        id: "teeth",
+        label: "Name 3 Shark Teeth",
+        price: 8,
+        namesNeeded: 3,
+        physical: true,
+        file: "named-trio-sample.jpg",
+        folder: "souvenirs",
+        kicker: "You name them. You keep them.",
+        lede:
+          "You name them, you pay for them, you keep them. Three real Florida shark teeth for $8.",
+        body:
+          "These are genuine teeth found along the shores of Southwest Florida. You choose the three names, we photograph each tooth with its name, and we mail all three in a small glass bottle — the certificate rolled and tied with a little bow.",
+        galleryNote: "Your named teeth will also appear in our rotating gallery.",
+        closing: "Three little pieces of Florida, now yours.",
+      },
+      {
+        id: "hibiscus",
+        label: "Name a Hibiscus",
+        price: 4,
+        namesNeeded: 1,
+        physical: false,
+        file: "sunrise-blush.jpg",
+        folder: "hibiscus",
+        kicker: "A flower with a name",
+        lede: "For $4 you can give a name to one Florida hibiscus.",
+        body:
+          "Choose a name and we’ll add it to a beautiful photo of the flower. You’ll receive the named image, and it will join our gallery of named hibiscus.",
+        galleryNote: "",
+        closing: "All hibiscus are loved by the sun… but only some have names.",
+      },
+      {
+        id: "photo",
+        label: "Name a Gallery Photo",
+        price: 3,
+        namesNeeded: 1,
+        physical: false,
+        file: "golden-gulf.jpeg",
+        folder: "prints",
+        kicker: "Name what you love",
+        lede:
+          "For $3 you can name one photo from our Florida Nature gallery.",
+        body:
+          "Pick a bird, alligator, shell, sunset, or any image you love. We’ll add your name to the photo and send you the personalized version. It will also appear in our “Named by You” section.",
+        galleryNote: "",
+        closing:
+          "You can’t keep a free-flying bird or a wild alligator — but you can give it a name that stays forever.",
+      },
+    ],
+    hibiscus: [
+      {
+        id: "sunrise-blush",
+        file: "sunrise-blush.jpg",
+        title: "Sunrise Blush",
+        desc: "Pale peach petals, a deep rose throat",
+      },
+      {
+        id: "crimson-gulf",
+        file: "crimson-gulf.jpg",
+        title: "Crimson Gulf",
+        desc: "A velvety red Florida bloom",
+      },
+      {
+        id: "coral-dawn",
+        file: "coral-dawn.jpg",
+        title: "Coral Dawn",
+        desc: "Soft coral and peach in morning light",
+      },
+      {
+        id: "moon-white",
+        file: "moon-white.jpg",
+        title: "Moon White",
+        desc: "Creamy white with a magenta heart",
+      },
+      {
+        id: "sun-gold",
+        file: "sun-gold.jpg",
+        title: "Sun Gold",
+        desc: "Golden yellow, bright as a Florida noon",
+      },
+    ],
+    shipping: {
+      teeth: {
+        methodTitle: "Small padded mailer (bottle of teeth + rolled certificate)",
+        packaging: 2,
+        postage: 4,
+        total: 6,
+      },
+      card: {
+        methodTitle: "First-class envelope (mini certificate)",
+        packaging: 0.5,
+        postage: 1.5,
+        total: 2,
+      },
+      digital: {
+        methodTitle: "Emailed named image",
+        packaging: 0,
+        postage: 0,
+        total: 0,
+      },
+    },
+  },
+
   // Sister bakery (cookies + pantry spices) — used as quiet ads around the match game
   sisterSite: {
     name: "MariCooks",

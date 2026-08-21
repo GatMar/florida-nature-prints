@@ -906,6 +906,7 @@ button.souvenir-img-wrap {
 .photo-card .photo-actions {
   margin-top: 0.9rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -1044,6 +1045,7 @@ button.souvenir-img-wrap {
 }
 
 .souvenir-img-wrap {
+  display: block;
   position: relative;
   aspect-ratio: 1;
   width: 100%;
@@ -1344,6 +1346,78 @@ button.souvenir-img-wrap {
 
 .contact-details a {
   font-weight: 600;
+}
+
+/* ---- Name them / keep them band ---- */
+.keep-band {
+  background: var(--sand);
+  padding: 3.25rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.keep-band-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.keep-band-photo {
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.keep-band-photo img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.keep-kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--green-700);
+  margin-bottom: 0.45rem;
+}
+
+.keep-band-copy h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3.2vw, 2.5rem);
+  line-height: 1.15;
+  color: var(--blue-800);
+  margin-bottom: 0.85rem;
+}
+
+.keep-band-copy p {
+  color: var(--text-soft);
+  margin-bottom: 0.85rem;
+  max-width: 38rem;
+}
+
+.keep-example {
+  font-size: 0.95rem;
+  color: var(--blue-800) !important;
+}
+
+.keep-example em {
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+.keep-band-copy .btn {
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 800px) {
+  .keep-band-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 }
 
 /* ---- CTA band ---- */

@@ -8,7 +8,8 @@
       name="description"
       content="Browse Florida nature photography by category - sunsets, beaches, gators, herons, anhinga, and storks."
     />
-    <link rel="stylesheet" href="css/styles.css?v=music2" />
+    <link rel="stylesheet" href="css/styles.css?v=naming1" />
+    <link rel="stylesheet" href="css/naming.css?v=naming1" />
   </head>
   <body>
     <header class="site-header">
@@ -30,6 +31,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="gallery.html" class="active">Gallery</a></li>
           <li><a href="shop.html">Shop</a></li>
+          <li><a href="name.html">Name</a></li>
           <li><a href="game.html">Match</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
@@ -67,6 +69,19 @@
           </div>
         </div>
       </section>
+
+      <section class="section section-green" id="named-by-you">
+        <div class="container">
+          <div class="section-header">
+            <h2>Named by You</h2>
+            <p>
+              Photographs, hibiscus, and shark teeth that now have names.
+              <a href="name.html">Name one of your own</a>.
+            </p>
+          </div>
+          <div class="named-strip" id="named-gallery"></div>
+        </div>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -81,6 +96,7 @@
           <ul class="footer-links">
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="shop.html">Shop</a></li>
+            <li><a href="name.html">Name</a></li>
             <li><a href="game.html">Match</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="contact.html">Contact</a></li>
@@ -97,7 +113,9 @@
     <script>
       document.getElementById("year").textContent = new Date().getFullYear();
     </script>
-    <script src="js/config.js?v=visitors1"></script>
-    <script src="js/main.js?v=music2"></script>
+    <script src="js/config.js?v=naming1"></script>
+    <script src="js/main.js?v=naming1"></script>
+    <script src="js/named-registry.js?v=naming1"></script>
+    <script src="js/naming.js?v=naming1"></script>
   </body>
 </html>

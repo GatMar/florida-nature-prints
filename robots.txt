@@ -1,3 +1,5 @@
 User-agent: *
 Disallow: /metrics.html
+Disallow: /studio.html
 Disallow: /offline/
+Disallow: /charts, to do, instructions, SOP's/

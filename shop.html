@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Shop — Prints, Mugs &amp; Shark Teeth | Florida Nature Prints</title>
+    <title>Shop — Prints, Mugs, Shark Teeth &amp; Naming | Florida Nature Prints</title>
     <meta
       name="description"
       content="Order Florida nature photo prints and specialty mugs. Secure payment options. Order alerts by email and text."
     />
-    <link rel="stylesheet" href="css/styles.css?v=music2" />
+    <link rel="stylesheet" href="css/styles.css?v=naming2" />
   </head>
   <body>
     <header class="site-header">
@@ -30,6 +30,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="gallery.html">Gallery</a></li>
           <li><a href="shop.html" class="active">Shop</a></li>
+          <li><a href="name.html">Name</a></li>
           <li><a href="game.html">Match</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
@@ -43,8 +44,9 @@
           <h1>Shop — prints, mugs &amp; shark teeth</h1>
           <p>
             Choose a Florida scene for a fine art print or a 12 oz photo mug,
-            or add a jar of 15 fossil shark teeth. Send your order details,
-            then pay securely.
+            add a jar of 15 fossil shark teeth, or
+            <a href="name.html">name three teeth, a hibiscus, or a photo</a>.
+            Send your order details, then pay securely.
           </p>
         </div>
       </div>
@@ -91,6 +93,18 @@
                 <!-- Filled by main.js -->
               </ul>
             </article>
+            <article class="product-type-card is-featured">
+              <div class="product-type-badge">New</div>
+              <div class="product-type-icon" aria-hidden="true">✦</div>
+              <h3>Name a piece of Florida</h3>
+              <p>
+                Name three real shark teeth ($8), a hibiscus ($4), or a gallery
+                photo ($3). Each name is printed on a 2×3.5 mini-scroll that rolls into the bottle with a bow.
+              </p>
+              <p>
+                <a class="btn btn-primary" href="name.html">Open the naming page</a>
+              </p>
+            </article>
           </div>
         </div>
       </section>
@@ -106,6 +120,33 @@
           </div>
           <div class="souvenir-grid" id="souvenir-grid">
             <!-- Filled by main.js -->
+          </div>
+        </div>
+      </section>
+
+      <section class="keep-band" id="naming">
+        <div class="container keep-band-grid">
+          <div class="keep-band-photo">
+            <img
+              src="images/souvenirs/named-trio-sample.jpg"
+              alt="Sample: Poseidon, Luffy, and Llamrei — three named Florida shark teeth"
+            />
+          </div>
+          <div class="keep-band-copy">
+            <p class="keep-kicker">New · $8</p>
+            <h2>You name them.<br />You pay for them.<br />You keep them.</h2>
+            <p>
+              Three real Florida shark teeth. You choose the names, we
+              photograph each one, and they come home in a small bottle with a
+              tiny certificate rolled and tied with a bow.
+            </p>
+            <p class="keep-example">
+              This sample: <em>Poseidon</em>, <em>Luffy</em> &amp;
+              <em>Llamrei</em>.
+            </p>
+            <a class="btn btn-primary" href="name.html?kind=teeth"
+              >Name 3 shark teeth — $8</a
+            >
           </div>
         </div>
       </section>
@@ -397,6 +438,7 @@
           <ul class="footer-links">
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="shop.html">Shop</a></li>
+            <li><a href="name.html">Name</a></li>
             <li><a href="game.html">Match</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="contact.html">Contact</a></li>
@@ -413,7 +455,7 @@
     <script>
       document.getElementById("year").textContent = new Date().getFullYear();
     </script>
-    <script src="js/config.js?v=visitors1"></script>
+    <script src="js/config.js?v=naming2"></script>
     <script src="js/main.js?v=music2"></script>
   </body>
 </html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Naming studio — Florida Nature Prints</title>
+    <meta
+      name="description"
+      content="Private naming tracker and 2×3.5 mini-scroll certificate printer for Florida Nature Prints."
+    />
+    <link rel="stylesheet" href="css/styles.css?v=naming1" />
+    <link rel="stylesheet" href="css/naming.css?v=naming1" />
+  </head>
+  <body data-page="studio">
+    <header class="site-header">
+      <div class="container nav-inner">
+        <a href="index.html" class="logo" data-business-name
+          >Florida <span>Nature</span> Prints</a
+        >
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="shop.html">Shop</a></li>
+          <li><a href="name.html">Name</a></li>
+          <li><a href="game.html">Match</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-hero">
+        <div class="container">
+          <h1>Naming studio</h1>
+          <p>
+            Private page — not in the public menu. Bookmark
+            floridanatureprints.com/studio.html. Track naming orders, assign
+            registry numbers, print 2×3.5 mini-scrolls, and publish names to the
+            gallery.
+          </p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="container">
+          <p class="studio-note">
+            Orders arrive by email. Add them here, walk the checklist, print
+            the card, then ship or send. Everything saves in this browser
+            (export a backup so you don’t lose it).
+          </p>
+
+          <div class="studio-stats" id="studio-stats"></div>
+
+          <div class="studio-tabs" role="tablist">
+            <button type="button" data-tab="orders" class="is-on">Orders</button>
+            <button type="button" data-tab="registry">Registry</button>
+            <button type="button" data-tab="print">Certificate printer</button>
+            <button type="button" data-tab="guide">How to fulfill</button>
+          </div>
+
+          <div class="studio-panel" data-panel="orders">
+            <div class="studio-toolbar">
+              <button class="btn btn-primary" type="button" id="btn-new-order">New order</button>
+              <select id="filter-status">
+                <option value="">All statuses</option>
+              </select>
+              <button class="btn btn-outline" type="button" id="btn-export">Download backup</button>
+              <label class="btn btn-outline" for="import-file">Restore backup</label>
+              <input id="import-file" type="file" accept="application/json" hidden />
+            </div>
+            <div class="studio-split">
+              <div>
+                <div class="order-list" id="order-list"></div>
+              </div>
+              <div class="form-card studio-form" id="order-detail">
+                <p class="named-empty">Select an order, or add a new one from an email.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="studio-panel" data-panel="registry" hidden>
+            <div class="studio-toolbar">
+              <input id="registry-search" type="search" placeholder="Search names or IDs…" />
+              <button class="btn btn-outline" type="button" id="btn-export-registry">
+                Download named-registry.js for the website
+              </button>
+            </div>
+            <div style="overflow: auto">
+              <table class="registry-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Kind</th>
+                    <th>Source</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="registry-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="studio-panel" data-panel="print" hidden>
+            <div class="naming-layout">
+              <div class="form-card">
+                <h2>Print a mini-scroll</h2>
+                <p class="form-intro">
+                  Paper: Avery 8371 / 5371, 2″ × 3.5″. Bottle: tall 50 ml cork,
+                  about 4–5″ high and 1.4″ wide — not the short 2″ jars. Full
+                  SOP PDF on your Mac:
+                  <code>charts, to do, instructions, SOP's/Naming-SOP-what-works.pdf</code>.
+                </p>
+                <div class="form-group">
+                  <label for="print-order">From an order</label>
+                  <select id="print-order">
+                    <option value="">Type names instead…</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="print-kind">Kind</label>
+                  <select id="print-kind">
+                    <option value="teeth">Three shark teeth</option>
+                    <option value="hibiscus">Hibiscus</option>
+                    <option value="photo">Gallery photo</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="print-n1">Names</label>
+                  <input id="print-n1" type="text" placeholder="Name 1" />
+                </div>
+                <div class="form-group" id="print-n2-wrap">
+                  <input id="print-n2" type="text" placeholder="Name 2" />
+                </div>
+                <div class="form-group" id="print-n3-wrap">
+                  <input id="print-n3" type="text" placeholder="Name 3" />
+                </div>
+                <div class="form-group">
+                  <label for="print-source">Hibiscus or photo title</label>
+                  <input id="print-source" type="text" placeholder="Sunrise Blush / Golden Gulf" />
+                </div>
+                <div class="form-group">
+                  <label for="print-ids">Registry numbers</label>
+                  <input id="print-ids" type="text" placeholder="FNP-T-2026-0001, FNP-T-2026-0002, FNP-T-2026-0003" />
+                </div>
+                <div class="form-group">
+                  <label for="print-by">Named by <span class="hint">(optional)</span></label>
+                  <input id="print-by" type="text" placeholder="Jane" />
+                </div>
+                <div class="form-group">
+                  <label for="print-date">Date</label>
+                  <input id="print-date" type="date" />
+                </div>
+                <div class="form-group">
+                  <label>Design</label>
+                  <div class="design-grid" id="print-designs"></div>
+                  <input type="hidden" id="print-design" value="shell-ivory" />
+                </div>
+                <div class="studio-toolbar">
+                  <button class="btn btn-primary" type="button" id="btn-print-avery">
+                    Print Avery 8371 sheet (10 cards)
+                  </button>
+                  <button class="btn btn-outline" type="button" id="btn-print-letter">
+                    Print 8-up on letter (cut yourself)
+                  </button>
+                  <button class="btn btn-outline" type="button" id="btn-print-4x6">
+                    Print one card (test)
+                  </button>
+                </div>
+              </div>
+              <aside class="naming-preview-col">
+                <h2>Preview</h2>
+                <p>What will come out of the printer.</p>
+                <div class="cert-stage">
+                  <div class="cert-scale" id="print-live"></div>
+                </div>
+              </aside>
+            </div>
+          </div>
+
+          <div class="studio-panel" data-panel="guide" hidden>
+            <div class="guide-grid">
+              <article class="guide-card">
+                <h3>Paper, ribbon, bottle</h3>
+                <p>
+                  One paper, one bottle — both easy to order.
+                </p>
+                <ul>
+                  <li><strong>Card:</strong> Avery <strong>8371</strong> (inkjet) or <strong>5371</strong> (laser), 2″ × 3.5″, 10 per letter sheet. Amazon, Office Depot, Walmart.</li>
+                  <li><strong>Bottle:</strong> 50 ml cork bottle, about <strong>4–5″ tall and 1.4″ wide</strong>. Search “50ml glass bottles with cork 4 inch”.</li>
+                  <li>Skip the short squat 50 ml jars (~2″ tall). A 2″ scroll plus a bow will not fit those.</li>
+                  <li>Ribbon: ⅛″ (3 mm), about 8–10″ per bow — kraft, sage, or blush</li>
+                </ul>
+              </article>
+              <article class="guide-card">
+                <h3>Name 3 shark teeth — $8</h3>
+                <ol>
+                  <li>Add the email order here. Lock the three names.</li>
+                  <li>Pick three real teeth. Photograph each with its name.</li>
+                  <li>Print the 2×3.5 mini-scroll (all three names on one card).</li>
+                  <li>Roll along the long edge so the scroll is 2″ tall. Tie a little bow.</li>
+                  <li>Slip the scroll into the bottle with the three teeth. Cork it.</li>
+                  <li>Small padded mailer. Mark sent, then publish names to the gallery.</li>
+                </ol>
+              </article>
+              <article class="guide-card">
+                <h3>Name a hibiscus — $4</h3>
+                <ol>
+                  <li>Add the order. Confirm the flower photo they picked, or shoot a new one.</li>
+                  <li>Add the chosen name onto the image (Photos app text, or a simple overlay).</li>
+                  <li>Email the named image. Print a mini-scroll only if they paid to mail the card.</li>
+                  <li>Publish to Named by You. Drop the photo in <code>images/named/</code> if you want it on the site.</li>
+                </ol>
+              </article>
+              <article class="guide-card">
+                <h3>Name a gallery photo — $3</h3>
+                <ol>
+                  <li>Add the order and the photo title they chose.</li>
+                  <li>Make a named version of that print (name on the image, tasteful and small).</li>
+                  <li>Email it. Mail the mini-scroll only if they asked.</li>
+                  <li>Publish to the Named by You section.</li>
+                </ol>
+              </article>
+              <article class="guide-card">
+                <h3>Registry numbers</h3>
+                <p>
+                  When you lock names, this studio assigns IDs:
+                </p>
+                <ul>
+                  <li><code>FNP-T-2026-0001</code> — shark tooth</li>
+                  <li><code>FNP-H-2026-0001</code> — hibiscus</li>
+                  <li><code>FNP-P-2026-0001</code> — gallery photo</li>
+                </ul>
+                <p>Those numbers print on the certificate and appear in the public gallery.</p>
+              </article>
+              <article class="guide-card">
+                <h3>Putting names on the live website</h3>
+                <ol>
+                  <li>Mark the order <strong>published</strong>.</li>
+                  <li>Open Registry → Download <code>named-registry.js</code>.</li>
+                  <li>Replace <code>js/named-registry.js</code> in the website folder.</li>
+                  <li>If you photographed the named piece, put the file in <code>images/named/</code> and set that filename on the order.</li>
+                  <li>Upload / push the site.</li>
+                </ol>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-brand" data-business-name>
+              Florida <span>Nature</span> Prints
+            </div>
+            <p data-tagline>Calm moments from the Sunshine State</p>
+          </div>
+          <ul class="footer-links">
+            <li><a href="metrics.html">Metrics</a></li>
+            <li><a href="studio.html">Studio</a></li>
+            <li><a href="name.html">Name page</a></li>
+          </ul>
+        </div>
+        <div class="footer-bottom">
+          Private studio · not listed in the public menu
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/config.js?v=naming1"></script>
+    <script src="js/main.js?v=naming1"></script>
+    <script src="js/certificates.js?v=naming1"></script>
+    <script src="js/named-registry.js?v=naming1"></script>
+    <script src="js/studio.js?v=naming1"></script>
+  </body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Name a piece of Florida — Florida Nature Prints</title>
+    <meta
+      name="description"
+      content="Name three real Florida shark teeth, a hibiscus, or a gallery photograph. Teeth arrive in a small bottle with a mini certificate rolled and tied with a bow."
+    />
+    <link rel="stylesheet" href="css/styles.css?v=naming2" />
+    <link rel="stylesheet" href="css/naming.css?v=naming2" />
+  </head>
+  <body data-page="naming">
+    <header class="site-header">
+      <div class="container nav-inner">
+        <a href="index.html" class="logo" data-business-name
+          >Florida <span>Nature</span> Prints</a
+        >
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="shop.html">Shop</a></li>
+          <li><a href="name.html" class="active">Name</a></li>
+          <li><a href="game.html">Match</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-hero">
+        <div class="container naming-hero">
+          <div class="naming-hero-copy">
+            <p class="keep-kicker">Name them · pay for them · keep them</p>
+            <h1>You name them. You keep them.</h1>
+            <p>
+              Three real Florida shark teeth for $8. You choose the names — a
+              Greek god, a One Piece pirate, King Arthur’s horse, your kids,
+              anyone. We photograph each tooth, print a tiny certificate,
+              roll it with a bow, and mail the teeth to you in a small glass
+              bottle.
+            </p>
+            <p class="keep-example">
+              Sample:
+              <em>Poseidon</em>,
+              <em>Luffy</em> &amp;
+              <em>Llamrei</em>.
+            </p>
+            <p>
+              <a class="btn btn-primary" href="#order">Name 3 shark teeth — $8</a>
+            </p>
+          </div>
+          <div class="naming-hero-photo">
+            <img
+              src="images/souvenirs/named-trio-sample.jpg"
+              alt="Sample of three named Florida shark teeth: Poseidon, Luffy, and Llamrei"
+            />
+          </div>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2>Choose what to name</h2>
+            <p>Tap a card to begin. You can change your mind in the form.</p>
+          </div>
+          <div class="naming-offers" id="naming-offers">
+            <!-- Filled by naming.js -->
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <h2>How it works</h2>
+          </div>
+          <div class="naming-steps">
+            <article class="naming-step">
+              <span>1</span>
+              <p>Choose shark teeth, a hibiscus, or a gallery photo, and the names.</p>
+            </article>
+            <article class="naming-step">
+              <span>2</span>
+              <p>Pick one of ten designs — all the same 2″ × 3.5″ mini-scroll, made to roll into the bottle.</p>
+            </article>
+            <article class="naming-step">
+              <span>3</span>
+              <p>We photograph the piece with its name and print your mini-scroll.</p>
+            </article>
+            <article class="naming-step">
+              <span>4</span>
+              <p>Teeth go in a small tall glass bottle with the rolled certificate and a bow. Images are emailed. Names go in the gallery.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="order">
+        <div class="container naming-layout">
+          <div class="form-card">
+            <h2>Name it</h2>
+            <p class="form-intro">
+              I’ll receive this by email so I can prepare your names, photos,
+              and certificate.
+            </p>
+            <div id="naming-message" class="form-message" role="status"></div>
+
+            <form id="naming-form" novalidate>
+              <div class="setup-notice" style="display: none">
+                Order email is not configured yet.
+              </div>
+
+              <input type="hidden" name="product_type" id="naming-kind" value="teeth" />
+              <input type="hidden" name="certificate_design" id="naming-design" value="shell-ivory" />
+              <input type="hidden" name="hibiscus_id" id="naming-hibiscus" value="" />
+              <input type="hidden" name="photo_title" id="naming-photo" value="" />
+
+              <div class="form-group">
+                <label>What are you naming?</label>
+                <p class="hint" id="naming-kind-label">Name 3 Shark Teeth — $8</p>
+              </div>
+
+              <div id="names-group">
+                <div class="form-group">
+                  <label for="name-one">Name 1</label>
+                  <input id="name-one" name="name_1" type="text" maxlength="32" required placeholder="Poseidon" />
+                </div>
+                <div class="form-group" id="name-two-wrap">
+                  <label for="name-two">Name 2</label>
+                  <input id="name-two" name="name_2" type="text" maxlength="32" placeholder="Luffy" />
+                </div>
+                <div class="form-group" id="name-three-wrap">
+                  <label for="name-three">Name 3</label>
+                  <input id="name-three" name="name_3" type="text" maxlength="32" placeholder="Llamrei" />
+                </div>
+              </div>
+
+              <div class="form-group" id="hibiscus-group" hidden>
+                <label>Which hibiscus?</label>
+                <div class="picker-grid" id="hibiscus-picker"></div>
+              </div>
+
+              <div class="form-group" id="photo-group" hidden>
+                <label for="photo-search">Which gallery photo?</label>
+                <input id="photo-search" type="search" placeholder="Search birds, gators, sunsets…" />
+                <div class="picker-grid" id="photo-picker"></div>
+              </div>
+
+              <div class="form-group">
+                <label>Certificate design</label>
+                <p class="hint">
+                  All ten print on the same 2″ × 3.5″ mini-scroll (business-card
+                  size). Roll it, tie a bow, and it slips into the bottle with
+                  the teeth.
+                </p>
+                <div class="design-grid" id="design-grid"></div>
+              </div>
+
+              <div class="form-group" id="delivery-group" hidden>
+                <label for="naming-delivery">How should we send it?</label>
+                <select id="naming-delivery" name="delivery">
+                  <option value="email">Email the named image (included)</option>
+                  <option value="mail">Also mail the mini certificate — $2</option>
+                </select>
+              </div>
+
+              <div class="totals-line" id="naming-totals">
+                <strong>Total due after you submit: $8 + shipping</strong>
+                <p>Teeth ship in a small bottle, certificate rolled with a bow, inside a padded mailer.</p>
+              </div>
+
+              <div class="form-group">
+                <label for="order-name">Your name</label>
+                <input id="order-name" name="name" type="text" autocomplete="name" required placeholder="Jane Smith" />
+              </div>
+              <div class="form-group">
+                <label for="order-email">Email</label>
+                <input id="order-email" name="email" type="email" autocomplete="email" required placeholder="you@email.com" />
+              </div>
+              <div class="form-group">
+                <label for="order-phone">Phone <span class="hint">(recommended)</span></label>
+                <input id="order-phone" name="phone" type="tel" autocomplete="tel" placeholder="(555) 123-4567" />
+              </div>
+
+              <div id="shipping-fields">
+                <div class="form-group">
+                  <label for="order-address">Shipping street address</label>
+                  <input id="order-address" name="address" type="text" autocomplete="street-address" placeholder="123 Palm Ave" />
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="order-city">City</label>
+                    <input id="order-city" name="city" type="text" autocomplete="address-level2" placeholder="Tampa" />
+                  </div>
+                  <div class="form-group">
+                    <label for="order-state">State</label>
+                    <input id="order-state" name="state" type="text" autocomplete="address-level1" placeholder="FL" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="order-zip">ZIP code</label>
+                  <input id="order-zip" name="zip" type="text" autocomplete="postal-code" placeholder="33601" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" name="show_first_name" value="yes" />
+                  Show my first name on the Named by You gallery
+                  <span class="hint">(optional — we never post your address)</span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="order-notes">Notes <span class="hint">(optional)</span></label>
+                <textarea id="order-notes" name="notes" placeholder="A gift message, a story behind the names…"></textarea>
+              </div>
+
+              <button class="btn btn-primary btn-block" type="submit">
+                Submit naming details
+              </button>
+              <p class="form-after-submit">
+                Next: use a payment button so I can match your payment to this
+                order.
+              </p>
+            </form>
+
+            <div class="payment-box" id="payment-box">
+              <h3>Payment options</h3>
+              <p id="payment-note-text">TBA</p>
+              <div class="payment-buttons">
+                <a
+                  id="stripe-payment-btn"
+                  class="btn btn-payment"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Pay with Stripe (card)
+                </a>
+              </div>
+              <p class="payment-note">TBA</p>
+            </div>
+          </div>
+
+          <aside class="naming-preview-col">
+            <h2>Your mini certificate</h2>
+            <p>
+              Actual size: 2″ × 3.5″. Roll it along the long edge, tie a little
+              bow, and it fits in the bottle with the teeth.
+            </p>
+            <div class="cert-stage">
+              <div class="cert-scale" id="cert-live"></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section section-green" id="named-by-you">
+        <div class="container">
+          <div class="section-header">
+            <h2>Named by You</h2>
+            <p>A rotating gallery of teeth, blooms, and photographs that now have names.</p>
+          </div>
+          <div class="named-strip" id="named-gallery"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-brand" data-business-name>
+              Florida <span>Nature</span> Prints
+            </div>
+            <p data-tagline>Calm moments from the Sunshine State</p>
+          </div>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="name.html">Name</a></li>
+            <li><a href="game.html">Match</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-bottom">
+          &copy; <span id="year"></span>
+          <span data-business-name>Florida Nature Prints</span>. All rights
+          reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+    <script src="js/config.js?v=naming2"></script>
+    <script src="js/main.js?v=naming2"></script>
+    <script src="js/certificates.js?v=naming2"></script>
+    <script src="js/named-registry.js?v=naming2"></script>
+    <script src="js/naming.js?v=naming2"></script>
+  </body>
+</html>

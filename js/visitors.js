@@ -10,6 +10,7 @@
     "": "Home",
     "gallery.html": "Gallery",
     "shop.html": "Shop",
+    "name.html": "Name a piece of Florida",
     "game.html": "Wildlife Match",
     "about.html": "About",
     "contact.html": "Contact",

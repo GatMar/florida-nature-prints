@@ -21,6 +21,8 @@ Your site lives in this folder:
 | `index.html` | Home page |
 | `gallery.html` | Photo gallery |
 | `shop.html` | Buy prints, mugs, and a jar of shark teeth |
+| `name.html` | Name shark teeth, a hibiscus, or a gallery photo |
+| `studio.html` | **Your** naming tracker + 2×3.5 mini-scroll printer (not in the public menu) |
 | `game.html` | Wildlife Match (10-level matching game) |
 | `offline/gator-life/` | Gator Life hop-runner, saved for later |
 | `about.html` | About you |
@@ -29,7 +31,10 @@ Your site lives in this folder:
 | `js/config.js` | **Edit this** for name, email, prices, photos, Stripe, Formspree |
 | `js/main.js` | Makes buttons and forms work (usually leave alone) |
 | `images/prints/` | **Put your photos here** |
+| `images/hibiscus/` | Hibiscus photos for the naming page |
+| `images/named/` | Photos of named teeth / flowers (after you shoot them) |
 | `metrics.html` | **Your** visitor counts (not in the public menu) |
+| `charts, to do, instructions, SOP's/` | **Your** naming SOP PDF (paper, bottle, ribbon, how to fulfill) — not in the public menu |
 
 ---
 
@@ -113,6 +118,49 @@ florida-nature-prints/images/prints/
 ## Shark teeth
 
 The shop currently offers one extra item: a jar of 15 fossil shark teeth ($20 plus shipping). It is listed in `js/config.js` under `souvenirs`. The photo is in `images/souvenirs/`.
+
+---
+
+## Name a piece of Florida
+
+Public page: **https://floridanatureprints.com/name.html** (also the **Name** tab).
+
+| Offer | Price | What they get |
+|-------|-------|----------------|
+| Name 3 shark teeth | $8 + $6 shipping | Three real teeth in a small cork bottle, certificate rolled and tied with a bow, listed in Named by You |
+| Name a hibiscus | $4 | Named image by email; optional mini-scroll +$2 |
+| Name a gallery photo | $3 | Named image by email; optional mini-scroll +$2 |
+
+Prices and hibiscus photos live in `js/config.js` under `naming`. Put your own hibiscus photos in `images/hibiscus/` and list them there.
+
+### Certificates (one paper size)
+
+Printed SOP (what to buy, what not to buy, step-by-step):  
+`charts, to do, instructions, SOP's/Naming-SOP-what-works.pdf`
+
+Every design prints on a **2″ × 3.5″ mini-scroll** — a standard US business card.
+
+- **Paper:** Avery **8371** (inkjet) or **5371** (laser), 10 tear-apart cards per letter sheet. Amazon, Office Depot, Walmart.
+- **Bottle:** 50 ml cork bottle, about **4–5″ tall and 1.4″ wide**. Search “50ml glass bottles with cork 4 inch”. Do not buy the short 2″ squat jars — the scroll plus bow will not fit.
+- Roll along the 3.5″ side (the scroll is 2″ tall), tie a ⅛″ ribbon bow, cork with the three teeth.
+
+Customers pick one of **ten designs** (fonts, colors, background). You print whatever they picked.
+
+### Behind the scenes
+
+Bookmark **https://floridanatureprints.com/studio.html** (not in the public menu).
+
+1. An order email arrives.
+2. Click **New order** and copy in the names.
+3. **Lock names / assign IDs** — this gives registry numbers like `FNP-T-2026-0001`.
+4. Photograph the teeth (or flower / named print).
+5. **Print the mini-scroll**, roll it, tie a bow, bottle it with the teeth.
+6. Pack / email, mark **sent**, then **published**.
+7. Registry → **Download named-registry.js** and replace `js/named-registry.js`, then upload the site.
+
+Orders save in this browser. Use **Download backup** so you don’t lose the list.
+
+Named photos you take go in `images/named/` (put the filename on the order).
 
 ---
 

@@ -82,7 +82,7 @@
   // ---- Visitor counts (js/visitors.js). Skips the private metrics page. ----
   (function initAnalytics() {
     const page = window.location.pathname.split("/").pop() || "index.html";
-    if (page === "metrics.html") return;
+    if (page === "metrics.html" || page === "studio.html") return;
     const s = document.createElement("script");
     s.async = true;
     s.src = "js/visitors.js?v=visitors1";
@@ -191,6 +191,9 @@
           '<a class="btn btn-primary" href="' +
           escapeHtml(buyHref) +
           '">Buy print / mug</a>' +
+          '<a class="btn btn-outline" href="name.html?kind=photo&amp;print=' +
+          encodeURIComponent(photo.title) +
+          '">Name it · $3</a>' +
           "</div>"
         : "") +
       "</div>" +
@@ -666,6 +669,39 @@
             money(ship.souvenir.postage) +
             "</td><td>" +
             money(ship.souvenir.total) +
+            "</td></tr>"
+        );
+      }
+      const namingShip =
+        SITE_CONFIG.naming && SITE_CONFIG.naming.shipping
+          ? SITE_CONFIG.naming.shipping
+          : null;
+      if (namingShip && namingShip.teeth) {
+        rows.push(
+          "<tr><td>Name 3 shark teeth" +
+            (namingShip.teeth.methodTitle
+              ? ' <span class="ship-muted">(' +
+                escapeHtml(namingShip.teeth.methodTitle) +
+                ")</span>"
+              : "") +
+            '</td><td class="ship-muted">' +
+            money(namingShip.teeth.packaging) +
+            '</td><td class="ship-muted">' +
+            money(namingShip.teeth.postage) +
+            "</td><td>" +
+            money(namingShip.teeth.total) +
+            "</td></tr>"
+        );
+      }
+      if (namingShip && namingShip.card) {
+        rows.push(
+          "<tr><td>Mail a mini naming certificate" +
+            '</td><td class="ship-muted">' +
+            money(namingShip.card.packaging) +
+            '</td><td class="ship-muted">' +
+            money(namingShip.card.postage) +
+            "</td><td>" +
+            money(namingShip.card.total) +
             "</td></tr>"
         );
       }
@@ -1512,7 +1548,7 @@
   // ---- Optional beach music (off until the visitor turns it on) ----
   (function initBeachMusic() {
     const page = window.location.pathname.split("/").pop() || "index.html";
-    if (page === "metrics.html") return;
+    if (page === "metrics.html" || page === "studio.html") return;
 
     const STORAGE_KEY = "fnpMusicOn";
     const VOL_KEY = "fnpMusicVolStep";
