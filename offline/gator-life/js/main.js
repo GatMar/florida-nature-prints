@@ -187,7 +187,7 @@
     return null;
   }
 
-  /** One cover card per category — used on home + gallery front */
+  /** One cover card per category - used on home + gallery front */
   function categoryChoiceHtml(cat, opts) {
     opts = opts || {};
     const count = photosInCategory(cat.id).length;
@@ -271,7 +271,7 @@
       } catch (e) {}
     }
 
-    // Mixed “all categories” grid — photos jumbled, not grouped by theme
+    // Mixed “all categories” grid - photos jumbled, not grouped by theme
     const mixedWrap = document.createElement("div");
     mixedWrap.id = "gallery-all-mixed";
     mixedWrap.className = "gallery-all-mixed";
@@ -430,7 +430,7 @@
       });
     }
 
-    // Deep link: gallery.html?cat=gators — else default to mixed all
+    // Deep link: gallery.html?cat=gators - else default to mixed all
     const params = new URLSearchParams(window.location.search);
     const startCat = params.get("cat");
     if (startCat && categoryMeta(startCat)) {
@@ -487,7 +487,7 @@
 
     function money(n) {
       const x = Number(n);
-      if (isNaN(x)) return "—";
+      if (isNaN(x)) return "-";
       return "$" + (x % 1 === 0 ? String(x) : x.toFixed(2));
     }
 
@@ -517,7 +517,7 @@
         "Flat shipping fees (not a live rate calculator). " +
         "Prints go out via " +
         (ship.carrier || "USPS Priority Mail") +
-        ", rolled in a hard mailing tube — same tube size for every print. " +
+        ", rolled in a hard mailing tube, same tube size for every print. " +
         "Region: " +
         (ship.region || "Continental U.S.") +
         ".";
@@ -652,7 +652,7 @@
             s.price +
             '">' +
             escapeHtml(s.label) +
-            " — $" +
+            ": $" +
             s.price +
             "</option>"
           );
@@ -840,7 +840,7 @@
       if (isMug && ship.mug) {
         shippingTotal = String(ship.mug.total);
         shippingLine =
-          "Mug padded box — packaging $" +
+          "Mug padded box, packaging $" +
           ship.mug.packaging +
           " + postage $" +
           ship.mug.postage +
@@ -864,7 +864,7 @@
               (ship.methodTitle || "Tube") +
               " (" +
               (ship.tube && ship.tube.label ? ship.tube.label : "uniform tube") +
-              ") — packaging $" +
+              "), packaging $" +
               r.packaging +
               " + postage $" +
               r.postage +
@@ -879,7 +879,7 @@
     const payload = {
       _subject:
         (isMug ? "☕ NEW MUG ORDER" : "🖼️ NEW PRINT ORDER") +
-        " — " +
+        " | " +
         SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
@@ -904,7 +904,7 @@
       gator_coupon: (form.gator_coupon && form.gator_coupon.value) || "(none)",
       print_discount:
         form.gator_coupon && form.gator_coupon.value
-          ? "Apply extra 10% off prints — Gator Life coupon " +
+          ? "Apply extra 10% off prints: Gator Life coupon " +
             form.gator_coupon.value
           : "(none)",
       // Plain-text block for SMS gateways (short)
@@ -931,7 +931,7 @@
   // ---- Contact form ----
   setupForm("contact-form", "contact-message", function (form) {
     const payload = {
-      _subject: "Website contact — " + SITE_CONFIG.businessName,
+      _subject: "Website contact: " + SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
       form_type: "Contact",
@@ -1054,7 +1054,7 @@
         input.value = d.coupon.code;
         if (note) {
           note.textContent =
-            "Gator Life complete — extra 10% off prints with code " +
+            "Gator Life complete: extra 10% off prints with code " +
             d.coupon.code +
             ".";
         }

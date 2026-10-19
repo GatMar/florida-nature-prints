@@ -1,7 +1,7 @@
 /**
- * Gator Life — original Florida wetland hop-runner
+ * Gator Life - original Florida wetland hop-runner
  * A hatchling walks ponds and canals, climbs hills, hunts, and learns facts.
- * Original design — not affiliated with any trademarked game.
+ * Original design - not affiliated with any trademarked game.
  */
 (function () {
   "use strict";
@@ -22,7 +22,7 @@
       name: "Hattie the Heron",
       file: "images/game/heron.png",
       tag: "HERON SAYS",
-      line: "Stand still a second — then hop on!",
+      line: "Stand still a second, then hop on!",
     },
     {
       id: "spoonbill",
@@ -50,7 +50,7 @@
       name: "Tess the Turtle",
       file: "images/game/turtle.png",
       tag: "TURTLE SAYS",
-      line: "No rush — I’ve got a shell full of time.",
+      line: "No rush. I’ve got a shell full of time.",
     },
     {
       id: "gator",
@@ -126,9 +126,9 @@
 
   const FACTS = [
     { label: "Alligator", text: "Hatchling alligators wear bright yellow bands that help them hide in sunlit grass and reeds." },
-    { label: "Sawgrass", text: "Sawgrass isn’t a true grass — it’s a sedge, and its leaf edges are finely toothed like a saw." },
+    { label: "Sawgrass", text: "Sawgrass isn’t a true grass. It’s a sedge, and its leaf edges are finely toothed like a saw." },
     { label: "Great Blue Heron", text: "Great blue herons hunt by standing statue-still in shallows, then striking with a spear-like bill." },
-    { label: "Wetland", text: "Florida wetlands — marshes, sloughs, and cypress strands — are nurseries for fish, birds, and reptiles." },
+    { label: "Wetland", text: "Florida wetlands (marshes, sloughs, and cypress strands) are nurseries for fish, birds, and reptiles." },
     { label: "Roseate Spoonbill", text: "Roseate spoonbills sweep their spatula bills side to side to snap up small fish and shrimp." },
     { label: "Safety", text: "Never feed wild alligators. Fed gators lose their fear of people and become dangerous." },
     { label: "White Ibis", text: "White ibises probe soft mud with curved bills. A pink face and bill means an adult in breeding colors." },
@@ -136,17 +136,17 @@
     { label: "Manatee", text: "Florida manatees are gentle mammals. They graze seagrass and must surface to breathe air." },
     { label: "Anhinga", text: "Anhingas spear fish underwater, then spread their wings in the sun because their feathers get soaked." },
     { label: "Nest Heat", text: "Nest temperature helps decide whether baby alligators become male or female." },
-    { label: "Snowy Egret", text: "Snowy egrets are famous for their “golden slippers” — bright yellow feet they shuffle to stir prey." },
+    { label: "Snowy Egret", text: "Snowy egrets are famous for their “golden slippers”: bright yellow feet they shuffle to stir prey." },
     { label: "Cypress", text: "Bald cypress trees grow knobby “knees” from their roots. The knees may help the tree breathe in wet soil." },
     { label: "Softshell Turtle", text: "Florida softshell turtles have pancake-flat shells and a snorkel snout for breathing while buried in mud." },
     { label: "Osprey", text: "Ospreys hover, then dive feet-first for fish. They nest on tall platforms all over coastal Florida." },
-    { label: "Spanish Moss", text: "Spanish moss is not a moss and not from Spain — it’s a bromeliad that hangs on trees and drinks the air." },
+    { label: "Spanish Moss", text: "Spanish moss is not a moss and not from Spain. It’s a bromeliad that hangs on trees and drinks the air." },
     { label: "Wood Stork", text: "Wood storks feed by feel: they snap their bills shut when a fish touches them in cloudy water." },
     { label: "Limpkin", text: "Limpkins wail at dusk and specialize in apple snails, prying them with a slightly curved bill." },
     { label: "Mangrove", text: "Red mangroves drop arching prop roots that break waves, trap sediment, and hide baby fish." },
     { label: "Gopher Tortoise", text: "Gopher tortoises dig long burrows. Dozens of other species may shelter in one tortoise home." },
     { label: "Double-crested Cormorant", text: "Cormorants chase fish underwater, then perch with wings spread to dry their less-waterproof feathers." },
-    { label: "Pink Color", text: "Spoonbills turn pink from pigments in the crustaceans they eat — a living sunset on wings." },
+    { label: "Pink Color", text: "Spoonbills turn pink from pigments in the crustaceans they eat, a living sunset on wings." },
     { label: "Key Deer", text: "Key deer are a tiny white-tailed deer that live only in the Florida Keys. Drive slowly there." },
     { label: "American Alligator", text: "American alligators are native to the southeastern U.S. They prefer fresh water over the open ocean." },
     { label: "Tricolored Heron", text: "Tricolored herons dash through shallows, wings partly open, herding minnows into a corner." },
@@ -168,9 +168,9 @@
     { label: "Sandhill Crane", text: "Florida sandhill cranes are tall gray birds with a red cap. They often stroll through ranch pastures." },
     { label: "Air Plants", text: "Bromeliads (air plants) perch on cypress branches and hold rainwater that tree frogs use as tiny ponds." },
     { label: "Roseate Tern", text: "Some Florida beaches host nesting terns. Stay off roped nesting areas in spring and summer." },
-    { label: "Alligator Gar", text: "Alligator gar are giant armored fish of slow rivers — not alligators, despite the name and snout." },
+    { label: "Alligator Gar", text: "Alligator gar are giant armored fish of slow rivers, not alligators, despite the name and snout." },
     { label: "Magnificent Frigatebird", text: "Frigatebirds soar over the Keys and steal fish from other birds rather than diving themselves." },
-    { label: "Wetland Filter", text: "Healthy marshes filter water and soak up storm surge — wildlife habitat that also protects towns." },
+    { label: "Wetland Filter", text: "Healthy marshes filter water and soak up storm surge: wildlife habitat that also protects towns." },
     { label: "Mottled Duck", text: "Mottled ducks are Florida’s resident dabbling duck. They prefer freshwater marshes to the open Gulf." },
     { label: "Keep Distance", text: "The best wildlife photo is taken from far away. If an animal changes what it’s doing, you are too close." },
     { label: "River Otter", text: "North American river otters slide, dive, and hunt fish in Florida creeks. Watch for a sleek brown head." },
@@ -2187,7 +2187,7 @@
       ctx.fillText(world.failMsg || "Try again!", W / 2, H * 0.42);
       ctx.fillStyle = "#e8f5ec";
       ctx.font = "bold 15px system-ui,sans-serif";
-      ctx.fillText("Same goal — hop and hunt", W / 2, H * 0.54);
+      ctx.fillText("Same goal: hop and hunt", W / 2, H * 0.54);
       return;
     }
     if (!world.goFlash || world.goFlash <= 0) return;
@@ -2343,7 +2343,7 @@
     if (hint) {
       hint.textContent =
         idx === 19
-          ? m.text + " Watch the sky — a great horned owl may swoop."
+          ? m.text + " Watch the sky. A great horned owl may swoop."
           : idx === 0
             ? m.text
             : m.text;
@@ -2390,7 +2390,7 @@
       const icon = done ? "✅" : m.hazard === "heron" ? "🐦" : "🐊";
       btn.innerHTML =
         '<span class="emoji">' + icon + "</span>" + (i + 1);
-      btn.title = m.title + " — " + m.text;
+      btn.title = m.title + ": " + m.text;
       btn.addEventListener("click", function () {
         startLevel(i);
       });

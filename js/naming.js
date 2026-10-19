@@ -103,7 +103,7 @@
     if (!sel) return;
     if (kind === "photo") {
       sel.innerHTML =
-        '<option value="digital">Digital only — keep it in the gallery under this name ($3)</option>' +
+        '<option value="digital">Digital only: keep it in the gallery under this name ($3)</option>' +
         '<option value="print-addon">Name it on a print I order (print price + $3)</option>';
       if (hint) {
         hint.textContent =
@@ -112,7 +112,7 @@
     } else {
       sel.innerHTML =
         '<option value="email">Email the named image (included)</option>' +
-        '<option value="mail">Also mail the mini certificate — $2</option>';
+        '<option value="mail">Also mail the mini certificate: $2</option>';
       if (hint) {
         hint.textContent = "Hibiscus naming includes the named image by email.";
       }
@@ -135,7 +135,7 @@
       total = Number(p.price);
       detail =
         money(p.price) +
-        " digital only — the photo is kept in our gallery under your name. We do not email a personalized file.";
+        " digital only. The photo is kept in our gallery under your name. We do not email a personalized file.";
     } else if (p.physical) {
       detail =
         "Includes " +
@@ -153,11 +153,11 @@
         money(ship.total) +
         " to mail the mini certificate.";
     } else {
-      detail = "Includes " + money(p.price) + ". Named image sent by email — no shipping.";
+      detail = "Includes " + money(p.price) + ". Named image sent by email, no shipping.";
     }
     box.querySelector("strong").textContent =
       total === 0
-        ? "Due here: $0 — pay naming with the print"
+        ? "Due here: $0, pay naming with the print"
         : "Total due after you submit: " + money(total);
     box.querySelector("p").textContent = detail;
   }
@@ -167,7 +167,7 @@
     if (!p) return;
     if ($("naming-kind")) $("naming-kind").value = p.id;
     if ($("naming-kind-label")) {
-      $("naming-kind-label").textContent = p.label + " — $" + p.price;
+      $("naming-kind-label").textContent = p.label + ": $" + p.price;
     }
     document.querySelectorAll(".offer-card").forEach(function (card) {
       card.classList.toggle("is-selected", card.getAttribute("data-id") === p.id);
@@ -382,7 +382,7 @@
     var items = window.NAMED_REGISTRY || [];
     if (!items.length) {
       el.innerHTML =
-        '<p class="named-empty" style="grid-column:1/-1">No names yet — be the first. A shark tooth, a hibiscus, or a wild Florida scene is waiting.</p>';
+        '<p class="named-empty" style="grid-column:1/-1">No names yet. Be the first. A shark tooth, a hibiscus, or a wild Florida scene is waiting.</p>';
       return;
     }
     var shown = items.slice(-12).reverse();
@@ -502,7 +502,7 @@
       if (p.id === "photo") total = Number(p.price);
       var design = C && C.designById($("naming-design").value);
       var payload = {
-        _subject: "🌿 NEW NAMING ORDER — " + p.label + " — " + SITE_CONFIG.businessName,
+        _subject: "🌿 NEW NAMING ORDER: " + p.label + " | " + SITE_CONFIG.businessName,
         _template: "table",
         _captcha: "false",
         form_type: "Naming",
@@ -524,9 +524,9 @@
             : $("naming-delivery").value === "mail"
               ? "Email image + mail mini certificate"
               : p.id === "photo"
-                ? "Digital only — named in the gallery (no personalized file emailed)"
+                ? "Digital only, named in the gallery (no personalized file emailed)"
                 : "Email named image",
-        shipping: ship.methodTitle + " — $" + ship.total,
+        shipping: ship.methodTitle + ": $" + ship.total,
         shipping_total: "$" + ship.total,
         order_total: "$" + total,
         name: form.name.value,

@@ -1,4 +1,4 @@
-/* Gator Life — original Florida wetland hop-runner (mobile-first) */
+/* Gator Life - original Florida wetland hop-runner (mobile-first) */
 
 .game-page {
   background: radial-gradient(ellipse at top, #3a2410 0%, #1a1408 45%, #0a100c 100%);
@@ -201,7 +201,7 @@
   line-height: 1.35;
 }
 
-/* Big hop pad — replaces the maze D-pad */
+/* Big hop pad - replaces the maze D-pad */
 .hop-btn {
   display: flex;
   flex-direction: column;
@@ -246,7 +246,7 @@
   filter: brightness(1.08);
 }
 
-/* D-pad — large diamond for thumbs */
+/* D-pad - large diamond for thumbs */
 .dpad {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -398,7 +398,7 @@
   width: auto;
   max-width: min(90vw, 320px);
   object-fit: contain;
-  /* Clear hatchling — no speech bubble */
+  /* Clear hatchling - no speech bubble */
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.5));
   image-rendering: auto;
   background: transparent;
@@ -664,7 +664,7 @@
   width: 100%;
 }
 
-/* Compact wildlife quiz — small card, never fills the trail */
+/* Compact wildlife quiz - small card, never fills the trail */
 .comic-overlay {
   position: absolute;
   inset: 0;

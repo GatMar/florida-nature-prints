@@ -40,17 +40,13 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   // Leave blank ("") to only get email (no text).
   smsAlertEmail: "",
 
-  // Also CC any extra email (assistant, spouse, Gmail, etc.) — blank = none
+  // Also CC any extra email (assistant, spouse, Gmail, etc.) - blank = none
   orderCcEmail: "",
 
   // ---- Website visitors (private page: metrics.html) ----
   // Counts unique people and page views. The metrics page also lists
   // recent visitors by city/region (browsers do not share a name).
   analytics: {
-    storePath: "fnp-vlog-k8w3n1-08-18",
-    storeTitle: "fnp-vlog-k8w3n1",
-    storeToken: "3f969f0b6c1f637706f9f3805ad54c520c0699c4a16951314dd9029479d9",
-    counterSpace: "floridanatureprints",
     // GoatCounter site code, e.g. "floridanatureprints" for floridanatureprints.goatcounter.com.
     // Blank = GoatCounter stays off. See STATS-SETUP.md. Never put an API key here.
     goatcounterCode: "",
@@ -129,13 +125,13 @@ var SITE_CONFIG = window.SITE_CONFIG = {
       heightIn: 3.5,
       avery: "8371",
       why:
-        "US business-card size — the small card you can actually buy. Avery 8371 (inkjet) or 5371 (laser), 10 tear-apart cards per letter sheet, at Amazon, Office Depot, or Walmart. Roll along the 3.5\" side so the scroll is 2\" tall, tie a thin ribbon bow.",
+        "US business-card size, the small card you can actually buy. Avery 8371 (inkjet) or 5371 (laser), 10 tear-apart cards per letter sheet, at Amazon, Office Depot, or Walmart. Roll along the 3.5\" side so the scroll is 2\" tall, tie a thin ribbon bow.",
     },
     bottle: {
-      label: '50 ml tall cork bottle, about 4–5" high and 1.4" wide',
+      label: '50 ml tall cork bottle, about 4 to 5" high and 1.4" wide',
       search: "50ml glass bottles with cork 4 inch",
       why:
-        "This is the common bottle that actually fits a 2\" scroll, a bow, and three teeth. Skip the short squat 50 ml jars (about 2\" tall) — the scroll will not fit.",
+        "This is the common bottle that actually fits a 2\" scroll, a bow, and three teeth. Skip the short squat 50 ml jars (about 2\" tall). The scroll will not fit.",
     },
     products: [
       {
@@ -150,7 +146,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
         lede:
           "You name them, you pay for them, you keep them. Three real Florida shark teeth for $8.",
         body:
-          "These are genuine teeth found along the shores of Southwest Florida. You choose the three names, we photograph each tooth with its name, and we mail all three in a small glass bottle — the certificate rolled and tied with a little bow.",
+          "These are genuine teeth found along the shores of Southwest Florida. You choose the three names, we photograph each tooth with its name, and we mail all three in a small glass bottle, the certificate rolled and tied with a little bow.",
         galleryNote: "Your named teeth will also appear in our rotating gallery.",
         closing: "Three little pieces of Florida, now yours.",
       },
@@ -179,12 +175,12 @@ var SITE_CONFIG = window.SITE_CONFIG = {
         folder: "prints",
         kicker: "Name what you love",
         lede:
-          "For $3 you can name a gallery photo digitally — it stays in Named by You under your chosen name.",
+          "For $3 you can name a gallery photo digitally. It stays in Named by You under your chosen name.",
         body:
           "Pick a bird, alligator, shell, sunset, or any image you love. Digital only: we do not email a personalized file. The photo is kept in our gallery under the name you choose. Want it on your wall? Add the name for an extra $3 when you order the print.",
         galleryNote: "",
         closing:
-          "You can’t keep a free-flying bird or a wild alligator — but you can give it a name that stays forever.",
+          "You can’t keep a free-flying bird or a wild alligator, but you can give it a name that stays forever.",
       },
     ],
     hibiscus: [
@@ -233,7 +229,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
         total: 2,
       },
       digital: {
-        methodTitle: "Digital only — named in the gallery",
+        methodTitle: "Digital only, named in the gallery",
         packaging: 0,
         postage: 0,
         total: 0,
@@ -242,7 +238,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     printNameAddOn: 3,
   },
 
-  // Sister bakery (cookies + pantry spices) — used as quiet ads around the match game
+  // Sister bakery (cookies + pantry spices) - used as quiet ads around the match game
   sisterSite: {
     name: "MariCooks",
     url: "https://maricooks.com",
@@ -267,11 +263,11 @@ var SITE_CONFIG = window.SITE_CONFIG = {
    * USPS nonstandard-length fee.
    *
    * Tube cost reality (approx., early 2026):
-   *   - Bulk (Uline carton ~25): ~$1.50–$3.50 each (thin vs heavy wall)
-   *   - Small packs / Amazon singles: often ~$5–$10 each
+   *   - Bulk (Uline carton ~25): ~$1.50 to $3.50 each (thin vs heavy wall)
+   *   - Small packs / Amazon singles: often ~$5 to $10 each
    * packaging below assumes small-pack buying (~$5 tube + wrap/label ~$1 = $6).
    * totals = flat fee charged to customer (packaging + postage buffer).
-   * Edit any number anytime — shop page reads this automatically.
+   * Edit any number anytime - shop page reads this automatically.
    */
   shipping: {
     region: "Continental U.S.",
@@ -284,7 +280,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
       lengthIn: 24,
       packageCost: 6,
       why:
-        "Hard tubes are the standard way to mail unframed prints — they protect against creases better than a flat mailer, especially for 16×20 and 20×30. One tube size for every print: rolled along the shorter edge, tissue-wrapped, then capped. Packaging cost assumes a real-world small-pack tube (~$5) plus wrap and label (~$1), not bulk warehouse pricing.",
+        "Hard tubes are the standard way to mail unframed prints. They protect against creases better than a flat mailer, especially for 16×20 and 20×30. One tube size for every print: rolled along the shorter edge, tissue-wrapped, then capped. Packaging cost assumes a real-world small-pack tube (~$5) plus wrap and label (~$1), not bulk warehouse pricing.",
     },
     // packaging + estimated USPS Priority postage → flat fee (total) charged to customer
     printRates: [
@@ -332,7 +328,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
       total: 8,
     },
     note:
-      "These are flat fees (not a live quote). Ships via USPS Priority Mail with tracking within the continental U.S. Alaska, Hawaii, and international — message me for a quote.",
+      "These are flat fees (not a live quote). Ships via USPS Priority Mail with tracking within the continental U.S. Alaska, Hawaii, and international: message me for a quote.",
   },
 
   /**

@@ -79,13 +79,13 @@
     });
   }
 
-  // ---- Visitor counts (js/visitors.js). Skips the private metrics page. ----
+  // ---- Page and photo counts (js/goatcounter.js). Off until goatcounterCode is set. ----
   (function initAnalytics() {
     const page = window.location.pathname.split("/").pop() || "index.html";
     if (page === "metrics.html" || page === "studio.html") return;
     const s = document.createElement("script");
     s.async = true;
-    s.src = "js/visitors.js?v=picks5";
+    s.src = "js/goatcounter.js?v=p6";
     document.head.appendChild(s);
   })();
 
@@ -289,7 +289,7 @@
     return null;
   }
 
-  /** One cover card per category — used on home + gallery front */
+  /** One cover card per category - used on home + gallery front */
   function categoryChoiceHtml(cat, opts) {
     opts = opts || {};
     const count = photosInCategory(cat.id).length;
@@ -375,7 +375,7 @@
       } catch (e) {}
     }
 
-    // Mixed “all categories” grid — photos jumbled, not grouped by theme
+    // Mixed “all categories” grid - photos jumbled, not grouped by theme
     const mixedWrap = document.createElement("div");
     mixedWrap.id = "gallery-all-mixed";
     mixedWrap.className = "gallery-all-mixed";
@@ -536,7 +536,7 @@
       });
     }
 
-    // Deep link: gallery.html?cat=gators — else default to mixed all
+    // Deep link: gallery.html?cat=gators - else default to mixed all
     const params = new URLSearchParams(window.location.search);
     const startCat = params.get("cat");
     if (startCat && categoryMeta(startCat)) {
@@ -647,7 +647,7 @@
 
     function money(n) {
       const x = Number(n);
-      if (isNaN(x)) return "—";
+      if (isNaN(x)) return "-";
       return "$" + (x % 1 === 0 ? String(x) : x.toFixed(2));
     }
 
@@ -677,7 +677,7 @@
         "Flat shipping fees (not a live rate calculator). " +
         "Prints go out via " +
         (ship.carrier || "USPS Priority Mail") +
-        ", rolled in a hard mailing tube — same tube size for every print. " +
+        ", rolled in a hard mailing tube, same tube size for every print. " +
         "Region: " +
         (ship.region || "Continental U.S.") +
         ".";
@@ -879,8 +879,8 @@
       (items || [])
         .map(function (s) {
           const tag = s.custom
-            ? escapeHtml(s.label) + " (custom order) — from $" + s.price
-            : escapeHtml(s.label) + " — $" + s.price;
+            ? escapeHtml(s.label) + " (custom order), from $" + s.price
+            : escapeHtml(s.label) + ": $" + s.price;
           const val = s.custom
             ? escapeHtml(s.label) + " (custom order) - from $" + s.price
             : escapeHtml(s.label) + " - $" + s.price;
@@ -907,7 +907,7 @@
         s.price +
         '">' +
         escapeHtml(s.label) +
-        " — $" +
+        ": $" +
         s.price +
         "</option>";
     });
@@ -921,7 +921,7 @@
           s.price +
           '">' +
           escapeHtml(s.label) +
-          " — custom, from $" +
+          ", custom, from $" +
           s.price +
           "</option>";
       });
@@ -1171,7 +1171,7 @@
       if (isSouvenir && ship.souvenir) {
         shippingTotal = String(ship.souvenir.total);
         shippingLine =
-          "Souvenir padded mailer — packaging $" +
+          "Souvenir padded mailer, packaging $" +
           ship.souvenir.packaging +
           " + postage $" +
           ship.souvenir.postage +
@@ -1180,7 +1180,7 @@
       } else if (isMug && ship.mug) {
         shippingTotal = String(ship.mug.total);
         shippingLine =
-          "Mug padded box — packaging $" +
+          "Mug padded box, packaging $" +
           ship.mug.packaging +
           " + postage $" +
           ship.mug.postage +
@@ -1204,7 +1204,7 @@
               (ship.methodTitle || "Tube") +
               " (" +
               (ship.tube && ship.tube.label ? ship.tube.label : "uniform tube") +
-              ") — packaging $" +
+              "), packaging $" +
               r.packaging +
               " + postage $" +
               r.postage +
@@ -1223,7 +1223,7 @@
           : isMug
             ? "☕ NEW MUG ORDER"
             : "🖼️ NEW PRINT ORDER") +
-        " — " +
+        " | " +
         SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
@@ -1255,7 +1255,7 @@
         !isSouvenir &&
         form.name_the_print &&
         form.name_the_print.checked
-          ? "YES — +$3. Given name: " +
+          ? "YES, +$3. Given name: " +
             ((form.print_given_name && form.print_given_name.value) || "(blank)") +
             ". List in Named by You. Do not email a personalized file."
           : "(no)",
@@ -1291,7 +1291,7 @@
   // ---- Contact form ----
   setupForm("contact-form", "contact-message", function (form) {
     const payload = {
-      _subject: "Website contact — " + SITE_CONFIG.businessName,
+      _subject: "Website contact: " + SITE_CONFIG.businessName,
       _template: "table",
       _captcha: "false",
       form_type: "Contact",
@@ -1413,11 +1413,11 @@
       const d = JSON.parse(localStorage.getItem(matchKey) || "{}");
       if (d.reward && d.reward.code === code) {
         if (d.reward.kind === "shark-tooth") {
-          return "Wildlife Match gift — honor a free jar of 15 shark teeth. Code " + code;
+          return "Wildlife Match gift: honor a free jar of 15 shark teeth. Code " + code;
         }
 
         return (
-          "Wildlife Match gift — apply $" +
+          "Wildlife Match gift: apply $" +
           (d.reward.credit || 8) +
           " credit toward this order. Code " +
           code
@@ -1729,7 +1729,7 @@
     dock.className = "music-dock";
     dock.innerHTML =
       '<button type="button" class="music-vol is-down" aria-label="Quieter">−</button>' +
-      '<button type="button" class="music-toggle" aria-pressed="false" title="Optional beach music — My Last Mojito by Michael Ramir C. (Mixkit, royalty-free)">' +
+      '<button type="button" class="music-toggle" aria-pressed="false" title="Optional beach music: My Last Mojito by Michael Ramir C. (Mixkit, royalty-free)">' +
       '<span class="music-toggle-icon" aria-hidden="true">♪</span>' +
       '<span class="music-toggle-label">Music</span>' +
       "</button>" +

@@ -34,7 +34,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   // Leave blank ("") to only get email (no text).
   smsAlertEmail: "",
 
-  // Also CC any extra email (assistant, spouse, Gmail, etc.) — blank = none
+  // Also CC any extra email (assistant, spouse, Gmail, etc.) - blank = none
   orderCcEmail: "",
 
   // ---- Payment options ----
@@ -79,11 +79,11 @@ var SITE_CONFIG = window.SITE_CONFIG = {
    * USPS nonstandard-length fee.
    *
    * Tube cost reality (approx., early 2026):
-   *   - Bulk (Uline carton ~25): ~$1.50–$3.50 each (thin vs heavy wall)
-   *   - Small packs / Amazon singles: often ~$5–$10 each
+   *   - Bulk (Uline carton ~25): ~$1.50 to $3.50 each (thin vs heavy wall)
+   *   - Small packs / Amazon singles: often ~$5 to $10 each
    * packaging below assumes small-pack buying (~$5 tube + wrap/label ~$1 = $6).
    * totals = flat fee charged to customer (packaging + postage buffer).
-   * Edit any number anytime — shop page reads this automatically.
+   * Edit any number anytime - shop page reads this automatically.
    */
   shipping: {
     region: "Continental U.S.",
@@ -96,7 +96,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
       lengthIn: 24,
       packageCost: 6,
       why:
-        "Hard tubes are the standard way to mail unframed prints — they protect against creases better than a flat mailer, especially for 16×20 and 20×30. One tube size for every print: rolled along the shorter edge, tissue-wrapped, then capped. Packaging cost assumes a real-world small-pack tube (~$5) plus wrap and label (~$1), not bulk warehouse pricing.",
+        "Hard tubes are the standard way to mail unframed prints. They protect against creases better than a flat mailer, especially for 16×20 and 20×30. One tube size for every print: rolled along the shorter edge, tissue-wrapped, then capped. Packaging cost assumes a real-world small-pack tube (~$5) plus wrap and label (~$1), not bulk warehouse pricing.",
     },
     // packaging + estimated USPS Priority postage → flat fee (total) charged to customer
     printRates: [
@@ -132,7 +132,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
       total: 12,
     },
     note:
-      "These are flat fees (not a live quote). Ships via USPS Priority Mail with tracking within the continental U.S. Alaska, Hawaii, and international — message me for a quote.",
+      "These are flat fees (not a live quote). Ships via USPS Priority Mail with tracking within the continental U.S. Alaska, Hawaii, and international: message me for a quote.",
   },
 
   /**
@@ -320,7 +320,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     {
       file: "sandhill-crane-elegant.jpeg",
       title: "Sandhill Crane Portrait",
-      desc: "Elegant close-up by blue water — a top fan favorite",
+      desc: "Elegant close-up by blue water, a top fan favorite",
       category: "herons",
     },
     {
@@ -346,7 +346,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     {
       file: "snowy-egret-hunter.jpeg",
       title: "Snowy Egret Hunter",
-      desc: "Yellow feet and black bill — Florida’s crab specialist",
+      desc: "Yellow feet and black bill, Florida’s crab specialist",
       category: "herons",
     },
     {
@@ -643,7 +643,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
     {
       file: "gator-mid-yawn.jpeg",
       title: "Gator Mid-Yawn",
-      desc: "Caught mid-yawn on a grassy bank — high-traffic favorite",
+      desc: "Caught mid-yawn on a grassy bank, a high-traffic favorite",
       category: "gators",
     },
     {

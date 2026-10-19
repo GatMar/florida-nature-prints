@@ -1,5 +1,5 @@
 /**
- * Gator Life quiz bank — alligators, Florida birds, and wetland wildlife
+ * Gator Life quiz bank - alligators, Florida birds, and wetland wildlife
  * - Question text never includes the correct answer
  * - Exactly one clearly correct choice
  * - Other choices are loosely related (plausible mistakes), not silly nonsense
@@ -113,7 +113,7 @@
     ["Why does an anhinga often sit with wings spread?", "To dry feathers after swimming", "To signal airplanes", "To look larger than a manatee", "To block the sun from the whole marsh", "Anhinga feathers get wet when they swim, so they spread their wings to dry."],
     ["How do brown pelicans often catch fish?", "By plunge-diving and scooping with a throat pouch", "By running underwater on the bottom only", "By stealing nests from alligators", "By snapping bills like scissors on land only", "Brown pelicans plunge from the air and scoop fish in a large throat pouch."],
     ["What are a snowy egret’s yellow feet sometimes called?", "Golden slippers", "Marsh mittens", "Cypress boots", "Sawgrass sandals", "Snowy egrets are nicknamed for their bright yellow “golden slipper” feet."],
-    ["How do wood storks often find fish in cloudy water?", "By snap-feeding when something touches the bill", "By using a loud bark to scare fish up", "By glowing in the dark", "By following only sailboats", "Wood storks feed by touch — the bill snaps shut when prey brushes it."],
+    ["How do wood storks often find fish in cloudy water?", "By snap-feeding when something touches the bill", "By using a loud bark to scare fish up", "By glowing in the dark", "By following only sailboats", "Wood storks feed by touch. The bill snaps shut when prey brushes it."],
     ["What do limpkins especially like to eat in Florida wetlands?", "Apple snails", "Coconuts only", "Pine cones only", "Dry desert seeds only", "Limpkins are well known for eating apple snails."],
     ["How does a black skimmer catch many of its meals?", "By flying with the lower bill slicing the water", "By burying itself in sand all day", "By hunting only in mountain snow", "By waiting inside gator nests", "Skimmers fly low and cut the water with the longer lower bill until they hit a fish."],
     ["Where do ospreys often nest in Florida?", "On tall platforms, dead trees, or channel markers", "Only inside underwater caves", "Only on floating lily pads", "Only in attic vents of houses", "Ospreys commonly nest high on platforms, snags, and markers near water."],
@@ -129,10 +129,10 @@
     ["What is a Florida panther?", "A rare cougar that still lives in parts of south Florida", "A pink wading bird", "A kind of small minnow", "A type of mangrove tree", "The Florida panther is a rare subspecies of cougar."],
     ["Where do Key deer live?", "Only in the Florida Keys", "Only in the Rocky Mountains", "Only in downtown lakes of other states", "Only in the open Atlantic", "Key deer are a tiny white-tailed deer found in the Florida Keys."],
     ["What is unusual about a Florida softshell turtle’s shell?", "It is flat and leathery rather than a high hard dome", "It is made of glass", "It is covered in thick fur", "It glows bright blue at noon", "Softshells have a flat, leathery shell and a long snorkel-like snout."],
-    ["What should you do if you see an unknown snake near water?", "Give it plenty of space", "Pick it up to check the colors", "Corner it for a photo", "Feed it leftover fish", "Give every unknown snake room — some water snakes can be dangerous."],
+    ["What should you do if you see an unknown snake near water?", "Give it plenty of space", "Pick it up to check the colors", "Corner it for a photo", "Feed it leftover fish", "Give every unknown snake room. Some water snakes can be dangerous."],
     ["What do river otters hunt in Florida creeks?", "Fish and other small water animals", "Only ripe mangoes", "Only tree bark", "Only dry pine needles", "River otters are playful hunters of fish and other small aquatic prey."],
     ["What do red mangrove prop roots mainly help with?", "Holding the tree, trapping sediment, and hiding young fish", "Collecting rain for desert travel", "Making the water saltier", "Blocking all sunlight forever", "Prop roots stabilize the shoreline and create a nursery for fish."],
-    ["What is Spanish moss, really?", "A bromeliad that hangs on trees and takes moisture from the air", "A true moss that only grows in Spain", "A kind of seaweed from the open Gulf", "A fungus that eats cypress wood overnight", "Spanish moss is a bromeliad — not a moss, and not from Spain."],
+    ["What is Spanish moss, really?", "A bromeliad that hangs on trees and takes moisture from the air", "A true moss that only grows in Spain", "A kind of seaweed from the open Gulf", "A fungus that eats cypress wood overnight", "Spanish moss is a bromeliad, not a moss, and not from Spain."],
     ["What do healthy marshes do for nearby towns?", "Filter water and help soak up storm water", "Remove the need for any plants", "Turn lakes into deserts", "Stop the tide on the moon", "Wetlands clean water and can buffer storms while giving wildlife a home."],
     ["What is a good rule when photographing wildlife?", "Stay far enough that the animal does not change its behavior", "Walk up until it looks at the camera", "Clap so it turns toward you", "Block its path so it cannot leave", "If wildlife changes what it is doing, you are too close."],
     ["What is sawgrass, botanically?", "A sedge with finely toothed leaf edges", "A true grass that only grows on mountains", "A kind of palm tree", "A floating ocean algae", "Sawgrass is a sedge; the leaf edges feel saw-toothed."],
@@ -221,7 +221,7 @@
         // Vary wording without revealing answer
         const styles = [
           opener + questionBase,
-          "Level " + (level + 1) + " — " + questionBase,
+          "Level " + (level + 1) + ": " + questionBase,
           questionBase,
           opener + questionBase.replace(/\?$/, "") + "?",
         ];

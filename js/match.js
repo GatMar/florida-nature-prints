@@ -1,5 +1,5 @@
 /**
- * Florida Wildlife Match — 15-level memory game
+ * Florida Wildlife Match - 15-level memory game
  * Cards use real gallery prints (birds, gators, and other Florida wildlife).
  * Pairs: 7 on level 1, then +1 each level, capped at 20.
  */
@@ -433,7 +433,7 @@
   function onTimeUp() {
     state.lock = true;
     $("fail-text").textContent =
-      "Time ran out on level " + state.level + ". Your score stays — try this stretch again.";
+      "Time ran out on level " + state.level + ". Your score stays. Try this stretch again.";
     showScreen("screen-fail");
   }
 

@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
-    <title>Website metrics — Florida Nature Prints</title>
+    <title>Website metrics | Florida Nature Prints</title>
     <meta
       name="description"
       content="Private visitor counts for Florida Nature Prints."
     />
-    <link rel="stylesheet" href="css/styles.css?v=picks5" />
+    <link rel="stylesheet" href="css/styles.css?v=p6" />
   </head>
   <body>
     <header class="site-header">
@@ -44,9 +44,11 @@
         <div class="container">
           <h1>Website metrics</h1>
           <p>
-            This page is for you — it is not in the public menu. Bookmark
-            floridanatureprints.com/metrics.html. It shows how many people
-            opened the live site, and the city they were in. Naming orders
+            This page is for you. It is not in the public menu. Bookmark
+            floridanatureprints.com/metrics.html. Page and photo views come
+            from GoatCounter and need your API key. The old visitor log
+            (August 18 to October 19, 2026) was archived offline and is no
+            longer collected. Naming orders
             and mini-scroll certificates live on
             <a href="studio.html">studio.html</a>.
             The printed SOP (paper, bottle, ribbon) is in your website folder
@@ -55,78 +57,6 @@
         </div>
       </div>
 
-      <section class="section">
-        <div class="container">
-          <div class="metrics-toolbar">
-            <p id="metrics-status" class="metrics-status">Loading visitor numbers…</p>
-            <div class="metrics-toolbar-actions">
-              <p id="metrics-updated" class="metrics-updated"></p>
-              <button id="metrics-refresh" class="btn btn-outline" type="button">
-                Refresh
-              </button>
-            </div>
-          </div>
-
-          <div class="metrics-stats" aria-label="Visitor totals">
-            <article class="metrics-stat">
-              <p class="metrics-kicker">People</p>
-              <p id="stat-people" class="metrics-stat-num">0</p>
-              <p>Unique visitors since counting started</p>
-            </article>
-            <article class="metrics-stat">
-              <p class="metrics-kicker">Page views</p>
-              <p id="stat-views" class="metrics-stat-num">0</p>
-              <p>Total pages opened</p>
-            </article>
-            <article class="metrics-stat">
-              <p class="metrics-kicker">Today</p>
-              <p id="stat-today" class="metrics-stat-num">0</p>
-              <p>People so far (Florida time)</p>
-            </article>
-            <article class="metrics-stat">
-              <p class="metrics-kicker">This week</p>
-              <p id="stat-week" class="metrics-stat-num">0</p>
-              <p>People in the last 7 days</p>
-            </article>
-          </div>
-
-          <div class="metrics-panel">
-            <p class="metrics-kicker">Last 14 days</p>
-            <h2>How many people visited</h2>
-            <div id="metrics-chart" class="metrics-chart" aria-label="People per day"></div>
-          </div>
-
-          <div class="metrics-split">
-            <div class="metrics-panel">
-              <p class="metrics-kicker">Who visited</p>
-              <h2>Recent people</h2>
-              <p class="metrics-note">
-                Browsers do not share a name or email. This list shows the
-                nearest city, what they opened, and how they arrived. Names
-                only show up in your inbox when someone orders or uses Contact.
-              </p>
-              <div id="metrics-people" class="metrics-people"></div>
-            </div>
-            <div class="metrics-side">
-              <div class="metrics-panel">
-                <p class="metrics-kicker">Pages</p>
-                <h2>What they opened</h2>
-                <div id="metrics-pages" class="metrics-bars"></div>
-              </div>
-              <div class="metrics-panel">
-                <p class="metrics-kicker">Places</p>
-                <h2>Where they were</h2>
-                <div id="metrics-places" class="metrics-bars"></div>
-              </div>
-              <div class="metrics-panel">
-                <p class="metrics-kicker">Sources</p>
-                <h2>How they found you</h2>
-                <div id="metrics-refs" class="metrics-bars"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
       <section class="section" id="gc-panel">
         <div class="container">
           <div class="metrics-panel">
@@ -266,7 +196,7 @@
         <div class="footer-bottom">
           &copy; <span id="year"></span>
           <span data-business-name>Florida Nature Prints</span>. Private metrics
-          page — not listed in the public menu.
+          page, not listed in the public menu.
         </div>
       </div>
     </footer>
@@ -274,11 +204,9 @@
     <script>
       document.getElementById("year").textContent = new Date().getFullYear();
     </script>
-    <script src="js/config.js?v=picks5"></script>
-    <script src="js/selling.js?v=picks5"></script>
-    <script src="js/main.js?v=picks5"></script>
-    <script src="js/visitors.js?v=picks5"></script>
-    <script src="js/metrics.js?v=visitors1"></script>
-    <script src="js/stats-gc.js?v=picks5"></script>
+    <script src="js/config.js?v=p6"></script>
+    <script src="js/selling.js?v=p6"></script>
+    <script src="js/main.js?v=p6"></script>
+    <script src="js/stats-gc.js?v=p6"></script>
   </body>
 </html>

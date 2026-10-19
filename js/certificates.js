@@ -1,5 +1,5 @@
 /**
- * 2" × 3.5" mini-scroll naming certificates — ten designs, one paper size.
+ * 2" × 3.5" mini-scroll naming certificates - ten designs, one paper size.
  * Rolls with a ribbon into a small bottle with the shark teeth.
  * Used on name.html (preview + customer pick) and studio.html (print).
  */
@@ -124,7 +124,7 @@
     var design = designById(data.designId);
     var kind = data.kind || "teeth";
     var names = cleanNames(data.names);
-    if (!names.length) names = kind === "teeth" ? ["—", "—", "—"] : ["—"];
+    if (!names.length) names = kind === "teeth" ? ["-", "-", "-"] : ["-"];
     var ids = (data.registryIds || []).filter(Boolean);
     var nameClass =
       names.length > 1 ? "fnp-cert-names is-triple" : "fnp-cert-names is-single";
@@ -216,7 +216,7 @@
         '<div class="fnp-avery-8371">' +
         avery +
         "</div>" +
-        '<p class="fnp-cut-note">Avery 8371 · tear apart · roll the 3.5″ side (scroll is 2″ tall) · ribbon bow · tall 50 ml cork bottle (~4–5″ high)</p>';
+        '<p class="fnp-cut-note">Avery 8371 · tear apart · roll the 3.5″ side (scroll is 2″ tall) · ribbon bow · tall 50 ml cork bottle (~4 to 5″ high)</p>';
     } else if (mode === "letter") {
       var copies = "";
       for (i = 0; i < 8; i++) {
@@ -235,7 +235,7 @@
 
     w.document.open();
     w.document.write(
-      "<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Certificate — Florida Nature Prints</title>" +
+      "<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Certificate | Florida Nature Prints</title>" +
         "<link rel='stylesheet' href='" +
         fontsHref() +
         "' />" +
