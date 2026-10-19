@@ -942,3 +942,20 @@
     gap: 0.2rem 1rem;
   }
 }
+
+/* ---- Mobile friendliness (picks5): keep the order form inside the screen ---- */
+.naming-layout > * {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .naming-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.naming-layout input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+}

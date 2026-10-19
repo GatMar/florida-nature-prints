@@ -30,53 +30,53 @@
 
   // Distinct species first (easy). Similar herons / gators later (harder).
   const EASY_FILES = [
-    "gator-mid-yawn.jpeg",
+    "adult-seven-foot-gator.jpeg",
     "great-blue-heron.jpeg",
     "great-egret.jpeg",
-    "sandhill-crane-elegant.jpeg",
-    "wood-stork-standing-tall.jpeg",
+    "sandhill-crane.jpeg",
+    "wood-stork-by-the-palm.jpeg",
     "anhinga-portrait.JPG",
-    "baby-manatee.jpeg",
-    "snowy-egret-hunter.jpeg",
+    "gopher-tortoise-9671.jpg",
     "young-gator.jpeg",
-    "anhinga-drying.jpeg",
-    "wood-stork-profile.jpeg",
+    "anhinga-on-the-branch.jpeg",
+    "wood-stork-walking.jpeg",
     "gator-eyes.jpeg",
-    "sandhill-crane-pair.jpeg",
-    "floating-gator.jpeg",
-    "heron-close-portrait.jpeg",
+    "sandhill-crane-lakeside.jpg",
+    "heron-and-palm.jpeg",
     "farewell-egret.jpeg",
-    "adult-seven-foot-gator.jpeg",
-    "great-blue-command.jpeg",
     "gator-up-close.jpeg",
-    "wood-stork-watchful.jpeg",
-    "heron-glow.JPG",
-    "focused-mister-egret.jpeg",
+    "great-blue-on-the-path.jpeg",
+    "wood-stork-foraging.jpeg",
+    "gopher-tortoise-close-up-1299.jpg",
+    "wood-stork-close-up-6524.jpg",
+    "egret-by-the-water.jpeg",
+    "anhinga-3511.jpg",
+    "alligator-close-up-5663.jpg",
   ];
 
   const HARD_FILES = [
-    "gator-mid-yawn.jpeg",
     "gator-eyes.jpeg",
     "gator-up-close.jpeg",
     "young-gator.jpeg",
-    "floating-gator.jpeg",
+    "gator-in-the-green.jpeg",
     "adult-seven-foot-gator.jpeg",
-    "gator-surface.jpeg",
     "gator-in-still-water.jpeg",
+    "alligator-close-up-5625.jpg",
+    "alligator-close-up-5637.jpg",
+    "alligator-close-up-5663.jpg",
+    "alligator-close-up-5683.jpg",
     "great-blue-heron.jpeg",
-    "great-blue-command.jpeg",
-    "heron-close-portrait.jpeg",
-    "heron-neck-curve.jpeg",
-    "golden-hour-heron.jpeg",
-    "heron-glow.JPG",
+    "great-blue-on-the-path.jpeg",
+    "heron-in-tall-grass.jpeg",
+    "heron-along-the-canal.jpeg",
+    "heron-looking-down.jpeg",
+    "heron-at-golden-hour.jpeg",
     "great-egret.jpeg",
-    "focused-mister-egret.jpeg",
     "farewell-egret.jpeg",
-    "snowy-egret-hunter.jpeg",
-    "wood-stork-standing-tall.jpeg",
-    "wood-stork-profile.jpeg",
+    "egret-by-the-water.jpeg",
+    "wood-stork-by-the-palm.jpeg",
+    "wood-stork-walking.jpeg",
     "anhinga-portrait.JPG",
-    "anhinga-drying.jpeg",
   ];
 
   const COOKIE_ADS = [
@@ -158,7 +158,8 @@
           p.category === "herons" ||
           p.category === "anhinga" ||
           p.category === "storks" ||
-          p.file === "baby-manatee.jpeg") &&
+          p.category === "close-ups" ||
+          p.category === "turtles") &&
         !out.some(function (x) {
           return x.file === p.file;
         })
@@ -355,9 +356,13 @@
           '<span class="match-card-inner">' +
           '<span class="match-card-face match-card-back" aria-hidden="true"></span>' +
           '<span class="match-card-face match-card-front">' +
-          '<img src="images/prints/' +
+          '<img src="images/prints/thumbs/' +
           card.photo.file +
-          '" alt="' +
+          '"' +
+          (card.photo.width && card.photo.height
+            ? ' width="' + card.photo.width + '" height="' + card.photo.height + '"'
+            : "") +
+          ' decoding="async" alt="' +
           escapeAttr(card.photo.title) +
           '" />' +
           "</span>" +
@@ -581,7 +586,7 @@
     return photos.slice(0, count).map(function (p) {
       return {
         title: p.title,
-        file: "images/prints/" + p.file,
+        file: "images/prints/thumbs/" + p.file,
         href: "shop.html?print=" + encodeURIComponent(p.title) + "#order-form",
         blurb: "Print · add to order",
         local: true,
@@ -601,7 +606,7 @@
       ">" +
       '<img src="' +
       ad.file +
-      '" alt="" />' +
+      '" alt="" loading="lazy" decoding="async" />' +
       "<span>" +
       '<strong>' +
       escapeAttr(ad.title) +

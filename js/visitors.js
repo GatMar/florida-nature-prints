@@ -417,7 +417,57 @@
       });
   }
 
+  // ---- GoatCounter (page views + photo views for the owner stats page) ----
+  // Inert until SITE_CONFIG.analytics.goatcounterCode is filled in.
+  var gcQueue = [];
+
+  function goatcounterCode() {
+    var code = String(analyticsConfig().goatcounterCode || "").trim();
+    return /^[a-z0-9-]+$/i.test(code) ? code : "";
+  }
+
+  function goatcounterReady() {
+    return !!(window.goatcounter && typeof window.goatcounter.count === "function");
+  }
+
+  function flushPhotoQueue() {
+    if (!goatcounterReady()) return;
+    while (gcQueue.length) {
+      try {
+        window.goatcounter.count(gcQueue.shift());
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  }
+
+  function loadGoatCounter() {
+    var code = goatcounterCode();
+    if (!code || !isLiveHost() || isBot()) return;
+    if (document.querySelector("script[data-goatcounter]")) return;
+    var s = document.createElement("script");
+    s.async = true;
+    s.src = "https://gc.zgo.at/count.js";
+    s.setAttribute("data-goatcounter", "https://" + code + ".goatcounter.com/count");
+    s.onload = flushPhotoQueue;
+    document.head.appendChild(s);
+  }
+
+  // Called by the lightbox each time a photo is opened or enlarged.
+  // Recorded as an event with path photo/<category>/<file>.
+  function trackPhoto(file, category, title) {
+    if (!goatcounterCode() || !isLiveHost() || isBot() || !file) return;
+    var cat = String(category || "other").replace(/[^a-z0-9-]/gi, "") || "other";
+    var name = String(file).replace(/^.*\//, "");
+    var hit = { path: "photo/" + cat + "/" + name, title: String(title || name), event: true };
+    gcQueue.push(hit);
+    if (gcQueue.length > 50) gcQueue.shift();
+    flushPhotoQueue();
+  }
+
   window.FNP_ANALYTICS = {
+    trackPhoto: trackPhoto,
+    goatcounterCode: goatcounterCode,
     emptyLog: emptyLog,
     loadLog: loadLog,
     readCounter: readCounter,
@@ -430,5 +480,6 @@
 
   if (currentPage() !== "metrics.html") {
     recordVisit();
+    loadGoatCounter();
   }
 })(window);

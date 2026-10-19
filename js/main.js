@@ -85,7 +85,7 @@
     if (page === "metrics.html" || page === "studio.html") return;
     const s = document.createElement("script");
     s.async = true;
-    s.src = "js/visitors.js?v=visitors1";
+    s.src = "js/visitors.js?v=picks5";
     document.head.appendChild(s);
   })();
 
@@ -119,8 +119,10 @@
       "name.html?kind=photo&print=" + encodeURIComponent(photo.title);
     el.innerHTML =
       '<img src="' +
-      src +
-      '" alt="' +
+      thumbUrl(photo.file) +
+      '"' +
+      responsiveImgAttrs(photo.file, "(max-width: 640px) 100vw, 600px") +
+      ' loading="lazy" decoding="async" alt="' +
       escapeHtml(photo.title) +
       '" />' +
       '<div class="home-offer-body">' +
@@ -141,6 +143,33 @@
   function photoUrl(file) {
     // Keep simple relative paths (encoding only breaks some hosts / cases)
     return "images/prints/" + String(file || "").replace(/^\/+/, "");
+  }
+
+  function photoByFile(file) {
+    const list = (window.SITE_CONFIG && SITE_CONFIG.photos) || [];
+    for (let i = 0; i < list.length; i++) if (list[i].file === file) return list[i];
+    return null;
+  }
+
+  // srcset / size attributes: 600px thumb + 2000px web copy, with width/height
+  // so the page does not jump while images load.
+  function responsiveImgAttrs(file, sizes) {
+    const p = photoByFile(file) || {};
+    let attrs =
+      ' srcset="' +
+      thumbUrl(file) +
+      " 600w, " +
+      photoUrl(file) +
+      ' 2000w" sizes="' +
+      (sizes || "(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 400px") +
+      '"';
+    if (p.width && p.height) attrs += ' width="' + p.width + '" height="' + p.height + '"';
+    return attrs;
+  }
+
+  function thumbUrl(file) {
+    // 600px copy for cards and covers; the 2000px copy opens in the lightbox
+    return "images/prints/thumbs/" + String(file || "").replace(/^\/+/, "");
   }
 
   function formspreeReady() {
@@ -208,12 +237,18 @@
       escapeHtml(photo.desc) +
       '" data-buy-href="' +
       escapeHtml(buyHref) +
+      '" data-file="' +
+      escapeHtml(photo.file || "") +
+      '" data-category="' +
+      escapeHtml(photo.category || "") +
       '" data-buy-label="Buy print / mug" aria-label="View larger photo of ' +
       escapeHtml(photo.title) +
       '">' +
       '<img class="photo-img" src="' +
-      src +
-      '" alt="' +
+      thumbUrl(photo.file) +
+      '"' +
+      responsiveImgAttrs(photo.file) +
+      ' decoding="async" alt="' +
       escapeHtml(photo.title) +
       '" loading="lazy" />' +
       '<span class="photo-zoom-hint" aria-hidden="true">View larger</span>' +
@@ -275,8 +310,10 @@
       '<div class="category-choice-img">' +
       (cover
         ? '<img src="' +
-          photoUrl(cover) +
-          '" alt="' +
+          thumbUrl(cover) +
+          '"' +
+          responsiveImgAttrs(cover) +
+          ' decoding="async" alt="' +
           escapeHtml(cat.label) +
           '" loading="lazy" />'
         : "") +
@@ -428,8 +465,10 @@
           '<div class="gallery-section-cover">' +
           (cover
             ? '<img src="' +
-              photoUrl(cover) +
-              '" alt="" loading="eager" />'
+              thumbUrl(cover) +
+              '"' +
+              responsiveImgAttrs(cover, "(max-width: 640px) 40vw, 240px") +
+              ' alt="" loading="lazy" decoding="async" />'
             : "") +
           "</div>" +
           '<div class="gallery-section-text">' +
@@ -1501,6 +1540,8 @@
             desc: el.getAttribute("data-desc") || "",
             buyHref: el.getAttribute("data-buy-href") || "",
             buyLabel: el.getAttribute("data-buy-label") || "Buy print / mug",
+            file: el.getAttribute("data-file") || "",
+            category: el.getAttribute("data-category") || "",
           };
         });
     }
@@ -1520,6 +1561,10 @@
         buyEl.textContent = item.buyLabel;
       } else {
         buyEl.hidden = true;
+      }
+      // Owner stats: count one photo view each time a photo is enlarged
+      if (item.file && window.FNP_ANALYTICS && FNP_ANALYTICS.trackPhoto) {
+        FNP_ANALYTICS.trackPhoto(item.file, item.category, item.title);
       }
       const many = items.length > 1;
       prevBtn.hidden = !many;

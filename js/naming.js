@@ -210,7 +210,7 @@
           '">' +
           '<img src="' +
           escapeHtml(imgSrc(p.folder, p.file)) +
-          '" alt="' +
+          '" loading="lazy" decoding="async" alt="' +
           escapeHtml(p.label) +
           '" />' +
           '<div class="offer-body">' +
@@ -292,7 +292,7 @@
           escapeHtml(h.id) +
           '"><img src="images/hibiscus/' +
           escapeHtml(h.file) +
-          '" alt="' +
+          '" loading="lazy" decoding="async" alt="' +
           escapeHtml(h.title) +
           '" /><span>' +
           escapeHtml(h.title) +
@@ -334,9 +334,11 @@
         return (
           '<button type="button" class="picker-item" data-title="' +
           escapeHtml(p.title) +
-          '"><img src="images/prints/' +
+          '"><img src="images/prints/thumbs/' +
           escapeHtml(p.file) +
-          '" alt="' +
+          '"' +
+          (p.width && p.height ? ' width="' + p.width + '" height="' + p.height + '"' : "") +
+          ' loading="lazy" decoding="async" alt="' +
           escapeHtml(p.title) +
           '" /><span>' +
           escapeHtml(p.title) +
@@ -387,7 +389,7 @@
     el.innerHTML = shown
       .map(function (item) {
         var img = item.photo
-          ? '<img src="images/named/' + escapeHtml(item.photo) + '" alt="' + escapeHtml(item.name) + '" />'
+          ? '<img src="images/named/' + escapeHtml(item.photo) + '" loading="lazy" decoding="async" alt="' + escapeHtml(item.name) + '" />'
           : '<div class="named-fallback">' + escapeHtml(item.name) + "</div>";
         var kind =
           item.kind === "hibiscus"

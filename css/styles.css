@@ -2313,3 +2313,98 @@ body.lightbox-open {
     animation: none;
   }
 }
+
+/* ---- Mobile friendliness (picks5): 44px tap targets, no sideways scroll ---- */
+html,
+body {
+  overflow-x: clip;
+}
+
+img {
+  height: auto;
+}
+
+.btn,
+.match-btn,
+.nav-toggle,
+.music-vol,
+.music-toggle,
+.studio-tabs button,
+.gallery-section-toggle,
+.photo-lightbox button {
+  min-height: 44px;
+}
+
+.nav-toggle,
+.music-vol {
+  min-width: 44px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.footer-links a,
+.footer-bottom a,
+.studio-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+select,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="password"],
+input[type="search"],
+textarea {
+  min-height: 44px;
+  max-width: 100%;
+  font-size: 16px; /* stops iPhone zooming in on focus */
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 24px;
+  height: 24px;
+}
+
+.btn-payment {
+  white-space: normal;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .metrics-toolbar,
+  .metrics-toolbar-actions {
+    flex-wrap: wrap;
+  }
+
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.photo-lightbox-nav {
+  min-width: 44px;
+}
+
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+  width: 24px;
+  height: 24px;
+}
+
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  justify-content: center;
+}

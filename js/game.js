@@ -203,21 +203,21 @@
   const bgImages = [];
 
   const BG_FILES_FALLBACK = [
-    "marsh-at-dusk.jpeg",
+    "sunset-1443.jpg",
     "crimson-marsh.jpeg",
     "golden-gulf.jpeg",
     "gator-in-the-green.jpeg",
     "great-blue-heron.jpeg",
-    "pink-cloud-reflections.jpeg",
+    "sunset-8101.jpg",
     "open-water-sunset.jpeg",
-    "horizon-fire.jpeg",
-    "amber-waves.jpeg",
-    "clouded-gold.jpeg",
-    "evening-shore.jpeg",
-    "heron-silhouette.jpeg",
-    "floating-gator.jpeg",
+    "sunset-2891.jpg",
+    "sunset-4596.jpg",
+    "sunset-4115.jpg",
+    "beach-horizon-glow.jpeg",
+    "sunset-2986.jpg",
+    "sunset-1515.jpg",
     "young-gator.jpeg",
-    "storm-lit-sunset.jpeg",
+    "heron-at-golden-hour.jpeg",
   ];
 
   const $ = function (s) {
