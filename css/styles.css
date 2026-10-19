@@ -2408,3 +2408,73 @@ input[type="radio"] {
   min-width: 44px;
   justify-content: center;
 }
+
+/* ---- Selling switch (commerce freeze). See js/selling.js ---- */
+.selling-off [data-sell] {
+  display: none !important;
+}
+
+.sell-off-only {
+  display: none !important;
+}
+
+.selling-off .sell-off-only {
+  display: block !important;
+}
+
+.selling-preview [data-sell] {
+  position: relative;
+  opacity: 0.55;
+  filter: grayscale(1);
+  outline: 2px dashed #b45309;
+  outline-offset: 2px;
+  cursor: not-allowed;
+}
+
+.selling-preview [data-sell] * {
+  pointer-events: none;
+}
+
+.selling-preview [data-sell]::before {
+  content: "DRAFT";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 5;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: #b45309;
+  color: #fff;
+  font: 700 11px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.sell-preview-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  padding: 0.6rem 1rem;
+  background: #b45309;
+  color: #fff;
+  font: 600 14px/1.4 system-ui, sans-serif;
+  text-align: center;
+}
+
+.sell-preview-banner a {
+  color: #fff;
+  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.selling-off .match-layout {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 900px;
+}
+
+.sell-off-only .btn {
+  margin: 0.35rem 0.5rem 0.35rem 0;
+}

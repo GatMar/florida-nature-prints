@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="selling-off">
  <head>
  <meta charset="UTF-8" />
  <meta name="viewport" content="width=device-width, initial-scale=1" />
  <title>Contact - Florida Nature Prints</title>
  <meta
  name="description"
- content="Contact Florida Nature Prints with questions about orders, sizes, or custom requests."
+ content="Contact Florida Nature Prints with questions or custom requests."
  />
  <link rel="stylesheet" href="css/styles.css?v=picks5" />
  </head>
@@ -29,8 +29,8 @@
  <ul class="nav-links">
  <li><a href="index.html">Home</a></li>
  <li><a href="gallery.html">Gallery</a></li>
- <li><a href="shop.html">Shop</a></li>
- <li><a href="name.html">Name</a></li>
+ <li data-sell><a href="shop.html">Shop</a></li>
+ <li data-sell><a href="name.html">Name</a></li>
  <li><a href="game.html">Match</a></li>
  <li><a href="about.html">About</a></li>
  <li><a href="contact.html">Contact</a></li>
@@ -54,7 +54,7 @@
  Questions about a print, size, shipping, or a custom request?
  Send a message and I’ll reply within a day or two.
  </p>
- <p>
+ <p data-sell>
  For orders, you can also use the form on the
  <a href="shop.html">Shop</a> page.
  </p>
@@ -135,8 +135,8 @@
  </div>
  <ul class="footer-links">
  <li><a href="gallery.html">Gallery</a></li>
- <li><a href="shop.html">Shop</a></li>
- <li><a href="name.html">Name</a></li>
+ <li data-sell><a href="shop.html">Shop</a></li>
+ <li data-sell><a href="name.html">Name</a></li>
  <li><a href="game.html">Match</a></li>
  <li><a href="about.html">About</a></li>
  <li><a href="contact.html">Contact</a></li>
@@ -154,6 +154,7 @@
  document.getElementById("year").textContent = new Date().getFullYear();
  </script>
  <script src="js/config.js?v=picks5"></script>
+ <script src="js/selling.js?v=picks5"></script>
  <script src="js/main.js?v=picks5"></script>
  </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="selling-off">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -30,8 +30,8 @@
         <ul class="nav-links">
           <li><a href="index.html">Home</a></li>
           <li><a href="gallery.html" class="active">Gallery</a></li>
-          <li><a href="shop.html">Shop</a></li>
-          <li><a href="name.html">Name</a></li>
+          <li data-sell><a href="shop.html">Shop</a></li>
+          <li data-sell><a href="name.html">Name</a></li>
           <li><a href="game.html">Match</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
@@ -45,8 +45,8 @@
           <h1>Gallery</h1>
           <p>
             All photos start mixed together. Jump to a category anytime, or
-            pick one below to browse by theme. Tap a photo to see it larger.
-            Use “Buy print / mug” when you are ready to order.
+            pick one below to browse by theme. Tap a photo to see it larger.<span data-sell>
+            Use “Buy print / mug” when you are ready to order.</span>
           </p>
         </div>
       </div>
@@ -70,7 +70,7 @@
         </div>
       </section>
 
-      <section class="section section-green" id="named-by-you">
+      <section class="section section-green" id="named-by-you" data-sell>
         <div class="container">
           <div class="section-header">
             <h2>Named by You</h2>
@@ -95,8 +95,8 @@
           </div>
           <ul class="footer-links">
             <li><a href="gallery.html">Gallery</a></li>
-            <li><a href="shop.html">Shop</a></li>
-            <li><a href="name.html">Name</a></li>
+            <li data-sell><a href="shop.html">Shop</a></li>
+            <li data-sell><a href="name.html">Name</a></li>
             <li><a href="game.html">Match</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="contact.html">Contact</a></li>
@@ -114,6 +114,7 @@
       document.getElementById("year").textContent = new Date().getFullYear();
     </script>
     <script src="js/config.js?v=picks5"></script>
+    <script src="js/selling.js?v=picks5"></script>
     <script src="js/main.js?v=picks5"></script>
     <script src="js/named-registry.js?v=naming1"></script>
     <script src="js/naming.js?v=picks5"></script>

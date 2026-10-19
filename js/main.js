@@ -133,7 +133,7 @@
       "<p>" +
       escapeHtml(photo.desc || "A Florida moment from the gallery.") +
       "</p>" +
-      '<a class="btn btn-primary" href="' +
+      '<a class="btn btn-primary" data-sell href="' +
       nameHref +
       '">Name this print</a>' +
       "</div>";
@@ -261,7 +261,7 @@
       escapeHtml(photo.desc) +
       "</p>" +
       (withBuy
-        ? '<div class="photo-actions">' +
+        ? '<div class="photo-actions" data-sell>' +
           '<a class="btn btn-primary" href="' +
           escapeHtml(buyHref) +
           '">Buy print / mug</a>' +
@@ -1511,7 +1511,7 @@
       '<h3 id="photo-lightbox-title"></h3>' +
       '<p class="photo-lightbox-desc"></p>' +
       "</div>" +
-      '<a class="btn btn-primary photo-lightbox-buy" href="shop.html">Buy print / mug</a>' +
+      '<a class="btn btn-primary photo-lightbox-buy" href="shop.html" data-sell>Buy print / mug</a>' +
       "</figcaption>" +
       "</figure>" +
       '<button type="button" class="photo-lightbox-nav is-next" aria-label="Next photo">›</button>' +

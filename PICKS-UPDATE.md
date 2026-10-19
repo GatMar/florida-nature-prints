@@ -97,4 +97,45 @@ Moved out with `git rm` on this branch only. Reasons are in "Florida Nature Prin
 - Old Gator Life backgrounds in `js/game.js` and `css/game.css` point to current sunsets (those files are not loaded by any page today).
 - Mobile: 44px tap targets, no sideways scroll on name.html, lazy images with srcset and width/height.
 - Stats: see STATS-SETUP.md.
-- Buy buttons were not changed. There is no `sellingEnabled` switch in this code; the buy and naming buttons that are on main are still on here.
+
+## Selling switch (commerce freeze)
+
+Second commit on this branch: "Turn off selling UI (commerce freeze)".
+
+- `js/config.js` has `sellingEnabled: false`. Every selling element carries a `data-sell`
+  attribute. Each page starts with `<html class="selling-off">`, so they are hidden by CSS
+  before any script runs. Nothing was deleted; set `sellingEnabled: true` to bring it all back.
+- `js/selling.js` (loaded right after config.js on every page) sets the page class:
+  `selling-on`, `selling-off`, or `selling-preview`.
+- Review mode: add `?preview=buy` to any page URL. Selling items show greyed out with a DRAFT
+  tag and a dashed outline, and a DRAFT banner sits at the bottom. Clicks and form submits on
+  them are blocked, so no order can be sent. The preview lasts for the browser tab;
+  `?preview=off` (or the banner link) ends it.
+
+What is hidden while selling is off:
+
+- All pages: "Shop" and "Name" links in the header and footer menus.
+- index.html: "Name 3 shark teeth $8" hero button; "Quality prints", "Prints & photo mugs"
+  and "Easy ordering" list items; the shark teeth offer card; "Name this print" on Print of
+  the day; the gift certificate sentence in the Wildlife Match section; the Shark teeth
+  section (jar $20, Add to order, Name them $8); "Give it a name"; the "Shop prints" band.
+- gallery.html: "Buy print / mug" and "Name it · $3" on every photo card; the lightbox
+  "Buy print / mug" button; the "Buy print / mug" sentence in the intro; Named by You.
+- shop.html: the whole page (prints, mugs, prices, souvenirs, naming band, order form,
+  payment buttons). A short "The shop is not open yet." notice with Gallery and Match
+  buttons shows instead.
+- name.html: the whole naming page (paid naming, prices, order form, payment buttons,
+  Named by You). Naming is paid at every step, so it could not be split into a free part.
+  A short "Naming is not open yet." notice shows instead.
+- game.html: the "Win a gift" rule tile, "and gifts" in the subtitle, all gift certificate
+  boxes (start, choose, done), the shop print ads and MariCooks ads around the board, and
+  the MariCooks note in the footer. Clearing all 15 levels just says
+  "You matched every stretch." The game itself is unchanged.
+- contact.html: "For orders, you can also use the form on the Shop page."
+- studio.html (owner page): the Shop and Name menu links and the footer "Name page" link.
+  The studio tools themselves are unchanged.
+- Meta descriptions on index, shop, name, game and contact no longer mention prices,
+  orders or gifts.
+
+Not changed: the index headline "Florida nature, printed for your walls", the business
+name, and the private studio guide text.

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="selling-off">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Wildlife Match — Florida Nature Prints</title>
     <meta
       name="description"
-      content="Match Florida birds, alligators, and wetland wildlife across 15 levels. Finish the game for a souvenir gift certificate."
+      content="Match Florida birds, alligators, and wetland wildlife across 15 levels."
     />
     <link rel="stylesheet" href="css/styles.css?v=picks5" />
     <link rel="stylesheet" href="css/match.css?v=picks5" />
@@ -30,8 +30,8 @@
         <ul class="nav-links">
           <li><a href="index.html">Home</a></li>
           <li><a href="gallery.html">Gallery</a></li>
-          <li><a href="shop.html">Shop</a></li>
-          <li><a href="name.html">Name</a></li>
+          <li data-sell><a href="shop.html">Shop</a></li>
+          <li data-sell><a href="name.html">Name</a></li>
           <li><a href="game.html" class="active">Match</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
@@ -41,7 +41,7 @@
 
     <main>
       <div class="container match-layout">
-        <aside class="ad-rail" id="ad-rail-left" aria-label="Prints from the shop"></aside>
+        <aside class="ad-rail" id="ad-rail-left" aria-label="Prints from the shop" data-sell></aside>
 
         <div class="match-card-shell">
           <section id="screen-start" class="match-screen active">
@@ -58,7 +58,7 @@
             <p class="match-kicker">Florida fun</p>
             <h1>Wildlife Match</h1>
             <p class="subtitle">
-              Flip two cards. Find the twins. Happy birds, gators, and gifts!
+              Flip two cards. Find the twins. Happy birds, gators<span data-sell>, and gifts</span>!
             </p>
             <div class="rule-tiles" aria-label="How to play">
               <article class="rule-tile tile-sun">
@@ -79,7 +79,7 @@
                 <h3>Climb 15</h3>
                 <p>Start with 7 pairs. Add one each level, up to 20.</p>
               </article>
-              <article class="rule-tile tile-sky">
+              <article class="rule-tile tile-sky" data-sell>
                 <span class="rule-pic" aria-hidden="true">🎁</span>
                 <span class="rule-num">4</span>
                 <h3>Win a gift</h3>
@@ -101,7 +101,7 @@
                 look-alike birds and gators. Your progress stays on this device.
               </p>
             </div>
-            <div id="reward-box-start" class="reward-card" hidden>
+            <div id="reward-box-start" class="reward-card" data-sell hidden>
               <div class="label">Gift certificate</div>
               <p id="reward-text-start"></p>
               <p class="reward-code" id="reward-code-start"></p>
@@ -154,7 +154,7 @@
             <h1 id="clear-title">Level complete</h1>
             <p class="score-pop" id="clear-score">Score 0</p>
             <p id="clear-text"></p>
-            <div id="reward-choose" class="reward-card" hidden>
+            <div id="reward-choose" class="reward-card" data-sell hidden>
               <div class="label">Choose your gift</div>
               <p>
                 You finished all 15 levels. Pick one gift certificate — then
@@ -169,7 +169,7 @@
                 </button>
               </div>
             </div>
-            <div id="reward-done" class="reward-card" hidden>
+            <div id="reward-done" class="reward-card" data-sell hidden>
               <div class="label">Your gift certificate</div>
               <p id="reward-done-text"></p>
               <p class="reward-code" id="reward-done-code"></p>
@@ -194,10 +194,10 @@
             </div>
           </section>
 
-          <div class="ad-strip" id="ad-strip" aria-label="Quiet shop notes"></div>
+          <div class="ad-strip" id="ad-strip" aria-label="Quiet shop notes" data-sell></div>
         </div>
 
-        <aside class="ad-rail" id="ad-rail-right" aria-label="MariCooks cookies and spices"></aside>
+        <aside class="ad-rail" id="ad-rail-right" aria-label="MariCooks cookies and spices" data-sell></aside>
       </div>
     </main>
 
@@ -212,8 +212,8 @@
           </div>
           <ul class="footer-links">
             <li><a href="gallery.html">Gallery</a></li>
-            <li><a href="shop.html">Shop</a></li>
-            <li><a href="name.html">Name</a></li>
+            <li data-sell><a href="shop.html">Shop</a></li>
+            <li data-sell><a href="name.html">Name</a></li>
             <li><a href="game.html">Match</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="contact.html">Contact</a></li>
@@ -221,9 +221,9 @@
         </div>
         <div class="footer-bottom">
           &copy; <span id="year"></span>
-          <span data-business-name>Florida Nature Prints</span>. Quiet notes
+          <span data-business-name>Florida Nature Prints</span>.<span data-sell> Quiet notes
           around the board are our own prints and sister kitchen,
-          <a href="https://maricooks.com" rel="noopener noreferrer">MariCooks</a>.
+          <a href="https://maricooks.com" rel="noopener noreferrer">MariCooks</a>.</span>
         </div>
       </div>
     </footer>
@@ -232,6 +232,7 @@
       document.getElementById("year").textContent = new Date().getFullYear();
     </script>
     <script src="js/config.js?v=picks5"></script>
+    <script src="js/selling.js?v=picks5"></script>
     <script src="js/main.js?v=picks5"></script>
     <script src="js/match.js?v=picks5"></script>
   </body>

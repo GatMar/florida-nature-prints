@@ -532,8 +532,11 @@
     const allDone = state.completed.length >= TOTAL_LEVELS;
     $("clear-title").textContent = allDone ? "All 15 levels cleared!" : "Level " + state.level + " complete";
     $("clear-score").textContent = "Score " + state.score;
+    const giftsOn = !!(window.FNP_SELLING && window.FNP_SELLING.visible);
     $("clear-text").textContent = allDone
-      ? "You matched every stretch. Choose a gift certificate below."
+      ? giftsOn
+        ? "You matched every stretch. Choose a gift certificate below."
+        : "You matched every stretch."
       : "Nice work. Level " + Math.min(TOTAL_LEVELS, state.level + 1) + " is open.";
 
     const nextBtn = $("btn-next-level");

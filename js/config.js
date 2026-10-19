@@ -8,6 +8,12 @@
 
 // Attached to window so every page script can read it reliably
 var SITE_CONFIG = window.SITE_CONFIG = {
+  // ---- Selling switch (commerce freeze) ----
+  // false = every buy, order, price, paid naming, gift certificate and shop ad is hidden.
+  // Add ?preview=buy to any page URL to see them greyed out as DRAFT (no orders possible).
+  // ?preview=off ends the preview. Set to true only when Mari is ready to sell.
+  sellingEnabled: false,
+
   // ---- Your info ----
   businessName: "Florida Nature Prints",
   tagline: "Calm moments from the Sunshine State",

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="selling-off">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Name a piece of Florida — Florida Nature Prints</title>
     <meta
       name="description"
-      content="Name three real Florida shark teeth, a hibiscus, or a gallery photograph. Teeth arrive in a small bottle with a mini certificate rolled and tied with a bow."
+      content="Naming page for Florida Nature Prints."
     />
     <link rel="stylesheet" href="css/styles.css?v=picks5" />
     <link rel="stylesheet" href="css/naming.css?v=picks5" />
@@ -30,8 +30,8 @@
         <ul class="nav-links">
           <li><a href="index.html">Home</a></li>
           <li><a href="gallery.html">Gallery</a></li>
-          <li><a href="shop.html">Shop</a></li>
-          <li><a href="name.html" class="active">Name</a></li>
+          <li data-sell><a href="shop.html">Shop</a></li>
+          <li data-sell><a href="name.html" class="active">Name</a></li>
           <li><a href="game.html">Match</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
@@ -40,6 +40,18 @@
     </header>
 
     <main>
+      <section class="page-hero sell-off-only">
+        <div class="container">
+          <h1>Name a piece of Florida</h1>
+          <p>Naming is not open yet.</p>
+          <p>
+            <a class="btn btn-primary" href="gallery.html">View the gallery</a>
+            <a class="btn btn-outline" href="game.html">Play Wildlife Match</a>
+          </p>
+        </div>
+      </section>
+      <div data-sell>
+
       <div class="page-hero">
         <div class="container naming-hero">
           <div class="naming-hero-copy">
@@ -308,6 +320,7 @@
           <div class="named-strip" id="named-gallery"></div>
         </div>
       </section>
+      </div>
     </main>
 
     <footer class="site-footer">
@@ -321,8 +334,8 @@
           </div>
           <ul class="footer-links">
             <li><a href="gallery.html">Gallery</a></li>
-            <li><a href="shop.html">Shop</a></li>
-            <li><a href="name.html">Name</a></li>
+            <li data-sell><a href="shop.html">Shop</a></li>
+            <li data-sell><a href="name.html">Name</a></li>
             <li><a href="game.html">Match</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="contact.html">Contact</a></li>
@@ -340,6 +353,7 @@
       document.getElementById("year").textContent = new Date().getFullYear();
     </script>
     <script src="js/config.js?v=picks5"></script>
+    <script src="js/selling.js?v=picks5"></script>
     <script src="js/main.js?v=picks5"></script>
     <script src="js/certificates.js?v=naming3"></script>
     <script src="js/named-registry.js?v=naming3"></script>

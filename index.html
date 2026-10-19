@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="selling-off">
  <head>
  <meta charset="UTF-8" />
  <meta name="viewport" content="width=device-width, initial-scale=1" />
  <title>Florida Nature Prints - Calm moments from the Sunshine State</title>
  <meta
  name="description"
- content="Fine art Florida nature prints — and name three real shark teeth for $8. You name them, you pay for them, you keep them."
+ content="Fine art Florida nature photography. Calm moments from the Sunshine State."
  />
  <link rel="stylesheet" href="css/styles.css?v=picks5" />
  </head>
@@ -29,8 +29,8 @@
  <ul class="nav-links">
  <li><a href="index.html">Home</a></li>
  <li><a href="gallery.html">Gallery</a></li>
- <li><a href="shop.html">Shop</a></li>
- <li><a href="name.html">Name</a></li>
+ <li data-sell><a href="shop.html">Shop</a></li>
+ <li data-sell><a href="name.html">Name</a></li>
  <li><a href="game.html">Match</a></li>
  <li><a href="about.html">About</a></li>
  <li><a href="contact.html">Contact</a></li>
@@ -73,7 +73,7 @@
  wild places worth remembering.
  </p>
  <div class="hero-actions">
- <a class="btn btn-primary" href="name.html?kind=teeth">Name 3 shark teeth — $8</a>
+ <a class="btn btn-primary" href="name.html?kind=teeth" data-sell>Name 3 shark teeth — $8</a>
  <a class="btn btn-outline" href="gallery.html">View gallery</a>
  </div>
  <p class="hero-caption">
@@ -96,7 +96,7 @@
                   birds, and golden light.</span
                 >
               </li>
-              <li>
+              <li data-sell>
                 <span class="why-emoji" aria-hidden="true">🖼️</span>
                 <span class="why-check" aria-hidden="true">✓</span>
                 <span
@@ -104,7 +104,7 @@
                   hallway, or living room.</span
                 >
               </li>
-              <li>
+              <li data-sell>
                 <span class="why-emoji" aria-hidden="true">☕</span>
                 <span class="why-check" aria-hidden="true">✓</span>
                 <span
@@ -112,7 +112,7 @@
                   scene on the wall or in your hands.</span
                 >
               </li>
-              <li>
+              <li data-sell>
                 <span class="why-emoji" aria-hidden="true">📦</span>
                 <span class="why-check" aria-hidden="true">✓</span>
                 <span
@@ -125,7 +125,7 @@
           </aside>
 
           <div class="home-split-right">
-            <article class="home-offer" id="teeth-offer">
+            <article class="home-offer" id="teeth-offer" data-sell>
               <img
                 src="images/souvenirs/named-trio-sample.jpg"
                 alt="Three Florida shark teeth named Poseidon, Luffy, and Llamrei" loading="lazy" decoding="async" width="1024" height="1024" />
@@ -173,9 +173,9 @@
             <h2>Play: Wildlife Match</h2>
             <p>
               Match Florida birds, alligators, and wetland neighbors across 15
-              levels — 7 pairs to start, up to 20. Finish the whole game for a
+              levels — 7 pairs to start, up to 20.<span data-sell> Finish the whole game for a
               gift certificate: a jar of 15 shark teeth, or credit toward your
-              next order.
+              next order.</span>
             </p>
           </div>
           <p style="text-align: center">
@@ -184,7 +184,7 @@
         </div>
       </section>
 
-      <section class="section">
+      <section class="section" data-sell>
         <div class="container">
           <div class="section-header">
             <h2>Shark teeth</h2>
@@ -239,7 +239,7 @@
         </div>
       </section>
 
-      <section class="section section-alt">
+      <section class="section section-alt" data-sell>
         <div class="container">
           <div class="section-header">
             <h2>Give it a name</h2>
@@ -254,7 +254,7 @@
         </div>
       </section>
 
-      <section class="cta-band">
+      <section class="cta-band" data-sell>
  <div class="container">
  <h2>Bring a little Florida calm home</h2>
  <p>Browse the gallery or go straight to the shop to order a print.</p>
@@ -274,8 +274,8 @@
  </div>
  <ul class="footer-links">
  <li><a href="gallery.html">Gallery</a></li>
- <li><a href="shop.html">Shop</a></li>
- <li><a href="name.html">Name</a></li>
+ <li data-sell><a href="shop.html">Shop</a></li>
+ <li data-sell><a href="name.html">Name</a></li>
  <li><a href="game.html">Match</a></li>
  <li><a href="about.html">About</a></li>
  <li><a href="contact.html">Contact</a></li>
@@ -293,6 +293,7 @@
  document.getElementById("year").textContent = new Date().getFullYear();
  </script>
  <script src="js/config.js?v=picks5"></script>
+ <script src="js/selling.js?v=picks5"></script>
  <script src="js/main.js?v=picks5"></script>
  </body>
 </html>
