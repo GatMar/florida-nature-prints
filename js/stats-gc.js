@@ -281,7 +281,7 @@
       .catch(function (err) {
         setStatus(
           (err && err.message) ||
-            "Could not reach GoatCounter. If this keeps happening, the browser may be blocking the request (see STATS-SETUP.md)."
+            "Could not reach GoatCounter. If this keeps happening, the browser may be blocking the request (see STATS-SETUP.md in your docs archive)."
         );
       });
   }
@@ -419,7 +419,7 @@
     });
     $("gc-load").addEventListener("click", load);
     if (siteCode() && store(KEY_STORE)) load();
-    else setStatus("Not set up yet. Add your GoatCounter site code and API key (see STATS-SETUP.md).");
+    else setStatus("Not set up yet. Add your GoatCounter site code and API key (see STATS-SETUP.md in your docs archive).");
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

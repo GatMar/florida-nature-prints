@@ -2478,3 +2478,23 @@ input[type="radio"] {
 .sell-off-only .btn {
   margin: 0.35rem 0.5rem 0.35rem 0;
 }
+
+/* Privacy page: short readable column */
+.privacy-text {
+  max-width: 680px;
+}
+.privacy-text h2 {
+  margin-top: 1.75rem;
+  font-size: 1.3rem;
+}
+.privacy-text h2:first-child {
+  margin-top: 0;
+}
+.privacy-text p {
+  overflow-wrap: anywhere;
+}
+.privacy-updated {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}

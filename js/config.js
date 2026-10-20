@@ -48,7 +48,7 @@ var SITE_CONFIG = window.SITE_CONFIG = {
   // recent visitors by city/region (browsers do not share a name).
   analytics: {
     // GoatCounter site code, e.g. "floridanatureprints" for floridanatureprints.goatcounter.com.
-    // Blank = GoatCounter stays off. See STATS-SETUP.md. Never put an API key here.
+    // Blank = GoatCounter stays off. See STATS-SETUP.md in the docs archive (not on the site). Never put an API key here.
     goatcounterCode: "",
   },
 

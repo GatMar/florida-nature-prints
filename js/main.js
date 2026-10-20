@@ -85,7 +85,7 @@
     if (page === "metrics.html" || page === "studio.html") return;
     const s = document.createElement("script");
     s.async = true;
-    s.src = "js/goatcounter.js?v=p6";
+    s.src = "js/goatcounter.js?v=p7";
     document.head.appendChild(s);
   })();
 
@@ -1464,14 +1464,6 @@
           }
         }
         return;
-      }
-      const d = JSON.parse(localStorage.getItem("gatorLife_v1") || "{}");
-      if (d.coupon && d.coupon.code) {
-        input.value = d.coupon.code;
-        if (note) {
-          note.textContent =
-            "Saved print coupon " + d.coupon.code + " (10% off prints).";
-        }
       }
     } catch (e) {}
   })();
